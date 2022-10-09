@@ -97,7 +97,7 @@
         app:layout_constraintStart_toEndOf="@id/likes"
         app:layout_constraintEnd_toStartOf="@id/reposts"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
-        android:text="@sample/posts.json/data/likes" />
+        tools:text="@sample/posts.json/data/likes" />
 
     <ImageView
         android:id="@+id/reposts"
@@ -116,7 +116,7 @@
         android:paddingHorizontal="@dimen/indent"
         app:layout_constraintStart_toEndOf="@id/reposts"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
-        android:text="@sample/posts.json/data/reposts" />
+        tools:text="@sample/posts.json/data/reposts" />
 
     <TextView
         android:id="@+id/viewsCount"
@@ -124,7 +124,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/barrierBottom"
-        android:text="@sample/posts.json/data/views" />
+        tools:text="@sample/posts.json/data/views" />
 
     <ImageView
         android:id="@+id/views"
