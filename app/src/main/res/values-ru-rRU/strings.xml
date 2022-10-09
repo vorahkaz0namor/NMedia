@@ -2,4 +2,9 @@
 <resources>
     <string name="app_name">НМедиа</string>
     <string name="show_me">НМедиа!</string>
+    <string name="description_post_author_avatar">Логотип Нетологии</string>
+    <string name="description_post_menu">Меню поста</string>
+    <string name="description_likes">Количество лайков</string>
+    <string name="description_reposted">Количество репостов</string>
+    <string name="description_views">Количество просмотров</string>
 </resources>
