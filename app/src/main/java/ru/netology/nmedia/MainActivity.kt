@@ -50,6 +50,8 @@ class MainActivity : AppCompatActivity() {
 
             unshare.setOnClickListener {
                 post.shares -= 500
+                if (post.shares < 0)
+                    post.shares = 0
                 sharesCount.text = postService.countDisplay(post.shares)
             }
 
@@ -60,6 +62,8 @@ class MainActivity : AppCompatActivity() {
 
             unview.setOnClickListener {
                 post.views -= 100_000
+                if (post.views < 0)
+                    post.views = 0
                 viewsCount.text = postService.countDisplay(post.views)
             }
         }
