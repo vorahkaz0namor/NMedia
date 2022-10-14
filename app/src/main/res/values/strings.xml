@@ -4,6 +4,8 @@
     <string name="description_post_author_avatar">Netology logo</string>
     <string name="description_post_menu">Post menu</string>
     <string name="description_likes">Likes count</string>
-    <string name="description_reposted">Reposts count</string>
+    <string name="description_shared">Shares count</string>
     <string name="description_views">Views count</string>
+    <string name="description_unshared">Cancel sharings</string>
+    <string name="description_unviews">Cancel views</string>
 </resources>
