@@ -5,64 +5,72 @@ import androidx.lifecycle.MutableLiveData
 import ru.netology.nmedia.dto.Post
 
 class PostRepositoryInMemoryImpl : PostRepository {
-    private var post = Post(
-        id = 1,
-        author = "Нетология. Университет интернет-профессий будущего",
-        published = "21 мая в 18:36",
-        content = "Привет, это новая Нетология! Когда-то Нетология начиналась с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну, разработке, аналитике и управлению. Мы растём сами и помогаем расти студентам: от новичков до уверенных профессионалов. Но самое важное остаётся с нами: мы верим, что в каждом уже есть сила, которая заставляет хотеть больше, целиться выше, бежать быстрее. Наша миссия — помочь встать на путь роста и начать цепочку перемен → http://netolo.gy/fyb",
-        likes = 10,
-        shares = 5,
-        views = 5
+    private var posts = mutableListOf(
+        Post(
+            id = 3,
+            author = "Нетология. Университет интернет-профессий будущего",
+            published = "19 октября в 13:27",
+            content = "Системный администратор — специалист, который отвечает за стабильное и безотказное функционирование IT-инфраструктуры, занимается настройкой сетей, мониторингом, следит за безопасностью данных, а также проводит инвентаризацию и обновление программного обеспечения компании. Курс даст углубленные знания и подготовит вас к работе: обучитесь системному администрированию на практике, получите возможность найти работу уже во время обучения, будете знать больше, чем нужно работодателям, изучите современные инструменты для работы с инфраструктурой, получите углубленные знания основ администрирования Linux, откроете новые возможности с помощью английского языка.",
+            likes = 9,
+            shares = 5,
+            views = 7
+        ),
+        Post(
+            id = 2,
+            author = "Нетология. Университет интернет-профессий будущего",
+            published = "11 августа в 16:51",
+            content = "Android — самая популярная мобильная платформа. Android-разработчики востребованы всё больше: согласно Statcounter, Android занимает больше 70% рынка мобильных устройств, и число пользователей во всём мире растёт каждый год. За время курса вы создадите полноценное приложение под Android — социальную сеть формата LinkedIn с размещением постов, информацией о профессиональных связях, местах работы и чекинах. Такой проект позволит вам применить разные возможности Kotlin, включая работу с серверной частью и локальной базой данных, с камерой смартфона и его GPS-модулем.",
+            likes = 31,
+            shares = 7,
+            views = 23
+        ),
+        Post(
+            id = 1,
+            author = "Нетология. Университет интернет-профессий будущего",
+            published = "21 мая в 18:36",
+            content = "Привет, это новая Нетология! Когда-то Нетология начиналась с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну, разработке, аналитике и управлению. Мы растём сами и помогаем расти студентам: от новичков до уверенных профессионалов. Но самое важное остаётся с нами: мы верим, что в каждом уже есть сила, которая заставляет хотеть больше, целиться выше, бежать быстрее. Наша миссия — помочь встать на путь роста и начать цепочку перемен → http://netolo.gy/fyb",
+            likes = 100,
+            shares = 12,
+            views = 51
+        )
     )
-    private val data = MutableLiveData(post)
+    private val data = MutableLiveData(posts as List<Post>)
+    private val postById = { postId: Long ->
+        posts.asSequence().withIndex()
+            .find { it.value.id == postId }
+    }
 
-    override fun get(): LiveData<Post> =data
+    override fun get(): LiveData<List<Post>> = data
 
-    override fun like() {
-        val changeLikedByMe = !post.likedByMe
-        post = post.copy(
+    override fun likeById(id: Long): Boolean {
+        val post = postById(id) ?: return false
+        val changeLikedByMe = !post.value.likedByMe
+        posts[post.index] = post.value.copy(
             likedByMe = changeLikedByMe,
             likes = if (changeLikedByMe)
-                        ++post.likes
-                    else
-                        --post.likes
+                ++post.value.likes
+            else
+                --post.value.likes
         )
-        data.value = post
+        data.value = posts
+        return true
     }
 
-    override fun share() {
-        post = post.copy(
-            shares = post.shares + 500
+    override fun shareById(id: Long): Boolean {
+        val post = postById(id) ?: return false
+        posts[post.index] = post.value.copy(
+            shares = post.value.shares + 500
         )
-        data.value = post
+        data.value = posts
+        return true
     }
 
-    override fun unshare() {
-        val count = post.shares - 500
-        post = post.copy(
-            shares = if (count < 0)
-                         0
-                     else
-                         count
+    override fun viewById(id: Long): Boolean {
+        val post = postById(id) ?: return false
+        posts[post.index] = post.value.copy(
+            views = post.value.views + 100_000
         )
-        data.value = post
-    }
-
-    override fun view() {
-        post = post.copy(
-            views = post.views + 100_000
-        )
-        data.value = post
-    }
-
-    override fun unview() {
-        val count = post.views - 100_000
-        post = post.copy(
-            views = if (count < 0)
-                        0
-                    else
-                        count
-        )
-        data.value = post
+        data.value = posts
+        return true
     }
 }
