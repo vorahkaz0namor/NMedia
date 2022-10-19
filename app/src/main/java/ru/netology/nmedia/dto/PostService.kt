@@ -19,7 +19,7 @@ class PostService {
                 else
                     R.drawable.ic_baseline_favorite_border_24
             )
-            likesCount.text = post.likes.toString()
+            likesCount.text = countDisplay(post.likes)
             sharesCount.text = countDisplay(post.shares)
             viewsCount.text = countDisplay(post.views)
         }
