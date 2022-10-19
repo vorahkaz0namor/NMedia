@@ -8,18 +8,24 @@ import ru.netology.nmedia.databinding.ActivityMainBinding
 class PostService {
 
     fun postFill(binding: ActivityMainBinding, post: Post) {
-        binding.author.text = post.author
-        binding.published.text = post.published
-        binding.content.text = post.content
-        binding.avatar.setImageResource(R.drawable.netology)
-        if (post.likedByMe)
-            binding.likes.setImageResource(R.drawable.ic_liked_24)
-        binding.likesCount.text = post.likes.toString()
-        binding.sharesCount.text = post.shares.toString()
-        binding.viewsCount.text = post.views.toString()
+        binding.apply {
+            author.text = post.author
+            published.text = post.published
+            content.text = post.content
+            avatar.setImageResource(R.drawable.netology)
+            likes.setImageResource(
+                if (post.likedByMe)
+                    R.drawable.ic_liked_24
+                else
+                    R.drawable.ic_baseline_favorite_border_24
+            )
+            likesCount.text = post.likes.toString()
+            sharesCount.text = countDisplay(post.shares)
+            viewsCount.text = countDisplay(post.views)
+        }
     }
 
-    fun countDisplay(count: Int): String {
+    private fun countDisplay(count: Int): String {
         if (count < 0) return "0"
         if (count < 1_000) return count.toString()
         val countBigDecimal = BigDecimal(count)
