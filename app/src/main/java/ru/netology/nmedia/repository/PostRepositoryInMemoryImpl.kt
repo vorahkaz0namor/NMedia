@@ -40,7 +40,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
             .find { it.value.id == postId }
     }
 
-    override fun get(): LiveData<List<Post>> = data
+    override fun getAll(): LiveData<List<Post>> = data
 
     override fun likeById(id: Long): Boolean {
         val post = postById(id) ?: return false

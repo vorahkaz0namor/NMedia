@@ -23,9 +23,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun subscribe() {
         viewModel.data.observe(this) { posts ->
+            binding.posts.removeAllViews()
             posts.forEach { post ->
-                val postBinding = CardPostBinding.inflate(layoutInflater)
-                postBinding.apply {
+                    CardPostBinding
+                        .inflate(layoutInflater, binding.posts, true)
+                        .apply {
                     author.text = post.author
                     published.text = post.published
                     content.text = post.content
@@ -51,8 +53,7 @@ class MainActivity : AppCompatActivity() {
                     views.setOnClickListener {
                         viewModel.viewById(post.id)
                     }
-                }
-                binding.root.addView(postBinding.root)
+                }.root
             }
         }
     }
