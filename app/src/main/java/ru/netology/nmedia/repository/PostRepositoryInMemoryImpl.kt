@@ -1,7 +1,9 @@
 package ru.netology.nmedia.repository
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import ru.netology.nmedia.adapter.TAG
 import ru.netology.nmedia.dto.Post
 
 class PostRepositoryInMemoryImpl : PostRepository {
@@ -48,11 +50,13 @@ class PostRepositoryInMemoryImpl : PostRepository {
         posts[post.index] = post.value.copy(
             likedByMe = changeLikedByMe,
             likes = if (changeLikedByMe)
-                ++post.value.likes
+                post.value.likes + 1
             else
-                --post.value.likes
+                post.value.likes - 1
         )
         data.value = posts
+        val postAfterClick = postById(id) ?: return false
+        Log.d(TAG, "After click: 'likedByMe' of post #${postAfterClick.value.id} = ${postAfterClick.value.likedByMe}")
         return true
     }
 
