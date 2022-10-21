@@ -2,11 +2,8 @@ package ru.netology.nmedia.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.viewModels
-import androidx.core.view.children
 import ru.netology.nmedia.adapter.PostAdapter
-import ru.netology.nmedia.adapter.TAG
 import ru.netology.nmedia.databinding.ActivityMainBinding
 import ru.netology.nmedia.viewmodel.PostViewModel
 
@@ -30,9 +27,7 @@ class MainActivity : AppCompatActivity() {
         )
         binding.posts.adapter = adapter
         viewModel.data.observe(this) { posts ->
-//            binding.posts.adapter = adapter
             adapter.submitList(posts)
-            Log.d(TAG, "Has observed.")
         }
     }
 }
