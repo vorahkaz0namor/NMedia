@@ -3,12 +3,12 @@ package ru.netology.nmedia.activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
+import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.ActivityMainBinding
-import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class MainActivity : AppCompatActivity() {
-    lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityMainBinding
     private val viewModel: PostViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,42 +16,18 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        subscribe(PostService())
-        setupListeners()
+        subscribe()
     }
 
-    private fun subscribe(postService: PostService) {
-        viewModel.data.observe(this) { post ->
-            postService.postFill(binding, post)
-        }
-    }
-
-    private fun setupListeners() {
-        binding.apply {
-//            Click Like
-            likes.setOnClickListener {
-                viewModel.like()
-            }
-
-//            Click Share
-            share.setOnClickListener {
-                viewModel.share()
-            }
-
-//            Click Unshare
-            unshare.setOnClickListener {
-                viewModel.unshare()
-            }
-
-//            Click View
-            views.setOnClickListener {
-                viewModel.view()
-            }
-
-//            Click Unview
-            unview.setOnClickListener {
-                viewModel.unview()
-            }
+    private fun subscribe() {
+        val adapter = PostAdapter(
+            { viewModel.likeById(it.id) },
+            { viewModel.shareById(it.id) },
+            { viewModel.viewById(it.id) }
+        )
+        binding.posts.adapter = adapter
+        viewModel.data.observe(this) { posts ->
+            adapter.submitList(posts)
         }
     }
 }
