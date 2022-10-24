@@ -7,9 +7,7 @@ import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
 
 class PostAdapter(
-    private val likeClickListener: OnViewListener,
-    private val shareClickListener: OnViewListener,
-    private val viewClickListener: OnViewListener
+    private val onInteractionListener: OnInteractionListener
 ) : ListAdapter<Post, PostViewHolder>(PostItemCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
@@ -17,9 +15,7 @@ class PostAdapter(
             .inflate(LayoutInflater.from(parent.context), parent, false)
         return PostViewHolder(
             binding,
-            likeClickListener,
-            shareClickListener,
-            viewClickListener
+            onInteractionListener
         )
     }
 

@@ -7,6 +7,9 @@
     <string name="description_likes">Количество лайков</string>
     <string name="description_views">Количество просмотров</string>
     <string name="description_shared">Количество поделившихся</string>
-    <string name="description_unshared">Отмена совместного пользования</string>
-    <string name="description_unviews">Отмена просмотров</string>
+    <string name="remove_post">Удалить пост</string>
+    <string name="new_post">Создать новый пост</string>
+    <string name="description_create_new_post">Добавить новый пост</string>
+    <string name="empty_content">Содержание поста не может быть пустым!</string>
+    <string name="edit_post">Редактировать пост</string>
 </resources>
