@@ -87,14 +87,21 @@ class PostRepositoryInMemoryImpl : PostRepository {
                         )
                     ) + posts
                 else
-                    posts.map {
-                        updatePost(it, post.id) {
-                            it.copy(
-                                published = actualTime(System.currentTimeMillis()),
-                                content = post.content
+                    if (posts.none { it.id == post.id })
+                        (listOf(
+                            post.copy(
+                                published = actualTime(System.currentTimeMillis())
                             )
+                        ) + posts).sortedByDescending { it.id }
+                    else
+                        posts.map {
+                            updatePost(it, post.id) {
+                                it.copy(
+                                    published = actualTime(System.currentTimeMillis()),
+                                    content = post.content
+                                )
+                            }
                         }
-                    }
         data.value = posts
     }
 

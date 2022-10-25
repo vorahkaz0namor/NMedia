@@ -2,7 +2,9 @@ package ru.netology.nmedia.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
+import androidx.core.widget.doAfterTextChanged
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.ActivityMainBinding
@@ -31,13 +33,21 @@ class MainActivity : AppCompatActivity() {
             adapter.submitList(posts)
         }
         viewModel.edited.observe(this) { post ->
-            viewModel.editPostContent(binding.editContent, post)
+            viewModel.editPostContent(binding, post)
         }
     }
 
     private fun setupListeners() {
-        binding.saveNewPost.setOnClickListener {
-            viewModel.savePost(binding.editContent, this@MainActivity)
+        binding.apply {
+            saveNewPost.setOnClickListener {
+                viewModel.savePost(binding, this@MainActivity)
+            }
+            editContent.doAfterTextChanged {
+                editGroup.visibility = View.VISIBLE
+            }
+            cancelEdit.setOnClickListener {
+                viewModel.removeFocus(this)
+            }
         }
     }
 }

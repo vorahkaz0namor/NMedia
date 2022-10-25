@@ -11,4 +11,5 @@
     <string name="description_create_new_post">Add new post</string>
     <string name="empty_content">Content of the post can\'t be empty!</string>
     <string name="edit_post">Edit post</string>
+    <string name="description_cancel_edit">Cancel edit</string>
 </resources>

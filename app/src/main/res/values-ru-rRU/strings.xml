@@ -12,4 +12,5 @@
     <string name="description_create_new_post">Добавить новый пост</string>
     <string name="empty_content">Содержание поста не может быть пустым!</string>
     <string name="edit_post">Редактировать пост</string>
+    <string name="description_cancel_edit">Отменить редактирование</string>
 </resources>

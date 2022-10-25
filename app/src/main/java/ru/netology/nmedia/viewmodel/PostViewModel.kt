@@ -1,11 +1,13 @@
 package ru.netology.nmedia.viewmodel
 
 import android.content.Context
+import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import ru.netology.nmedia.R
+import ru.netology.nmedia.databinding.ActivityMainBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.repository.*
 import ru.netology.nmedia.util.AndroidUtils
@@ -20,6 +22,7 @@ private val empty = Post(
 class PostViewModel : ViewModel() {
     private val repository: PostRepository = PostRepositoryInMemoryImpl()
     val data = repository.getAll()
+    // Variable to hold editing post
     val edited = MutableLiveData(empty)
 
     private fun validation(view: EditText, context: Context): Boolean {
@@ -44,19 +47,22 @@ class PostViewModel : ViewModel() {
 
     private fun save() {
         edited.value?.let { repository.save(it) }
+    }
+
+    fun removeFocus(binding: ActivityMainBinding) {
         edited.value = empty
+        binding.apply {
+            editContent.setText("")
+            editContent.clearFocus()
+            AndroidUtils.hideKeyboard(editContent)
+            editGroup.visibility = View.INVISIBLE
+        }
     }
 
-    private fun removeFocus(view: EditText) {
-        view.setText("")
-        view.clearFocus()
-        AndroidUtils.hideKeyboard(view)
-    }
-
-    fun savePost(view: EditText, context: Context) {
-        view.apply {
-            if (validation(this, context)) {
-                changeContent(this.text.toString())
+    fun savePost(binding: ActivityMainBinding, context: Context) {
+        binding.apply {
+            if (validation(editContent, context)) {
+                changeContent(editContent.text.toString())
                 save()
                 removeFocus(this)
             }
@@ -67,11 +73,12 @@ class PostViewModel : ViewModel() {
         edited.value = post
     }
 
-    fun editPostContent(view: EditText, post: Post) {
+    fun editPostContent(binding: ActivityMainBinding, post: Post) {
         if (post.id != 0L)
-            view.apply {
-                requestFocus()
-                setText(post.content)
+            binding.apply {
+                editContent.requestFocus()
+                editContent.setText(post.content)
+                cancelEdit.visibility = View.VISIBLE
             }
     }
 
