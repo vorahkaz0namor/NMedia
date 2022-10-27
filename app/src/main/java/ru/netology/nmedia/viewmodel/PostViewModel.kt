@@ -1,16 +1,9 @@
 package ru.netology.nmedia.viewmodel
 
-import android.content.Context
-import android.view.View
-import android.widget.EditText
-import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import ru.netology.nmedia.R
-import ru.netology.nmedia.databinding.ActivityMainBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.repository.*
-import ru.netology.nmedia.util.AndroidUtils
 
 private val empty = Post(
     id = 0,
@@ -25,17 +18,7 @@ class PostViewModel : ViewModel() {
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
 
-    private fun validation(view: EditText, context: Context): Boolean {
-        return if (view.text.isNullOrBlank()) {
-            Toast.makeText(
-                context,
-                R.string.empty_content,
-                Toast.LENGTH_SHORT
-            ).show()
-            false
-        } else
-            true
-    }
+    private fun validation(text: CharSequence?) = (!text.isNullOrBlank())
 
     private fun changeContent(content: String) {
         edited.value?.let {
@@ -49,37 +32,22 @@ class PostViewModel : ViewModel() {
         edited.value?.let { repository.save(it) }
     }
 
-    fun removeFocus(binding: ActivityMainBinding) {
+    fun clearEditedValue() {
         edited.value = empty
-        binding.apply {
-            editContent.setText("")
-            editContent.clearFocus()
-            AndroidUtils.hideKeyboard(editContent)
-            editGroup.visibility = View.INVISIBLE
-        }
     }
 
-    fun savePost(binding: ActivityMainBinding, context: Context) {
-        binding.apply {
-            if (validation(editContent, context)) {
-                changeContent(editContent.text.toString())
-                save()
-                removeFocus(this)
-            }
-        }
+    fun savePost(text: CharSequence?): Boolean {
+        return if (validation(text)) {
+                   changeContent(text.toString())
+                   save()
+                   true
+               }
+               else
+                   false
     }
 
     fun edit(post: Post) {
         edited.value = post
-    }
-
-    fun editPostContent(binding: ActivityMainBinding, post: Post) {
-        if (post.id != 0L)
-            binding.apply {
-                editContent.requestFocus()
-                editContent.setText(post.content)
-                cancelEdit.visibility = View.VISIBLE
-            }
     }
 
     fun likeById(id: Long) = repository.likeById(id)
