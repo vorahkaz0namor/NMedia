@@ -1,8 +1,10 @@
 package ru.netology.nmedia.repository
 
+import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import ru.netology.nmedia.dto.Post
+import java.util.*
 
 class PostRepositoryInMemoryImpl : PostRepository {
     private var posts = listOf(
@@ -61,6 +63,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
             views = 118
         )
     )
+    private var nextId: Long = posts.size.toLong() + 1
     private val data = MutableLiveData(posts)
     private val updatePost = { post: Post, id: Long, block: (Post) -> Post ->
         if (post.id != id)
@@ -68,8 +71,39 @@ class PostRepositoryInMemoryImpl : PostRepository {
         else
             block(post)
     }
+    private val actualTime = { now: Long ->
+        SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
+    }
 
     override fun getAll(): LiveData<List<Post>> = data
+
+    override fun save(post: Post) {
+        posts = if (post.id == 0L)
+                    listOf(
+                        post.copy(
+                            id = nextId++,
+                            author = "Zakharov Roman, AN-34",
+                            published = actualTime(System.currentTimeMillis())
+                        )
+                    ) + posts
+                else
+                    if (posts.none { it.id == post.id })
+                        (listOf(
+                            post.copy(
+                                published = actualTime(System.currentTimeMillis())
+                            )
+                        ) + posts).sortedByDescending { it.id }
+                    else
+                        posts.map {
+                            updatePost(it, post.id) {
+                                it.copy(
+                                    published = actualTime(System.currentTimeMillis()),
+                                    content = post.content
+                                )
+                            }
+                        }
+        data.value = posts
+    }
 
     override fun likeById(id: Long): Boolean {
         posts = posts.map {
@@ -101,5 +135,10 @@ class PostRepositoryInMemoryImpl : PostRepository {
         }
         data.value = posts
         return true
+    }
+
+    override fun removeById(id: Long) {
+        posts = posts.filter { it.id != id }
+        data.value = posts
     }
 }
