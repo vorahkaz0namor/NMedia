@@ -123,7 +123,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
 
     override fun shareById(id: Long): Boolean {
         posts = posts.map {
-            updatePost(it, id) { it.copy(shares = it.shares + 500) }
+            updatePost(it, id) { it.copy(shares = it.shares + 1) }
         }
         data.value = posts
         return true
@@ -131,7 +131,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
 
     override fun viewById(id: Long): Boolean {
         posts = posts.map {
-            updatePost(it, id) { it.copy(views = it.views + 100_000) }
+            updatePost(it, id) { it.copy(views = it.views + 1) }
         }
         data.value = posts
         return true

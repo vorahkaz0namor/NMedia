@@ -2,4 +2,6 @@
 <resources>
     <dimen name="avatar_size">48dp</dimen>
     <dimen name="indent">16dp</dimen>
+    <dimen name="unindent">-16dp</dimen>
+    <dimen name="zero_dp">0dp</dimen>
 </resources>
