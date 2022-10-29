@@ -21,15 +21,10 @@ class PostViewHolder(
                 else
                     R.drawable.ic_local_user_24
             )
-            likes.setImageResource(
-                if (post.likedByMe)
-                    R.drawable.ic_liked_24
-                else
-                    R.drawable.ic_baseline_favorite_border_24
-            )
-            likesCount.text = CountDisplay.show(post.likes)
-            sharesCount.text = CountDisplay.show(post.shares)
-            viewsCount.text = CountDisplay.show(post.views)
+            likes.isChecked = post.likedByMe
+            likes.text = CountDisplay.show(post.likes)
+            share.text = CountDisplay.show(post.shares)
+            views.text = CountDisplay.show(post.views)
             // Click Like
             likes.setOnClickListener {
                 onInteractionListener.onLike(post)
@@ -37,10 +32,6 @@ class PostViewHolder(
             // Click Share
             share.setOnClickListener {
                 onInteractionListener.onShare(post)
-            }
-            // Click View
-            views.setOnClickListener {
-                onInteractionListener.onView(post)
             }
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {

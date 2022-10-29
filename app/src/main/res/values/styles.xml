@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.AppTheme.LikeButton" parent="Widget.AppTheme.NMediaButton">
+        <item name="iconTint">@color/like_button_tint</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+
+    <style name="Widget.AppTheme.MenuButton" parent="Widget.AppTheme.NMediaButton">
+        <item name="iconPadding">@dimen/zero_dp</item>
+        <item name="iconGravity">textEnd</item>
+    </style>
+
+    <style name="Widget.AppTheme.NMediaButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">
+        <item name="iconTint">?attr/colorControlNormal</item>
+        <item name="android:minWidth">@dimen/zero_dp</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
+        <item name="rippleColor">@color/ripple_button</item>
+        <item name="layout_constraintHeight">32dp</item>
+        <item name="iconPadding">@dimen/indent</item>
+        <item name="android:paddingTop">@dimen/zero_dp</item>
+        <item name="android:paddingBottom">@dimen/zero_dp</item>
+    </style>
+</resources>
