@@ -32,6 +32,8 @@ class PostViewHolder(
                 attachments.text = CountDisplay.show(post.attachments.size)
                 attachments.visibility = View.VISIBLE
             }
+            else
+                attachments.visibility = View.INVISIBLE
             views.text = CountDisplay.show(post.views)
             // Click Like
             likes.setOnClickListener {
