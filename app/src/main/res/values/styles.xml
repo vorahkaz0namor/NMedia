@@ -20,4 +20,9 @@
         <item name="android:paddingTop">@dimen/zero_dp</item>
         <item name="android:paddingBottom">@dimen/zero_dp</item>
     </style>
+
+    <style name="Widget.AppTheme.FAB" parent="Widget.MaterialComponents.FloatingActionButton">
+        <item name="fabSize">mini</item>
+        <item name="android:tint">?attr/colorControlNormal</item>
+    </style>
 </resources>

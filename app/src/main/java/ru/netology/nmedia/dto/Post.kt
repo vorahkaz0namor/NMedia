@@ -8,5 +8,6 @@ data class Post(
     val likes: Int = 0,
     val likedByMe: Boolean = false,
     val shares: Int = 0,
-    val views: Int = 0
+    val views: Int = 0,
+    val attachments: List<Attachment> = emptyList()
 )

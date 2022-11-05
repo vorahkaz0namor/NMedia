@@ -17,14 +17,17 @@ class PostViewModel : ViewModel() {
     val data = repository.getAll()
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
+    // Variable to hold sharing post
+    val hasShared = MutableLiveData(empty)
+    // Variable to hold viewing post attachments
+    val viewingAttachments = MutableLiveData(empty)
 
-    private fun validation(text: CharSequence?) = (!text.isNullOrBlank())
+    private fun validation(text: CharSequence?) =
+        (!text.isNullOrBlank() && edited.value?.content != text.trim())
 
-    private fun changeContent(content: String) {
+    private fun changeContent(newContent: String) {
         edited.value?.let {
-            val text = content.trim()
-            if (it.content != text)
-                edited.value = it.copy(content = text)
+            edited.value = it.copy(content = newContent)
         }
     }
 
@@ -32,18 +35,18 @@ class PostViewModel : ViewModel() {
         edited.value?.let { repository.save(it) }
     }
 
-    fun clearEditedValue() {
+    private fun clearEditedValue() {
         edited.value = empty
     }
 
-    fun savePost(text: CharSequence?): Boolean {
-        return if (validation(text)) {
-                   changeContent(text.toString())
-                   save()
-                   true
-               }
-               else
-                   false
+    fun savePost(text: CharSequence?): Long? {
+        if (validation(text)) {
+            changeContent(text.toString())
+            save()
+        }
+        val result = edited.value?.id
+        clearEditedValue()
+        return result
     }
 
     fun edit(post: Post) {
@@ -51,7 +54,13 @@ class PostViewModel : ViewModel() {
     }
 
     fun likeById(id: Long) = repository.likeById(id)
-    fun shareById(id: Long) = repository.shareById(id)
+    fun shareById(post: Post) {
+        hasShared.value = post
+        repository.shareById(post.id)
+    }
+    fun showAttachments(post: Post) {
+        viewingAttachments.value = post
+    }
     fun viewById(id: Long) = repository.viewById(id)
     fun removeById(id: Long) = repository.removeById(id)
 }

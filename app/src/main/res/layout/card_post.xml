@@ -99,6 +99,17 @@
         android:contentDescription="@string/description_shared" />
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/attachments"
+        style="@style/Widget.AppTheme.NMediaButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/share"
+        app:layout_constraintTop_toBottomOf="@id/barrierBottom"
+        app:icon="@drawable/ic_attachments_24"
+        android:visibility="invisible"
+        android:contentDescription="@string/description_attachments" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/views"
         style="@style/Widget.AppTheme.NMediaButton"
         android:clickable="false"
