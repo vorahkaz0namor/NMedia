@@ -19,6 +19,6 @@
     <string name="show_post">Here will be appear the post…</string>
     <string name="chooser_share_post">Choose where you want to share the post</string>
     <string name="description_attachments">Attachments</string>
-    <string name="description_attachment_preview">Attachment preview</string>
+    <string name="description_attachment_preview">Play attachment</string>
     <string name="description_play">Play attachment</string>
 </resources>
