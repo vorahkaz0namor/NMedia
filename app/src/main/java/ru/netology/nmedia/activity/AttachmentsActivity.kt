@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.ActivityAttachmentsBinding
 
 class AttachmentsActivity : AppCompatActivity() {

@@ -25,14 +25,12 @@ class PostViewModel : ViewModel() {
     private fun validation(text: CharSequence?) =
         (!text.isNullOrBlank() && edited.value?.content != text.trim())
 
-    private fun changeContent(newContent: String) {
+    private fun save(newContent: String) {
         edited.value?.let {
-            edited.value = it.copy(content = newContent)
+            repository.save(
+                it.copy(content = newContent)
+            )
         }
-    }
-
-    private fun save() {
-        edited.value?.let { repository.save(it) }
     }
 
     private fun clearEditedValue() {
@@ -41,8 +39,7 @@ class PostViewModel : ViewModel() {
 
     fun savePost(text: CharSequence?): Long? {
         if (validation(text)) {
-            changeContent(text.toString())
-            save()
+            save(text.toString())
         }
         val result = edited.value?.id
         clearEditedValue()
