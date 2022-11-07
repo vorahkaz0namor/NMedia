@@ -3,12 +3,15 @@ package ru.netology.nmedia.repository
 import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import ru.netology.nmedia.R
 import ru.netology.nmedia.dto.*
+import java.lang.reflect.Type
 import java.util.*
 
-class PostRepositoryInMemoryImpl : PostRepository {
-    private var posts = listOf(
+open class PostRepositoryInMemoryImpl : PostRepository {
+    protected var posts = listOf(
         Post(
             id = 7,
             author = "Проект Гитарин",
@@ -78,8 +81,10 @@ class PostRepositoryInMemoryImpl : PostRepository {
             views = 118
         )
     )
-    private var nextId: Long = posts.size.toLong() + 1
     private val data = MutableLiveData(posts)
+    protected val gson = Gson()
+    protected val type: Type = TypeToken.getParameterized(List::class.java, Post::class.java).type
+    private var nextId: Long = posts.size.toLong() + 1
     private val updatePost = { post: Post, id: Long, block: (Post) -> Post ->
         if (post.id != id)
             post
@@ -117,7 +122,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
                                 )
                             }
                         }
-        data.value = posts
+        sync()
     }
 
     override fun likeById(id: Long): Boolean {
@@ -132,7 +137,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
                 )
             }
         }
-        data.value = posts
+        sync()
         return true
     }
 
@@ -140,7 +145,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
         posts = posts.map {
             updatePost(it, id) { it.copy(shares = it.shares + 1) }
         }
-        data.value = posts
+        sync()
         return true
     }
 
@@ -148,12 +153,16 @@ class PostRepositoryInMemoryImpl : PostRepository {
         posts = posts.map {
             updatePost(it, id) { it.copy(views = it.views + 1) }
         }
-        data.value = posts
+        sync()
         return true
     }
 
     override fun removeById(id: Long) {
         posts = posts.filter { it.id != id }
+        sync()
+    }
+
+    protected open fun sync() {
         data.value = posts
     }
 }
