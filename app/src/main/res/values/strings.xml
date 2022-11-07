@@ -12,4 +12,13 @@
     <string name="empty_content">Content of the post can\'t be empty!</string>
     <string name="edit_post">Edit post</string>
     <string name="description_cancel_edit">Cancel edit</string>
+    <string name="error_empty_content">Content of the post is empty!</string>
+    <string name="complete_sharing">Your sharing was successful</string>
+    <string name="new_post_has_created">New post has created successfully</string>
+    <string name="post_has_edited">The post has edited successfully</string>
+    <string name="show_post">Here will be appear the post…</string>
+    <string name="chooser_share_post">Choose where you want to share the post</string>
+    <string name="description_attachments">Attachments</string>
+    <string name="description_attachment_preview">Play attachment</string>
+    <string name="description_play">Play attachment</string>
 </resources>

@@ -11,7 +11,11 @@ class OnInteractionListenerImpl(
     }
 
     override fun onShare(post: Post) {
-        viewModel.shareById(post.id)
+        viewModel.shareById(post)
+    }
+
+    override fun onAttachments(post: Post) {
+        viewModel.showAttachments(post)
     }
 
     override fun onView(post: Post) {

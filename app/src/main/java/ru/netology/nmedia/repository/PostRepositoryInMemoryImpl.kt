@@ -3,11 +3,26 @@ package ru.netology.nmedia.repository
 import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.R
+import ru.netology.nmedia.dto.*
 import java.util.*
 
 class PostRepositoryInMemoryImpl : PostRepository {
     private var posts = listOf(
+        Post(
+            id = 7,
+            author = "Проект Гитарин",
+            published = "04 ноября в 14:44",
+            content = "Гитарин - проект Виталия Каменюченко и Евгения Соколова, который появился в 2011 году на YouTube как обучающий канал для начинающих гитаристов. Со временем Гитарин трансформировался в творческую единицу с авторским материалом.",
+            likes = 73,
+            shares = 25,
+            views = 78,
+            attachments = listOf(Attachment(
+                id = 0,
+                preview = R.drawable.pickovskiy,
+                attachment = "https://www.youtube.com/watch?v=NGoITotysLc")
+            )
+        ),
         Post(
             id = 6,
             author = "Нетология. Университет интернет-профессий будущего",

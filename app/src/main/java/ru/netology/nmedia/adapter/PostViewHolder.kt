@@ -1,5 +1,6 @@
 package ru.netology.nmedia.adapter
 
+import android.view.View
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
@@ -19,11 +20,20 @@ class PostViewHolder(
                 if (author.text.contains("нетология", true))
                     R.drawable.netology
                 else
-                    R.drawable.ic_local_user_24
+                    if (author.text.contains("гитарин", true))
+                        R.drawable.guitarin
+                    else
+                        R.drawable.ic_local_user_24
             )
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)
+            if (post.attachments.isNotEmpty()) {
+                attachments.text = CountDisplay.show(post.attachments.size)
+                attachments.visibility = View.VISIBLE
+            }
+            else
+                attachments.visibility = View.INVISIBLE
             views.text = CountDisplay.show(post.views)
             // Click Like
             likes.setOnClickListener {
@@ -32,6 +42,9 @@ class PostViewHolder(
             // Click Share
             share.setOnClickListener {
                 onInteractionListener.onShare(post)
+            }
+            attachments.setOnClickListener {
+                onInteractionListener.onAttachments(post)
             }
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.AttachmentsActivity">
+
+    <ImageView
+        android:id="@+id/attachment_preview"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/max_preview"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:contentDescription="@string/description_attachment_preview" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/play"
+        style="@style/Widget.AppTheme.MenuButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:icon="@drawable/ic_play_button_24"
+        app:iconTint="@color/white"
+        app:backgroundTint="@color/like_toggle_tint"
+        app:layout_constraintTop_toTopOf="@id/attachment_preview"
+        app:layout_constraintBottom_toBottomOf="@id/attachment_preview"
+        app:layout_constraintStart_toStartOf="@id/attachment_preview"
+        app:layout_constraintEnd_toEndOf="@id/attachment_preview"
+        android:contentDescription="@string/description_play" />
+
+    <TextView
+        android:id="@+id/post_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/attachment_preview"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

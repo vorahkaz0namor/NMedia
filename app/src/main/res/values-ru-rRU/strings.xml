@@ -13,4 +13,13 @@
     <string name="empty_content">Содержание поста не может быть пустым!</string>
     <string name="edit_post">Редактировать пост</string>
     <string name="description_cancel_edit">Отменить редактирование</string>
+    <string name="error_empty_content">Содержание поста пусто!</string>
+    <string name="show_post">Здесь появится пост…</string>
+    <string name="chooser_share_post">Выберите, куда бы Вы хотели расшарить пост</string>
+    <string name="complete_sharing">Ваш шаринг прошел успешно</string>
+    <string name="new_post_has_created">Новый пост успешно создан</string>
+    <string name="post_has_edited">Пост успешно изменен</string>
+    <string name="description_attachments">Вложения</string>
+    <string name="description_attachment_preview">Воспроизвести</string>
+    <string name="description_play">Воспроизвести</string>
 </resources>
