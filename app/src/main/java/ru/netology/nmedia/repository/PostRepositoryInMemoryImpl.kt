@@ -3,11 +3,8 @@ package ru.netology.nmedia.repository
 import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import ru.netology.nmedia.R
 import ru.netology.nmedia.dto.*
-import java.lang.reflect.Type
 import java.util.*
 
 open class PostRepositoryInMemoryImpl : PostRepository {
@@ -82,8 +79,6 @@ open class PostRepositoryInMemoryImpl : PostRepository {
         )
     )
     private val data = MutableLiveData(posts)
-    protected val gson = Gson()
-    protected val type: Type = TypeToken.getParameterized(List::class.java, Post::class.java).type
     private var nextId: Long = posts.size.toLong() + 1
     private val updatePost = { post: Post, id: Long, block: (Post) -> Post ->
         if (post.id != id)
