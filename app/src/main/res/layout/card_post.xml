@@ -61,6 +61,7 @@
         android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:maxHeight="364dp"
         android:layout_marginVertical="@dimen/indent"
         app:layout_constraintTop_toBottomOf="@id/barrierTop"
         app:layout_constraintBottom_toTopOf="@id/barrierBottom"
@@ -68,8 +69,9 @@
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrierBottom"
-        app:barrierDirection="bottom"
-        app:constraint_referenced_ids="content"
+        app:barrierDirection="top"
+        app:constraint_referenced_ids="likes,share,views,attachments"
+        app:layout_constraintTop_toBottomOf="@id/content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
@@ -82,6 +84,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
         app:layout_constraintEnd_toStartOf="@id/share"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:icon="@drawable/like_selector"
         tools:text="@sample/posts.json/data/likes"
         android:contentDescription="@string/description_likes" />
@@ -93,6 +96,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/likes"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:icon="@drawable/ic_baseline_share_24"
         tools:text="@sample/posts.json/data/reposts"
         android:contentDescription="@string/description_shared" />
@@ -104,6 +108,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintStart_toEndOf="@id/views"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:icon="@drawable/ic_attachments_24"
         android:visibility="invisible"
         android:contentDescription="@string/description_attachments" />
@@ -119,6 +124,7 @@
         tools:text="@sample/posts.json/data/views"
         app:layout_constraintStart_toEndOf="@id/share"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom"
+        app:layout_constraintBottom_toBottomOf="parent"
         android:contentDescription="@string/description_views" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
