@@ -22,19 +22,19 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val hasShared = MutableLiveData(empty)
     // Variable to hold viewing post attachments
     val viewingAttachments = MutableLiveData(empty)
+    // Variable to hold single post to view
+    val singlePostToView = MutableLiveData(empty)
 
     private fun validation(text: CharSequence?) =
         (!text.isNullOrBlank() && edited.value?.content != text.trim())
 
     private fun save(newContent: String) {
         edited.value?.let {
-            repository.save(
-                it.copy(content = newContent)
-            )
+            repository.save(it.copy(content = newContent))
         }
     }
 
-    private fun clearEditedValue() {
+    fun clearEditedValue() {
         edited.value = empty
     }
 
@@ -53,12 +53,24 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun likeById(id: Long) = repository.likeById(id)
     fun shareById(post: Post) {
-        hasShared.value = post
-        repository.shareById(post.id)
+        hasShared.apply {
+            value = post
+            repository.shareById(post.id)
+            value = empty
+        }
     }
     fun showAttachments(post: Post) {
-        viewingAttachments.value = post
+        viewingAttachments.apply {
+            value = post
+            value = empty
+        }
     }
     fun viewById(id: Long) = repository.viewById(id)
     fun removeById(id: Long) = repository.removeById(id)
+    fun singlePost(post: Post) {
+        singlePostToView.apply {
+            value = post
+            value = empty
+        }
+    }
 }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/feedFragment">
+
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="ru.netology.nmedia.activity.FeedFragment"
+        tools:layout="@layout/fragment_feed">
+        <action
+            android:id="@+id/action_feedFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment"
+            app:enterAnim="@android:anim/fade_in"
+            app:exitAnim="@android:anim/fade_out"
+            app:popEnterAnim="@android:anim/fade_in"
+            app:popExitAnim="@android:anim/fade_out"/>
+        <action
+            android:id="@+id/action_feedFragment_to_sharePostFragment"
+            app:destination="@id/sharePostFragment"/>
+        <action
+            android:id="@+id/action_feedFragment_to_attachmentsFragment"
+            app:destination="@id/attachmentsFragment"/>
+        <action
+            android:id="@+id/action_feedFragment_to_singlePostFragment"
+            app:destination="@id/singlePostFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/newPostFragment"
+        android:name="ru.netology.nmedia.activity.NewPostFragment"
+        tools:layout="@layout/fragment_new_post"/>
+
+    <fragment
+        android:id="@+id/sharePostFragment"
+        android:name="ru.netology.nmedia.activity.SharePostFragment"
+        tools:layout="@layout/fragment_share_post"/>
+
+    <fragment
+        android:id="@+id/attachmentsFragment"
+        android:name="ru.netology.nmedia.activity.AttachmentsFragment"
+        tools:layout="@layout/fragment_attachments"/>
+
+    <fragment
+        android:id="@+id/singlePostFragment"
+        android:name="ru.netology.nmedia.activity.SinglePostFragment"
+        tools:layout="@layout/card_post">
+        <action
+            android:id="@+id/action_singlePostFragment_to_newPostFragment"
+            app:destination="@id/newPostFragment"/>
+        <action
+            android:id="@+id/action_singlePostFragment_to_sharePostFragment"
+            app:destination="@id/sharePostFragment"/>
+        <action
+            android:id="@+id/action_singlePostFragment_to_attachmentsFragment"
+            app:destination="@id/attachmentsFragment"/>
+    </fragment>
+
+</navigation>

@@ -29,4 +29,8 @@ class OnInteractionListenerImpl(
     override fun onRemove(post: Post) {
         viewModel.removeById(post.id)
     }
+
+    override fun toSinglePost(post: Post) {
+        viewModel.singlePost(post)
+    }
 }

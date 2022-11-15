@@ -79,7 +79,7 @@ open class PostRepositoryInMemoryImpl : PostRepository {
         )
     )
     private val data = MutableLiveData(posts)
-    private var nextId: Long = posts.size.toLong() + 1
+    protected var nextId: Long = posts.size.toLong() + 1
     private val updatePost = { post: Post, id: Long, block: (Post) -> Post ->
         if (post.id != id)
             post
