@@ -6,6 +6,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.viewbinding.ViewBinding
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
@@ -15,16 +16,17 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostViewHolder
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.databinding.CardPostBinding
+import ru.netology.nmedia.databinding.SingleCardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.viewmodel.PostViewModel
 
-class SinglePostFragment : Fragment(R.layout.card_post) {
+class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private val viewModel: PostViewModel by viewModels(
         ownerProducer = ::requireParentFragment
     )
-    private val binding by viewBinding(CardPostBinding::bind)
+    private val binding by viewBinding(SingleCardPostBinding::bind)
     private val postBind = { post: Post ->
-        PostViewHolder(binding, OnInteractionListenerImpl(viewModel)).bind(post)
+        PostViewHolder(binding.singlePost, OnInteractionListenerImpl(viewModel)).bind(post)
     }
 
     private fun post() =
@@ -39,7 +41,7 @@ class SinglePostFragment : Fragment(R.layout.card_post) {
     }
 
     private fun initViews() {
-        binding.content.autoLinkMask = Linkify.WEB_URLS
+        binding.singlePost.content.autoLinkMask = Linkify.WEB_URLS
         postBind(post()!!)
     }
 
