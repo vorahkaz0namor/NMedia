@@ -39,6 +39,10 @@ class SinglePostFragment : Fragment(R.layout.card_post) {
     }
 
     private fun initViews() {
+        if (arguments?.ATTACHMENT_PREVIEW == "Post view") {
+            viewModel.viewById(arguments?.POST_ID!!)
+            arguments?.ATTACHMENT_PREVIEW = ""
+        }
         binding.content.autoLinkMask = Linkify.WEB_URLS
         postBind(post()!!)
     }
@@ -67,13 +71,13 @@ class SinglePostFragment : Fragment(R.layout.card_post) {
             }
             viewingAttachments.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L) {
-                    val first = post.attachments.firstOrNull()
                     findNavController().navigate(
                         R.id.action_singlePostFragment_to_attachmentsFragment,
                         Bundle().apply {
                             POST_CONTENT = post.content
-                            ATTACHMENT_PREVIEW = first?.preview.toString()
-                            ATTACHMENT_URI = first?.attachment ?: "https://"
+                            // Аналогично FeedFragment
+                            ATTACHMENT_PREVIEW = post.author
+                            ATTACHMENT_URI = post.attachments ?: "https://"
                         }
                     )
                 }

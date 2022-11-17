@@ -23,10 +23,10 @@ class AttachmentsFragment : Fragment(R.layout.fragment_attachments) {
     }
 
     private fun loadIntent() {
-        val preview = arguments?.ATTACHMENT_PREVIEW
+        val preview = arguments?.ATTACHMENT_PREVIEW ?: ""
         binding.apply {
-            if (preview != null)
-                attachmentPreview.setImageResource(preview.toInt())
+            if (preview.contains("гитарин", true))
+                attachmentPreview.setImageResource(R.drawable.pickovskiy)
             postContent.text = arguments?.POST_CONTENT ?: ""
         }
     }

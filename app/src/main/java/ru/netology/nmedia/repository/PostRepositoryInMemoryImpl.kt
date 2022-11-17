@@ -17,11 +17,7 @@ open class PostRepositoryInMemoryImpl : PostRepository {
             likes = 73,
             shares = 25,
             views = 78,
-            attachments = listOf(Attachment(
-                id = 0,
-                preview = R.drawable.pickovskiy,
-                attachment = "https://www.youtube.com/watch?v=NGoITotysLc")
-            )
+            attachments = "https://www.youtube.com/watch?v=NGoITotysLc"
         ),
         Post(
             id = 6,
@@ -120,7 +116,7 @@ open class PostRepositoryInMemoryImpl : PostRepository {
         sync()
     }
 
-    override fun likeById(id: Long): Boolean {
+    override fun likeById(id: Long) {
         posts = posts.map {
             updatePost(it, id) {
                 it.copy(
@@ -133,23 +129,20 @@ open class PostRepositoryInMemoryImpl : PostRepository {
             }
         }
         sync()
-        return true
     }
 
-    override fun shareById(id: Long): Boolean {
+    override fun shareById(id: Long) {
         posts = posts.map {
             updatePost(it, id) { it.copy(shares = it.shares + 1) }
         }
         sync()
-        return true
     }
 
-    override fun viewById(id: Long): Boolean {
+    override fun viewById(id: Long) {
         posts = posts.map {
             updatePost(it, id) { it.copy(views = it.views + 1) }
         }
         sync()
-        return true
     }
 
     override fun removeById(id: Long) {

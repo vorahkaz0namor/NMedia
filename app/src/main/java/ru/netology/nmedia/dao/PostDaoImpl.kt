@@ -3,7 +3,9 @@ package ru.netology.nmedia.dao
 import android.content.ContentValues
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.icu.text.SimpleDateFormat
 import ru.netology.nmedia.dto.Post
+import java.util.*
 
 class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
     companion object {
@@ -14,9 +16,16 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
             ${PostColumns.COLUMN_CONTENT} TEXT NOT NULL,
             ${PostColumns.COLUMN_PUBLISHED} TEXT NOT NULL,
             ${PostColumns.COLUMN_LIKED_BY_ME} BOOLEAN NOT NULL DEFAULT 0,
-            ${PostColumns.COLUMN_LIKES} INTEGER NOT NULL DEFAULT 0
+            ${PostColumns.COLUMN_LIKES} INTEGER NOT NULL DEFAULT 0,
+            ${PostColumns.COLUMN_SHARES} INTEGER NOT NULL DEFAULT 0,
+            ${PostColumns.COLUMN_VIEWS} INTEGER NOT NULL DEFAULT 0,
+            ${PostColumns.COLUMN_ATTACHMENTS} TEXT DEFAULT NULL
         );
         """.trimIndent()
+
+        val actualTime = { now: Long ->
+            SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
+        }
     }
 
     object PostColumns {
@@ -27,13 +36,26 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
         const val COLUMN_PUBLISHED = "published"
         const val COLUMN_LIKED_BY_ME = "likedByMe"
         const val COLUMN_LIKES = "likes"
+        const val COLUMN_SHARES = "shares"
+        const val COLUMN_VIEWS = "views"
+        const val COLUMN_ATTACHMENTS = "attachments"
         val ALL_COLUMNS = arrayOf(
             COLUMN_ID,
             COLUMN_AUTHOR,
             COLUMN_CONTENT,
             COLUMN_PUBLISHED,
             COLUMN_LIKED_BY_ME,
-            COLUMN_LIKES
+            COLUMN_LIKES,
+            COLUMN_SHARES,
+            COLUMN_VIEWS,
+            COLUMN_ATTACHMENTS
+        )
+    }
+
+    private val updateRecord = { postId: Long, values: String ->
+        db.execSQL(
+            """UPDATE posts SET $values WHERE id = ?;""".trimIndent(),
+            arrayOf(postId)
         )
     }
 
@@ -57,10 +79,10 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
 
     override fun save(post: Post): Post {
         val values = ContentValues().apply {
-            // TODO: remove hardcoded values
-            put(PostColumns.COLUMN_AUTHOR, "Me")
+            if (post.id == 0L)
+                put(PostColumns.COLUMN_AUTHOR, "Zakharov Roman, AN-34")
             put(PostColumns.COLUMN_CONTENT, post.content)
-            put(PostColumns.COLUMN_PUBLISHED, "now")
+            put(PostColumns.COLUMN_PUBLISHED, actualTime(System.currentTimeMillis()))
         }
         val id = if (post.id != 0L) {
             db.update(
@@ -88,14 +110,21 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
     }
 
     override fun likeById(id: Long) {
-        db.execSQL(
+        updateRecord(
+            id,
             """
-           UPDATE posts SET
                likes = likes + CASE WHEN likedByMe THEN -1 ELSE 1 END,
                likedByMe = CASE WHEN likedByMe THEN 0 ELSE 1 END
-           WHERE id = ?;
-        """.trimIndent(), arrayOf(id)
+            """
         )
+    }
+
+    override fun shareById(id: Long) {
+        updateRecord(id, "shares = shares + 1")
+    }
+
+    override fun viewById(id: Long) {
+        updateRecord(id, "views = views + 1")
     }
 
     override fun removeById(id: Long) {
@@ -115,6 +144,9 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
                 published = getString(getColumnIndexOrThrow(PostColumns.COLUMN_PUBLISHED)),
                 likedByMe = getInt(getColumnIndexOrThrow(PostColumns.COLUMN_LIKED_BY_ME)) != 0,
                 likes = getInt(getColumnIndexOrThrow(PostColumns.COLUMN_LIKES)),
+                shares = getInt(getColumnIndexOrThrow(PostColumns.COLUMN_SHARES)),
+                views = getInt(getColumnIndexOrThrow(PostColumns.COLUMN_VIEWS)),
+                attachments = getString(getColumnIndexOrThrow(PostColumns.COLUMN_ATTACHMENTS))
             )
         }
     }

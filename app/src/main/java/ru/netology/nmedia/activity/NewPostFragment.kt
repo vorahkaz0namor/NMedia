@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -24,6 +25,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private val binding: FragmentNewPostBinding
         get() = _binding!!
     private var snackbar: Snackbar? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+             Bundle().POST_CONTENT = binding.newContent.text.toString()
+            findNavController().navigateUp()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

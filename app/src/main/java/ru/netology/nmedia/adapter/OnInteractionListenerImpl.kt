@@ -18,10 +18,6 @@ class OnInteractionListenerImpl(
         viewModel.showAttachments(post)
     }
 
-    override fun onView(post: Post) {
-        viewModel.viewById(post.id)
-    }
-
     override fun onEdit(post: Post) {
         viewModel.edit(post)
     }
