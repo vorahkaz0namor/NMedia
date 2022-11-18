@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.AttachmentsActivity">
+    tools:context=".activity.AttachmentsFragment">
 
     <ImageView
         android:id="@+id/attachment_preview"
@@ -27,6 +27,16 @@
         app:layout_constraintStart_toStartOf="@id/attachment_preview"
         app:layout_constraintEnd_toEndOf="@id/attachment_preview"
         android:contentDescription="@string/description_play" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/finish_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Widget.AppTheme.FAB"
+        android:src="@drawable/ic_unpublish_post_24"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/description_finish_attachments_view" />
 
     <TextView
         android:id="@+id/post_content"

@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">NMedia</string>
-    <string name="show_me">NMedia!</string>
-    <string name="description_post_author_avatar">Netology logo</string>
+    <string name="description_post_author_avatar">Author avatar</string>
     <string name="description_post_menu">Post menu</string>
     <string name="description_likes">Likes count</string>
     <string name="description_shared">Shares count</string>
@@ -19,6 +18,7 @@
     <string name="show_post">Here will be appear the post…</string>
     <string name="chooser_share_post">Choose where you want to share the post</string>
     <string name="description_attachments">Attachments</string>
-    <string name="description_attachment_preview">Play attachment</string>
+    <string name="description_attachment_preview">@string/description_play</string>
     <string name="description_play">Play attachment</string>
+    <string name="description_finish_attachments_view">Finish attachments view</string>
 </resources>

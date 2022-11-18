@@ -5,12 +5,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.MainActivity">
+    tools:context=".activity.FeedFragment">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/posts"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="@dimen/zero_dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:listitem="@layout/card_post" />
@@ -23,13 +23,13 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" >
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/add_new_post"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        style="@style/Widget.AppTheme.FAB"
-        android:src="@drawable/ic_add_new_post_24"
-        android:contentDescription="@string/description_create_new_post" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/add_new_post"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Widget.AppTheme.FAB"
+            android:src="@drawable/ic_add_new_post_24"
+            android:contentDescription="@string/description_create_new_post" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

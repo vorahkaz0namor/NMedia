@@ -11,7 +11,13 @@ class PostViewHolder(
     private val binding: CardPostBinding,
     private val onInteractionListener: OnInteractionListener
 ) : RecyclerView.ViewHolder(binding.root) {
+
     fun bind(post: Post) {
+        fillingCardPost(post)
+        setupListeners(post)
+    }
+
+    private fun fillingCardPost(post: Post) {
         binding.apply {
             author.text = post.author
             published.text = post.published
@@ -35,7 +41,14 @@ class PostViewHolder(
             else
                 attachments.visibility = View.INVISIBLE
             views.text = CountDisplay.show(post.views)
-            // Click Like
+        }
+    }
+
+    private fun setupListeners(post: Post) {
+        binding.apply {
+            root.setOnClickListener {
+                onInteractionListener.toSinglePost(post)
+            }
             likes.setOnClickListener {
                 onInteractionListener.onLike(post)
             }

@@ -8,7 +8,6 @@ import ru.netology.nmedia.dto.Post
 class PostRepositoryFileImpl(
     private val context: Context
 ) : PostRepositoryInMemoryImpl() {
-
     private val gson = Gson()
     private val type = TypeToken.getParameterized(List::class.java, Post::class.java).type
     private val filename = "nmediaposts.json"
@@ -23,6 +22,8 @@ class PostRepositoryFileImpl(
                     posts = gson.fromJson(it, type)
                     super.sync()
                 }
+            val totalPosts = posts.maxOfOrNull { it.id } ?: 0
+            nextId = totalPosts + 1
         } else
             sync()
     }
