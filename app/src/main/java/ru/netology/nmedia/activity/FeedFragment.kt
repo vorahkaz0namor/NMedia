@@ -78,19 +78,22 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 if (post.id != 0L) {
                     navController.navigate(
                         R.id.action_feedFragment_to_singlePostFragment,
-                        Bundle().apply { POST_ID = post.id }
+                        Bundle().apply {
+                            POST_ID = post.id
+                            ATTACHMENT_PREVIEW = "Post view"
+                        }
                     )
                 }
             }
             viewingAttachments.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L) {
-                    val first = post.attachments.firstOrNull()
                     navController.navigate(
                         R.id.action_feedFragment_to_attachmentsFragment,
                         Bundle().apply {
                             POST_CONTENT = post.content
-                            ATTACHMENT_PREVIEW = first?.preview.toString()
-                            ATTACHMENT_URI = first?.attachment ?: "https://"
+                            // Временно организовано определение preview по имени автора
+                            ATTACHMENT_PREVIEW = post.author
+                            ATTACHMENT_URI = post.attachments ?: "https://"
                         }
                     )
                 }

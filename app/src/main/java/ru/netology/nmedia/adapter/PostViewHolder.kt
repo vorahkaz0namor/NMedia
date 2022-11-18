@@ -34,12 +34,11 @@ class PostViewHolder(
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)
-            if (post.attachments.isNotEmpty()) {
-                attachments.text = CountDisplay.show(post.attachments.size)
-                attachments.visibility = View.VISIBLE
-            }
-            else
-                attachments.visibility = View.INVISIBLE
+            attachments.visibility =
+                if (post.attachments != null)
+                    View.VISIBLE
+                else
+                    View.INVISIBLE
             views.text = CountDisplay.show(post.views)
         }
     }
