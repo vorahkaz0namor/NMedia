@@ -16,7 +16,10 @@ class AppDb private constructor(db: SQLiteDatabase) {
         fun getInstance(context: Context): AppDb {
             return instance ?: synchronized(this) {
                 instance ?: AppDb(
-                    buildDatabase(context, arrayOf(PostDaoImpl.DDL))
+                    buildDatabase(
+                        context,
+                        arrayOf(PostDaoImpl.DDL_POSTS, PostDaoImpl.DDL_DRAFT_COPY)
+                    )
                 ).also { instance = it }
             }
         }
@@ -27,8 +30,17 @@ class AppDb private constructor(db: SQLiteDatabase) {
     }
 }
 
-class DbHelper(context: Context, dbVersion: Int, dbName: String, private val DDLs: Array<String>) :
-    SQLiteOpenHelper(context, dbName, null, dbVersion) {
+class DbHelper(
+    context: Context,
+    dbVersion: Int,
+    dbName: String,
+    private val DDLs: Array<String>
+) : SQLiteOpenHelper(
+    context,
+    dbName,
+    null,
+    dbVersion
+) {
     override fun onCreate(db: SQLiteDatabase) {
         DDLs.forEach {
             db.execSQL(it)

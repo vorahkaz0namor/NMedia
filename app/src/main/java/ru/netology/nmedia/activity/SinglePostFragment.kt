@@ -6,7 +6,6 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.viewbinding.ViewBinding
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
@@ -15,7 +14,6 @@ import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostViewHolder
 import ru.netology.nmedia.util.viewBinding
-import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.databinding.SingleCardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.viewmodel.PostViewModel

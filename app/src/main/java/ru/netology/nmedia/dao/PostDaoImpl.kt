@@ -9,8 +9,8 @@ import java.util.*
 
 class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
     companion object {
-        val DDL = """
-        CREATE TABLE ${PostColumns.TABLE} (
+        val DDL_POSTS = """
+        CREATE TABLE ${PostColumns.POSTS_TABLE} (
             ${PostColumns.COLUMN_ID} INTEGER PRIMARY KEY AUTOINCREMENT,
             ${PostColumns.COLUMN_AUTHOR} TEXT NOT NULL,
             ${PostColumns.COLUMN_CONTENT} TEXT NOT NULL,
@@ -23,13 +23,22 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
         );
         """.trimIndent()
 
+        // Создание таблицы для хранения черновика
+        val DDL_DRAFT_COPY = """
+        CREATE TABLE ${PostColumns.DRAFT_COPY_TABLE} (
+            ${PostColumns.COLUMN_ID} INTEGER PRIMARY KEY,
+            ${PostColumns.COLUMN_CONTENT} TEXT
+        );
+        """.trimIndent()
+
         val actualTime = { now: Long ->
             SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
         }
     }
 
     object PostColumns {
-        const val TABLE = "posts"
+        const val DRAFT_COPY_TABLE = "draftCopy"
+        const val POSTS_TABLE = "posts"
         const val COLUMN_ID = "id"
         const val COLUMN_AUTHOR = "author"
         const val COLUMN_CONTENT = "content"
@@ -62,7 +71,7 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
     override fun getAll(): List<Post> {
         val posts = mutableListOf<Post>()
         db.query(
-            PostColumns.TABLE,
+            PostColumns.POSTS_TABLE,
             PostColumns.ALL_COLUMNS,
             null,
             null,
@@ -77,6 +86,50 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
         return posts
     }
 
+    // Получение черновика из БД
+    override fun getDraftCopy(): String? =
+        db.query(
+            PostColumns.DRAFT_COPY_TABLE,
+            arrayOf(PostColumns.COLUMN_CONTENT),
+            null,
+            null,
+            null,
+            null,
+            null
+        ).use {
+            if (it.moveToFirst())
+                it.getString(it.getColumnIndexOrThrow(PostColumns.COLUMN_CONTENT))
+            else
+                null
+        }
+
+    // Сохранение черновика в БД
+    override fun saveDraftCopy(content: String?) {
+        db.query(
+            PostColumns.DRAFT_COPY_TABLE,
+            arrayOf(PostColumns.COLUMN_CONTENT),
+            null,
+            null,
+            null,
+            null,
+            null
+        ).use {
+            if (it.moveToFirst())
+                db.update(
+                    PostColumns.DRAFT_COPY_TABLE,
+                    ContentValues().apply { put(PostColumns.COLUMN_CONTENT, content) },
+                    null,
+                    null
+                )
+            else
+                db.insert(
+                    PostColumns.DRAFT_COPY_TABLE,
+                    null,
+                    ContentValues().apply { put(PostColumns.COLUMN_CONTENT, content) }
+                )
+        }
+    }
+
     override fun save(post: Post): Post {
         val values = ContentValues().apply {
             if (post.id == 0L)
@@ -86,17 +139,17 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
         }
         val id = if (post.id != 0L) {
             db.update(
-                PostColumns.TABLE,
+                PostColumns.POSTS_TABLE,
                 values,
                 "${PostColumns.COLUMN_ID} = ?",
                 arrayOf(post.id.toString()),
             )
             post.id
         } else {
-            db.insert(PostColumns.TABLE, null, values)
+            db.insert(PostColumns.POSTS_TABLE, null, values)
         }
         db.query(
-            PostColumns.TABLE,
+            PostColumns.POSTS_TABLE,
             PostColumns.ALL_COLUMNS,
             "${PostColumns.COLUMN_ID} = ?",
             arrayOf(id.toString()),
@@ -129,7 +182,7 @@ class PostDaoImpl(private val db: SQLiteDatabase) : PostDao {
 
     override fun removeById(id: Long) {
         db.delete(
-            PostColumns.TABLE,
+            PostColumns.POSTS_TABLE,
             "${PostColumns.COLUMN_ID} = ?",
             arrayOf(id.toString())
         )

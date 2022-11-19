@@ -39,6 +39,13 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = empty
     }
 
+    fun saveDraftCopy(content: String?) {
+        if (edited.value?.id == 0L)
+           repository.saveDraftCopy(content)
+    }
+
+    fun getDraftCopy() = repository.getDraftCopy()
+
     fun savePost(text: CharSequence?): Long? {
         if (validation(text)) {
             save(text.toString())

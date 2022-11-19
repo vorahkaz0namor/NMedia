@@ -87,6 +87,13 @@ open class PostRepositoryInMemoryImpl : PostRepository {
     }
 
     override fun getAll(): LiveData<List<Post>> = data
+    override fun getDraftCopy(): String? {
+        TODO("Not yet implemented")
+    }
+
+    override fun saveDraftCopy(content: String?) {
+        TODO("Not yet implemented")
+    }
 
     override fun save(post: Post) {
         posts = if (post.id == 0L)

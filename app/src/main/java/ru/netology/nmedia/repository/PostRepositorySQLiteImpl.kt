@@ -18,6 +18,11 @@ class PostRepositorySQLiteImpl(
 
     override fun getAll(): LiveData<List<Post>> = data
 
+    override fun getDraftCopy(): String? = dao.getDraftCopy()
+
+    override fun saveDraftCopy(content: String?) =
+        dao.saveDraftCopy(content)
+
     override fun save(post: Post) {
         val id = post.id
         val saved = dao.save(post)
