@@ -65,9 +65,9 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
 
     private fun initView() {
         binding.newContent.apply {
-            // Загрузка черновика, если он был сохранен,
-            // или загрузка переданного на редактирование content'а
-            setText(viewModel.getDraftCopy() ?: arguments?.POST_CONTENT)
+            // Загрузка переданного на редактирование content'а,
+            // или загрузка черновика, если он был сохранен
+            setText(arguments?.POST_CONTENT ?: viewModel.getDraftCopy())
             requestFocus()
         }
     }
