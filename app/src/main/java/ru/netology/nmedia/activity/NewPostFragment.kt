@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -14,6 +14,7 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentNewPostBinding
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
+import ru.netology.nmedia.util.CompanionNotMedia.showToastAfterSave
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class NewPostFragment : Fragment(R.layout.fragment_new_post) {
@@ -24,6 +25,15 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private val binding: FragmentNewPostBinding
         get() = _binding!!
     private var snackbar: Snackbar? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+            // Сохранение черновика
+            viewModel.saveDraftCopy(binding.newContent.text.toString())
+            findNavController().navigateUp()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,9 +64,11 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun initView() {
-        binding.apply {
-            newContent.setText(arguments?.POST_CONTENT)
-            newContent.requestFocus()
+        binding.newContent.apply {
+            // Загрузка переданного на редактирование content'а,
+            // или загрузка черновика, если он был сохранен
+            setText(arguments?.POST_CONTENT ?: viewModel.getDraftCopy())
+            requestFocus()
         }
     }
 
@@ -72,30 +84,27 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     snackbar?.show()
                 }
                 else {
-                    addingNewPost(newContent.text.toString())
-                    findNavController().navigateUp()
+                    val postId = viewModel.savePost(newContent.text.toString())
+                    val initialContent = arguments?.POST_CONTENT
+                    showToastAfterSave(
+                        context,
+                        binding.root.context,
+                        postId,
+                        initialContent,
+                        newContent.text.toString()
+                    )
+//                    viewModel.newSavedContent = viewModel.edited.value?.content
+                    findNavController().navigateUp().also {
+                        // Очистка черновика
+                        viewModel.saveDraftCopy(null)
+                    }
                 }
             }
             cancelEdit.setOnClickListener {
-                findNavController().navigateUp()
+                findNavController().navigateUp().also {
+                    viewModel.saveDraftCopy(null)
+                }
             }
         }
-    }
-
-    private fun addingNewPost(content: String?) {
-        val initialContent = viewModel.edited.value?.content
-        val postId = viewModel.savePost(content)
-        if (content != initialContent)
-            if (!content.isNullOrBlank())
-                Toast.makeText(
-                    this.context,
-                    binding.root.context.getString(
-                        if (postId == 0L)
-                            R.string.new_post_has_created
-                        else
-                            R.string.post_has_edited
-                    ),
-                    Toast.LENGTH_LONG
-                ).show()
     }
 }
