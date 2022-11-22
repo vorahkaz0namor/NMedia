@@ -1,11 +1,13 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
+import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.repository.*
+import java.util.*
 
 private val empty = Post(
     id = 0,
@@ -13,9 +15,13 @@ private val empty = Post(
     published = "",
     content = ""
 )
+private val actualTime = { now: Long ->
+    SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
+}
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: PostRepository = PostRepositorySQLiteImpl(AppDb.getInstance(application).postDao)
+    private val repository: PostRepository =
+        PostRepositoryRoomDBImpl(AppDb.getInstance(application).postDao())
     val data = repository.getAll()
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
@@ -31,7 +37,16 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun save(newContent: String) {
         edited.value?.let {
-            repository.save(it.copy(content = newContent))
+            repository.save(
+                it.copy(
+                    author = if (it.id == 0L)
+                        "Zakharov Roman, AN-34"
+                    else
+                        it.author,
+                    content = newContent,
+                    published = actualTime(System.currentTimeMillis())
+                )
+            )
         }
     }
 
