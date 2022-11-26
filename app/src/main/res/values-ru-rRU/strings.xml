@@ -22,4 +22,8 @@
     <string name="description_attachment_preview">@string/description_play</string>
     <string name="description_play">Воспроизвести</string>
     <string name="description_finish_attachments_view">Завершение просмотра вложений</string>
+    <string name="no_google_api">Google Api недоступен</string>
+    <string name="notification_like">%1$s лайкнул(а) пост №%2$d, который разместил(а) %3$s</string>
+    <string name="channel_remote_name">Сервер уведомлений NMedia</string>
+    <string name="channel_remote_description">Уведомления с удаленного сервера NMedia</string>
 </resources>
