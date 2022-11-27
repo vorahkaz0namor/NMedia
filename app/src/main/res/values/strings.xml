@@ -23,6 +23,7 @@
     <string name="description_finish_attachments_view">Finish attachments view</string>
     <string name="no_google_api">Google Api Unavailable</string>
     <string name="notification_like">%1$s had liked post №%2$d of %3$s</string>
+    <string name="notification_new_post">%1$s had published new post:</string>
     <string name="channel_remote_name">NMedia server notifications</string>
     <string name="channel_remote_description">Notifications from NMedia remote server</string>
 </resources>

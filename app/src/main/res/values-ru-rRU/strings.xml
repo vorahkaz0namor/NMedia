@@ -26,4 +26,5 @@
     <string name="notification_like">%1$s лайкнул(а) пост №%2$d, который разместил(а) %3$s</string>
     <string name="channel_remote_name">Сервер уведомлений NMedia</string>
     <string name="channel_remote_description">Уведомления с удаленного сервера NMedia</string>
+    <string name="notification_new_post">%1$s опубликовал новый пост:</string>
 </resources>

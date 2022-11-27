@@ -2,7 +2,9 @@ package ru.netology.nmedia.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -11,6 +13,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import ru.netology.nmedia.R
+import ru.netology.nmedia.activity.AppActivity
 import kotlin.random.Random
 
 class FCMService : FirebaseMessagingService() {
@@ -37,54 +40,38 @@ class FCMService : FirebaseMessagingService() {
     override fun onMessageReceived(message: RemoteMessage) {
         val incomingAction = message.data[action]
         val incomingContent = message.data[content]
-        when (Action.values().find { it.name == incomingAction }) {
-            Action.LIKE -> handleLike(gson.fromJson(incomingContent, Like::class.java))
-            null -> handleElse("$incomingAction: $incomingContent")
-                    // После отладки handleElse() можно заменить на return
-        }
+        // Проверка входящего action'а на соответствие существующим в приложении
+        if (Action.values().find { it.name == incomingAction } != null)
+            handleMessage(incomingAction!!, gson.fromJson(incomingContent, MessageContent::class.java))
     }
 
     override fun onNewToken(token: String) {
         Log.d("TOKEN: ", token)
     }
 
-    private fun handleLike(content: Like) {
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(
-                getString(
-                    R.string.notification_like,
-                    content.userName,
-                    content.postId,
-                    content.postAuthor
-                )
-            ).setPriority(NotificationCompat.PRIORITY_DEFAULT)
-             .build()
+    private fun handleMessage(action: String, content: MessageContent) {
+        val intent = Intent(applicationContext, AppActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        NotificationManagerCompat.from(this)
-            .notify(Random.nextInt(100_000), notification)
-    }
-
-    // Функция для проверки прилета несуществующего Action
-    private fun handleElse(content: String) {
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build()
+        val notification = NotificationCompat.Builder(this, channelId).apply {
+            setSmallIcon(R.drawable.ic_notification)
+            when (Action.valueOf(action)) {
+                Action.LIKE ->
+                    setContentTitle( getString(R.string.notification_like, content.userName, content.postId, content.postAuthor) )
+                Action.NEW_POST -> {
+                    setContentTitle( getString(R.string.notification_new_post, content.userName) )
+                    setContentText(content.postContent.lines().first())
+                    setStyle( NotificationCompat.BigTextStyle().bigText(content.postContent) )
+                }
+            }
+            priority = NotificationCompat.PRIORITY_DEFAULT
+            setContentIntent(pendingIntent)
+            setAutoCancel(true)
+        }.build()
 
         NotificationManagerCompat.from(this)
             .notify(Random.nextInt(100_000), notification)
     }
 }
-
-enum class Action {
-    LIKE
-}
-
-data class Like(
-    val userId: Long,
-    val userName: String,
-    val postId: Long,
-    val postAuthor: String
-)
