@@ -3,7 +3,10 @@ package ru.netology.nmedia.activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.navigation.findNavController
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.GoogleApiAvailability
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 
@@ -23,6 +26,28 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                     )
                 }
             }
+        }
+
+        checkoutGoogleApiAvailability()
+    }
+
+    private fun checkoutGoogleApiAvailability() {
+        GoogleApiAvailability.getInstance().apply {
+            val code = isGooglePlayServicesAvailable(this@AppActivity)
+            val requestCode = 9000
+            if (code != ConnectionResult.SUCCESS)
+                if (isUserResolvableError(code))
+                    getErrorDialog(
+                        this@AppActivity,
+                        code,
+                        requestCode
+                    )?.show()
+                else
+                    Toast.makeText(
+                        this@AppActivity,
+                        R.string.no_google_api,
+                        Toast.LENGTH_LONG
+                    ).show()
         }
     }
 }
