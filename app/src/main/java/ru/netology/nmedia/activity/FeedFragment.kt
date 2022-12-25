@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -57,8 +58,13 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun subscribe() {
         viewModel.apply {
-            data.observe(viewLifecycleOwner) { posts ->
-                adapter.submitList(posts)
+            data.observe(viewLifecycleOwner) { state ->
+                adapter.submitList(state.posts)
+                binding.apply {
+                    progressBar.isVisible = state.loading
+                    errorGroup.isVisible = state.error
+                    emptyText.isVisible = state.empty
+                }
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -102,10 +108,15 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun setupListeners() {
-        binding.addNewPost.setOnClickListener {
-            navController.navigate(
-                R.id.action_feedFragment_to_newPostFragment
-            )
+        binding.apply {
+            addNewPost.setOnClickListener {
+                navController.navigate(
+                    R.id.action_feedFragment_to_newPostFragment
+                )
+            }
+            retryButton.setOnClickListener {
+                viewModel.loadPosts()
+            }
         }
     }
 }

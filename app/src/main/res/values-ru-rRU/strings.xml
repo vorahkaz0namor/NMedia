@@ -27,4 +27,7 @@
     <string name="channel_remote_name">Сервер уведомлений NMedia</string>
     <string name="channel_remote_description">Уведомления с удаленного сервера NMedia</string>
     <string name="notification_new_post">%1$s опубликовал новый пост:</string>
+    <string name="error_loading">Что-то пошло не так... Попробуйте снова.</string>
+    <string name="retry_loading">Повторить</string>
+    <string name="empty_posts">Список постов пуст. Если Вы создадите новый пост, то он появится здесь</string>
 </resources>

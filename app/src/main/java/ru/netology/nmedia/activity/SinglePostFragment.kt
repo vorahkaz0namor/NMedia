@@ -28,7 +28,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     }
 
     private fun post() =
-        viewModel.data.value?.find { post ->
+        viewModel.data.value?.posts?.find { post ->
             post.id == (arguments?.POST_ID)
         }
 
