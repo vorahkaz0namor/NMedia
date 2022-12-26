@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
+import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.IOException
 import java.util.*
 import kotlin.concurrent.thread
@@ -27,6 +28,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val _data = MutableLiveData(FeedModel())
     val data: LiveData<FeedModel>
         get() = _data
+    // Ручная реализация паттерна "слушатель-издатель" (одиночное событие)
+    private val _postCreated = SingleLiveEvent<Unit>()
+    val postCreated: LiveData<Unit>
+        get() = _postCreated
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
     // Variable to hold sharing post
@@ -77,6 +82,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         published = actualTime(System.currentTimeMillis())
                     )
                 )
+                _postCreated.postValue(Unit)
             }
         }
     }
@@ -105,7 +111,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = post
     }
 
-    fun likeById(id: Long) = repository.likeById(id)
+    fun likeById(id: Long) {
+        thread { repository.likeById(id) }
+    }
     fun shareById(post: Post) {
         hasShared.apply {
             value = post

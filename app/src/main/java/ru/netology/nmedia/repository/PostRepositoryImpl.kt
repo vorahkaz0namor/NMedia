@@ -1,6 +1,5 @@
 package ru.netology.nmedia.repository
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
@@ -8,8 +7,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.ResponseBody
-import okhttp3.ResponseBody.Companion.toResponseBody
 import ru.netology.nmedia.dto.Post
 import java.util.concurrent.TimeUnit
 
@@ -39,7 +36,7 @@ class PostRepositoryImpl: PostRepository {
         // Синхронно вызываем сетевой запрос с помощью функции newCall()
         return client.newCall(request)
             .execute().let { response ->
-                val body = response.body?.toString()
+                val body: String? = response.body?.string()
                 body ?: throw java.lang.RuntimeException("The body is null")
             }
             .let {
@@ -56,10 +53,6 @@ class PostRepositoryImpl: PostRepository {
     }
 
     override fun save(post: Post) {
-        val postInJson = gson.toJson(post)
-        println(postInJson.toString())
-        val requestBody = postInJson.toRequestBody(jsonType)
-        println(requestBody.toString())
         val request: Request = Request.Builder()
             .post(gson.toJson(post).toRequestBody(jsonType))
             .url("$BASE_URL/api/slow/posts")

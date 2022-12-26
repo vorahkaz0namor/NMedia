@@ -67,7 +67,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         binding.newContent.apply {
             // Загрузка переданного на редактирование content'а,
             // или загрузка черновика, если он был сохранен
-//            setText(arguments?.POST_CONTENT ?: viewModel.getDraftCopy())
+            setText(arguments?.POST_CONTENT /*?: viewModel.getDraftCopy()*/)
             requestFocus()
         }
     }
@@ -93,17 +93,22 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                         initialContent,
                         newContent.text.toString()
                     )
-//                    viewModel.newSavedContent = viewModel.edited.value?.content
-                    findNavController().navigateUp().also {
-                        // Очистка черновика
-//                        viewModel.saveDraftCopy(null)
-                    }
                 }
             }
             cancelEdit.setOnClickListener {
                 findNavController().navigateUp().also {
 //                    viewModel.saveDraftCopy(null)
                 }
+            }
+        }
+    }
+
+    private fun subscribe() {
+        viewModel.postCreated.observe(viewLifecycleOwner) {
+            viewModel.loadPosts()
+            findNavController().navigateUp().also {
+                // Очистка черновика
+//                viewModel.saveDraftCopy(null)
             }
         }
     }
