@@ -52,7 +52,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun initViews() {
         adapter = PostAdapter(OnInteractionListenerImpl(viewModel))
-        binding.posts.adapter = adapter
+        binding.recyclerView.posts.adapter = adapter
         navController = findNavController()
     }
 
@@ -61,9 +61,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             data.observe(viewLifecycleOwner) { state ->
                 adapter.submitList(state.posts)
                 binding.apply {
-                    progressBar.isVisible = state.loading
-                    errorGroup.isVisible = state.error
-                    emptyText.isVisible = state.empty
+                    progressBarView.progressBar.isVisible = state.loading
+                    errorView.errorGroup.isVisible = state.error
+                    emptyTextView.emptyText.isVisible = state.empty
                 }
             }
             edited.observe(viewLifecycleOwner) { post ->
@@ -104,17 +104,18 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     )
                 }
             }
+            postEvent.observe(viewLifecycleOwner) { loadPosts() }
         }
     }
 
     private fun setupListeners() {
         binding.apply {
-            addNewPost.setOnClickListener {
+            recyclerView.addNewPost.setOnClickListener {
                 navController.navigate(
                     R.id.action_feedFragment_to_newPostFragment
                 )
             }
-            retryButton.setOnClickListener {
+            errorView.retryButton.setOnClickListener {
                 viewModel.loadPosts()
             }
         }

@@ -25,8 +25,8 @@ class SingleLiveEvent<T> : MutableLiveData<T>() {
     }
 
     override fun setValue(value: T?) {
-        // При изменении контролируемого значения сообщаем,
-        // что надо обработать произошедшее событие
+        // При изменении контролируемого значения фиксируем,
+        // что произошедшее событие еще не обработано
         pending = true
         super.setValue(value)
     }

@@ -61,8 +61,16 @@ class PostRepositoryImpl: PostRepository {
         callRequest(request)
     }
 
-    override fun likeById(id: Long) {
-        TODO("Not yet implemented")
+    override fun likeById(id: Long, likedByMe: Boolean) {
+        val request: Request = Request.Builder().let {
+            if (likedByMe)
+                it.delete()
+            else
+                it.post("".toRequestBody())
+        }.url("$BASE_URL/api/slow/posts/$id/likes")
+         .build()
+
+        callRequest(request)
     }
 
     override fun shareById(id: Long) {

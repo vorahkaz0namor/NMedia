@@ -29,9 +29,9 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val data: LiveData<FeedModel>
         get() = _data
     // Ручная реализация паттерна "слушатель-издатель" (одиночное событие)
-    private val _postCreated = SingleLiveEvent<Unit>()
-    val postCreated: LiveData<Unit>
-        get() = _postCreated
+    private val _postEvent = SingleLiveEvent<Unit>()
+    val postEvent: LiveData<Unit>
+        get() = _postEvent
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
     // Variable to hold sharing post
@@ -63,6 +63,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 .also {
                     _data.postValue(it)
                 }
+                // Альтернативный вариант записи:
+                /*.also(_data::postValue)*/
         }
     }
 
@@ -82,7 +84,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         published = actualTime(System.currentTimeMillis())
                     )
                 )
-                _postCreated.postValue(Unit)
+                _postEvent.postValue(Unit)
             }
         }
     }
@@ -112,7 +114,13 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(id: Long) {
-        thread { repository.likeById(id) }
+        thread {
+            _data.value?.posts?.find { it.id == id }
+                ?.let {
+                    repository.likeById(it.id, it.likedByMe)
+                }
+            _postEvent.postValue(Unit)
+        }
     }
     fun shareById(post: Post) {
         hasShared.apply {
@@ -128,7 +136,21 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun viewById(id: Long) = repository.viewById(id)
-    fun removeById(id: Long) = repository.removeById(id)
+    fun removeById(id: Long) {
+        thread {
+            val oldPostsList = _data.value?.posts.orEmpty()
+            _data.postValue(
+                _data.value?.copy(
+                    posts = oldPostsList.filter { it.id != id }
+                )
+            )
+            try {
+                repository.removeById(id)
+            } catch (e: IOException) {
+                _data.postValue(_data.value?.copy(posts = oldPostsList))
+            }
+        }
+    }
     fun singlePost(post: Post) {
         singlePostToView.apply {
             value = post
