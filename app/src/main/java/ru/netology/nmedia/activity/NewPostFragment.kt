@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -61,6 +62,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onViewCreated(view, savedInstanceState)
         initView()
         setupListeners()
+        subscribe()
     }
 
     private fun initView() {
@@ -84,6 +86,10 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     snackbar?.show()
                 }
                 else {
+                    // Изменение состояния отображения, пока не закончится
+                    // уже запущенный процесс сохранения
+                    newPostGroup.isVisible = false
+                    progressBarView.progressBar.isVisible = true
                     val postId = viewModel.savePost(newContent.text.toString())
                     val initialContent = arguments?.POST_CONTENT
                     showToastAfterSave(
@@ -104,7 +110,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun subscribe() {
-        viewModel.postCreated.observe(viewLifecycleOwner) {
+        viewModel.postEvent.observe(viewLifecycleOwner) {
             viewModel.loadPosts()
             findNavController().navigateUp().also {
                 // Очистка черновика
