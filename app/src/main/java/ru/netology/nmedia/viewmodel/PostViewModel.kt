@@ -53,7 +53,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val posts = repository.getAll()
                 // Если данные успешно получены, то отправляем их в data
-                feedModel = FeedModel(posts = posts, empty = posts.isEmpty())
+                feedModel = FeedModel(posts = posts, empty = posts.isEmpty(), showing = true)
                 feedModel
             } catch (e: IOException) {
                 // Если получена ошибка (body == null)

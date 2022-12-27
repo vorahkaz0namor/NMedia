@@ -64,6 +64,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     progressBarView.progressBar.isVisible = state.loading
                     errorView.errorGroup.isVisible = state.error
                     emptyTextView.emptyText.isVisible = state.empty
+                    recyclerView.postsList.isVisible = state.showing
                 }
             }
             edited.observe(viewLifecycleOwner) { post ->

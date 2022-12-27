@@ -40,15 +40,7 @@ class PostRepositoryImpl: PostRepository {
                 body ?: throw java.lang.RuntimeException("The body is null")
             }
             .let {
-                val posts: List<Post> =
-                    try {
-                        gson
-                            .fromJson(it, typeToken.type)
-                    } catch (e: JsonSyntaxException) {
-                        println("$e: I'm getting lost here...")
-                        emptyList()
-                    }
-                posts
+                gson.fromJson(it, typeToken.type)
             }
     }
 
@@ -58,6 +50,8 @@ class PostRepositoryImpl: PostRepository {
             .url("$BASE_URL/api/slow/posts")
             .build()
 
+        val response = client.newCall(request).execute()
+        val body = response.body?.string()
         callRequest(request)
     }
 
