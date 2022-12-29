@@ -88,6 +88,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 else {
                     // Изменение состояния отображения, пока не закончится
                     // уже запущенный процесс сохранения
+                    AndroidUtils.hideKeyboard(binding.newContent)
                     newPostGroup.isVisible = false
                     progressBarView.progressBar.isVisible = true
                     val postId = viewModel.savePost(newContent.text.toString())

@@ -1,20 +1,21 @@
 package ru.netology.nmedia.repository
 
 import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.dto.SendingPost
 import java.util.concurrent.TimeUnit
 
 class PostRepositoryImpl: PostRepository {
     // Создаем клиента с использованием паттерна Builder()
     private val client = OkHttpClient.Builder()
         // Ставим таймаут на сетевое соединение
-        .connectTimeout(30, TimeUnit.SECONDS)
+//        .connectTimeout(30, TimeUnit.SECONDS)
         .build()
     private val gson = Gson()
     private val typeToken = object : TypeToken<List<Post>>() {}
@@ -26,18 +27,19 @@ class PostRepositoryImpl: PostRepository {
         private const val BASE_URL = "http://192.168.31.16:9999"
         // Тип данных, указываемый в заголовке
         private val jsonType = "application/json".toMediaType()
+        private const val PATH = "/api/slow/posts"
     }
 
     override fun getAll(): List<Post> {
         // Создание запроса
         val request: Request = Request.Builder()
-            .url("$BASE_URL/api/slow/posts")
+            .url("$BASE_URL$PATH")
             .build()
         // Синхронно вызываем сетевой запрос с помощью функции newCall()
         return client.newCall(request)
-            .execute().let { response ->
-                val body: String? = response.body?.string()
-                body ?: throw java.lang.RuntimeException("The body is null")
+            .execute().let { response: Response? ->
+                response?.body?.string()
+                    ?: throw java.lang.RuntimeException("The body is null")
             }
             .let {
                 gson.fromJson(it, typeToken.type)
@@ -46,12 +48,10 @@ class PostRepositoryImpl: PostRepository {
 
     override fun save(post: Post) {
         val request: Request = Request.Builder()
-            .post(gson.toJson(post).toRequestBody(jsonType))
-            .url("$BASE_URL/api/slow/posts")
+            .post(gson.toJson(SendingPost.fromDto(post)).toRequestBody(jsonType))
+            .url("$BASE_URL$PATH")
             .build()
 
-        val response = client.newCall(request).execute()
-        val body = response.body?.string()
         callRequest(request)
     }
 
@@ -61,24 +61,25 @@ class PostRepositoryImpl: PostRepository {
                 it.delete()
             else
                 it.post("".toRequestBody())
-        }.url("$BASE_URL/api/slow/posts/$id/likes")
+        }.url("$BASE_URL$PATH/$id/likes")
          .build()
 
         callRequest(request)
     }
 
-    override fun shareById(id: Long) {
-        TODO("Not yet implemented")
-    }
-
     override fun viewById(id: Long) {
-        TODO("Not yet implemented")
+        val request: Request = Request.Builder()
+            .post("".toRequestBody())
+            .url("$BASE_URL$PATH/$id/views")
+            .build()
+
+        callRequest(request)
     }
 
     override fun removeById(id: Long) {
         val request: Request = Request.Builder()
             .delete()
-            .url("$BASE_URL/api/slow/posts/$id")
+            .url("$BASE_URL$PATH/$id")
             .build()
 
         callRequest(request)

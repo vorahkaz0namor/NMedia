@@ -36,6 +36,12 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
         subscribe()
+        setupListeners()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.loadPosts()
     }
 
     private fun initViews() {
@@ -44,7 +50,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             arguments?.ATTACHMENT_PREVIEW = ""
         }
         binding.singlePost.content.autoLinkMask = Linkify.WEB_URLS
-        postBind(post()!!)
     }
 
     private fun subscribe() {
@@ -82,6 +87,14 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     )
                 }
             }
+            postEvent.observe(viewLifecycleOwner) { loadPosts() }
+        }
+    }
+
+    private fun setupListeners() {
+        binding.refreshPost.setOnRefreshListener {
+            viewModel.loadPosts()
+            binding.refreshPost.isRefreshing = false
         }
     }
 }

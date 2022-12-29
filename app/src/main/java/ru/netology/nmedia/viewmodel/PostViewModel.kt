@@ -5,6 +5,7 @@ import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
@@ -16,12 +17,9 @@ import kotlin.concurrent.thread
 private val empty = Post(
     id = 0,
     author = "",
-    published = "",
+    published = 0,
     content = ""
 )
-private val actualTime = { now: Long ->
-    SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
-}
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: PostRepository = PostRepositoryImpl()
@@ -63,8 +61,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 .also {
                     _data.postValue(it)
                 }
-                // Альтернативный вариант записи:
-                /*.also(_data::postValue)*/
+            // Альтернативный вариант записи:
+            /*.also(_data::postValue)*/
         }
     }
 
@@ -81,7 +79,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         else
                             it.author,
                         content = newContent,
-                        published = actualTime(System.currentTimeMillis())
+                        published = System.currentTimeMillis()
                     )
                 )
                 _postEvent.postValue(Unit)
@@ -113,30 +111,41 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         edited.value = post
     }
 
-    fun likeById(id: Long) {
+    fun likeById(post: Post) {
+        _data.value = FeedModel(loading = true)
         thread {
-            _data.value?.posts?.find { it.id == id }
-                ?.let {
-                    repository.likeById(it.id, it.likedByMe)
-                }
+            try {
+                repository.likeById(post.id, post.likedByMe)
+            } catch (_: IOException) {}
             _postEvent.postValue(Unit)
         }
     }
+
     fun shareById(post: Post) {
         hasShared.apply {
             value = post
-            repository.shareById(post.id)
+//            repository.shareById(post.id)
             value = empty
         }
     }
+
     fun showAttachments(post: Post) {
         viewingAttachments.apply {
             value = post
             value = empty
         }
     }
-    fun viewById(id: Long) = repository.viewById(id)
+
+    fun viewById(id: Long) {
+        thread {
+            try {
+                repository.viewById(id)
+            } catch (_: IOException) {}
+        }
+    }
+
     fun removeById(id: Long) {
+        _data.value = FeedModel(loading = true)
         thread {
             val oldPostsList = _data.value?.posts.orEmpty()
             _data.postValue(
@@ -149,8 +158,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: IOException) {
                 _data.postValue(_data.value?.copy(posts = oldPostsList))
             }
+            _postEvent.postValue(Unit)
         }
     }
+
     fun singlePost(post: Post) {
         singlePostToView.apply {
             value = post

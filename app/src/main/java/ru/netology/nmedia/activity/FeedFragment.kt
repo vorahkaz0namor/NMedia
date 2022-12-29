@@ -119,6 +119,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             errorView.retryButton.setOnClickListener {
                 viewModel.loadPosts()
             }
+            recyclerView.refreshPosts.setOnRefreshListener {
+                recyclerView.refreshPosts.isRefreshing = false
+                viewModel.loadPosts()
+            }
         }
     }
 }
