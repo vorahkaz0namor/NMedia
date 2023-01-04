@@ -3,6 +3,7 @@ package ru.netology.nmedia.activity
 import android.os.Bundle
 import android.text.util.Linkify
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -54,11 +55,16 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
 
     private fun subscribe() {
         viewModel.apply {
-            data.observe(viewLifecycleOwner) {
+            data.observe(viewLifecycleOwner) { state ->
                 if (post() != null)
                     postBind(post()!!)
                 else
                     findNavController().navigateUp()
+                binding.apply {
+                    progressBarView.progressBar.isVisible = state.loading
+                    errorView.errorGroup.isVisible = state.error
+                    singlePostView.isVisible = state.showing
+                }
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -87,14 +93,18 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     )
                 }
             }
-            postEvent.observe(viewLifecycleOwner) { loadPosts() }
         }
     }
 
     private fun setupListeners() {
-        binding.refreshPost.setOnRefreshListener {
-            viewModel.loadPosts()
-            binding.refreshPost.isRefreshing = false
+        binding.apply {
+            refreshPost.setOnRefreshListener {
+                viewModel.loadPosts()
+                binding.refreshPost.isRefreshing = false
+            }
+            errorView.retryButton.setOnClickListener {
+                viewModel.loadPosts()
+            }
         }
     }
 }

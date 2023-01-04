@@ -1,11 +1,9 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
-import android.icu.text.SimpleDateFormat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
@@ -46,17 +44,14 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun loadPosts() {
         thread {
             // Включение состояния "загрузка"
-            _data.postValue(FeedModel(loading = true))
-            var feedModel: FeedModel
+            _data.postValue(_data.value?.loading())
             try {
                 val posts = repository.getAll()
                 // Если данные успешно получены, то отправляем их в data
-                feedModel = FeedModel(posts = posts, empty = posts.isEmpty(), showing = true)
-                feedModel
+                _data.value?.showing(posts)
             } catch (e: IOException) {
-                // Если получена ошибка (body == null)
-                feedModel = FeedModel(error = true)
-                feedModel
+                // Если получена ошибка
+                _data.value?.error()
             }
                 .also {
                     _data.postValue(it)
@@ -65,6 +60,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             /*.also(_data::postValue)*/
         }
     }
+
+    private fun currentPostsList() =  _data.value?.posts.orEmpty()
 
     private fun validation(text: CharSequence?) =
         (!text.isNullOrBlank() && edited.value?.content != text.trim())
@@ -112,12 +109,22 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(post: Post) {
-        _data.value = FeedModel(loading = true)
+        _data.value = _data.value?.loading()
         thread {
             try {
-                repository.likeById(post.id, post.likedByMe)
-            } catch (_: IOException) {}
-            _postEvent.postValue(Unit)
+                val likedPost = repository.likeById(post.id, post.likedByMe)
+                _data.postValue(
+                    _data.value?.showing(
+                        currentPostsList().map {
+                            if (it.id == post.id)
+                                likedPost
+                            else it
+                        }
+                    )
+                )
+            } catch (_: IOException) {
+                _data.postValue(_data.value?.error())
+            }
         }
     }
 
@@ -137,6 +144,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun viewById(id: Long) {
+        _data.value =
+            _data.value?.copy(
+                posts = currentPostsList().map {
+                    if (it.id == id)
+                        it.copy(views = it.views + 1)
+                    else
+                        it
+                }
+            )
         thread {
             try {
                 repository.viewById(id)
@@ -145,20 +161,18 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removeById(id: Long) {
-        _data.value = FeedModel(loading = true)
+        _data.value = _data.value?.loading()
         thread {
-            val oldPostsList = _data.value?.posts.orEmpty()
             _data.postValue(
-                _data.value?.copy(
-                    posts = oldPostsList.filter { it.id != id }
+                _data.value?.showing(
+                    currentPostsList().filter { it.id != id }
                 )
             )
             try {
                 repository.removeById(id)
             } catch (e: IOException) {
-                _data.postValue(_data.value?.copy(posts = oldPostsList))
+                _data.postValue(_data.value?.showing(currentPostsList()))
             }
-            _postEvent.postValue(Unit)
         }
     }
 

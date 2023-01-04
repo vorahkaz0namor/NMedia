@@ -105,7 +105,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     )
                 }
             }
-            postEvent.observe(viewLifecycleOwner) { loadPosts() }
         }
     }
 

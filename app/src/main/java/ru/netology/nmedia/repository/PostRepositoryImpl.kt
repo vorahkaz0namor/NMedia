@@ -55,7 +55,7 @@ class PostRepositoryImpl: PostRepository {
         callRequest(request)
     }
 
-    override fun likeById(id: Long, likedByMe: Boolean) {
+    override fun likeById(id: Long, likedByMe: Boolean): Post {
         val request: Request = Request.Builder().let {
             if (likedByMe)
                 it.delete()
@@ -64,7 +64,11 @@ class PostRepositoryImpl: PostRepository {
         }.url("$BASE_URL$PATH/$id/likes")
          .build()
 
-        callRequest(request)
+        return client.newCall(request)
+            .execute().body.string()
+            .let {
+                gson.fromJson(it, Post::class.java)
+            }
     }
 
     override fun viewById(id: Long) {
