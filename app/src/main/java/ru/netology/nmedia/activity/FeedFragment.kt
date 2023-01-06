@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -51,14 +52,20 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun initViews() {
         adapter = PostAdapter(OnInteractionListenerImpl(viewModel))
-        binding.posts.adapter = adapter
+        binding.recyclerView.posts.adapter = adapter
         navController = findNavController()
     }
 
     private fun subscribe() {
         viewModel.apply {
-            data.observe(viewLifecycleOwner) { posts ->
-                adapter.submitList(posts)
+            data.observe(viewLifecycleOwner) { state ->
+                adapter.submitList(state.posts)
+                binding.apply {
+                    progressBarView.progressBar.isVisible = state.loading
+                    errorView.errorGroup.isVisible = state.error
+                    emptyTextView.emptyText.isVisible = state.empty
+                    recyclerView.postsList.isVisible = state.showing
+                }
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -102,10 +109,19 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun setupListeners() {
-        binding.addNewPost.setOnClickListener {
-            navController.navigate(
-                R.id.action_feedFragment_to_newPostFragment
-            )
+        binding.apply {
+            recyclerView.addNewPost.setOnClickListener {
+                navController.navigate(
+                    R.id.action_feedFragment_to_newPostFragment
+                )
+            }
+            errorView.retryButton.setOnClickListener {
+                viewModel.loadPosts()
+            }
+            recyclerView.refreshPosts.setOnRefreshListener {
+                recyclerView.refreshPosts.isRefreshing = false
+                viewModel.loadPosts()
+            }
         }
     }
 }

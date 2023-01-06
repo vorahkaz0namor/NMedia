@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
+import ru.netology.nmedia.util.CompanionNotMedia.actualTime
 
 class PostViewHolder(
     private val binding: CardPostBinding,
@@ -20,7 +21,7 @@ class PostViewHolder(
     private fun fillingCardPost(post: Post) {
         binding.apply {
             author.text = post.author
-            published.text = post.published
+            published.text = actualTime(post.published)
             content.text = post.content
             avatar.setImageResource(
                 if (author.text.contains("нетология", true))

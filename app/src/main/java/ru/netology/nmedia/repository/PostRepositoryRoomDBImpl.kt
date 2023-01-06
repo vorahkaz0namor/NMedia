@@ -8,7 +8,7 @@ import ru.netology.nmedia.entity.PostEntity
 
 class PostRepositoryRoomDBImpl(
     private val dao: PostDao
-) : PostRepository {
+) : PostRepositoryOld {
     override fun getAll(): LiveData<List<Post>> =
         Transformations.map(dao.getAll()) { list ->
             list.map {

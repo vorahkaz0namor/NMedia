@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -30,7 +31,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
             // Сохранение черновика
-            viewModel.saveDraftCopy(binding.newContent.text.toString())
+//            viewModel.saveDraftCopy(binding.newContent.text.toString())
             findNavController().navigateUp()
         }
     }
@@ -61,13 +62,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onViewCreated(view, savedInstanceState)
         initView()
         setupListeners()
+        subscribe()
     }
 
     private fun initView() {
         binding.newContent.apply {
             // Загрузка переданного на редактирование content'а,
             // или загрузка черновика, если он был сохранен
-            setText(arguments?.POST_CONTENT ?: viewModel.getDraftCopy())
+            setText(arguments?.POST_CONTENT /*?: viewModel.getDraftCopy()*/)
             requestFocus()
         }
     }
@@ -84,6 +86,11 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     snackbar?.show()
                 }
                 else {
+                    // Изменение состояния отображения, пока не закончится
+                    // уже запущенный процесс сохранения
+                    AndroidUtils.hideKeyboard(binding.newContent)
+                    newPostGroup.isVisible = false
+                    progressBarView.progressBar.isVisible = true
                     val postId = viewModel.savePost(newContent.text.toString())
                     val initialContent = arguments?.POST_CONTENT
                     showToastAfterSave(
@@ -93,17 +100,22 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                         initialContent,
                         newContent.text.toString()
                     )
-//                    viewModel.newSavedContent = viewModel.edited.value?.content
-                    findNavController().navigateUp().also {
-                        // Очистка черновика
-                        viewModel.saveDraftCopy(null)
-                    }
                 }
             }
             cancelEdit.setOnClickListener {
                 findNavController().navigateUp().also {
-                    viewModel.saveDraftCopy(null)
+//                    viewModel.saveDraftCopy(null)
                 }
+            }
+        }
+    }
+
+    private fun subscribe() {
+        viewModel.postEvent.observe(viewLifecycleOwner) {
+            viewModel.loadPosts()
+            findNavController().navigateUp().also {
+                // Очистка черновика
+//                viewModel.saveDraftCopy(null)
             }
         }
     }
