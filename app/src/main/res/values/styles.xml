@@ -25,4 +25,18 @@
         <item name="fabSize">mini</item>
         <item name="android:tint">?attr/colorControlNormal</item>
     </style>
+    
+    <style name="Widget.AppTheme.NMediaOutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">?attr/colorControlNormal</item>
+        <item name="strokeColor">?attr/colorControlNormal</item>
+        <item name="strokeWidth">@dimen/stroke_width</item>
+    </style>
+
+    <style name="Widget.AppTheme.AnotherStateText" parent="Widget.MaterialComponents.TextView">
+        <item name="android:layout_marginBottom">@dimen/indent</item>
+        <item name="android:paddingStart">@dimen/avatar_size</item>
+        <item name="android:paddingEnd">@dimen/avatar_size</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
 </resources>
