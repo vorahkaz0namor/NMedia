@@ -63,7 +63,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 binding.apply {
                     progressBarView.progressBar.isVisible = state.loading
                     errorView.errorGroup.isVisible = state.error
-                    emptyTextView.emptyText.isVisible = state.empty
+                    emptyTextView.emptyText.isVisible = (state.empty && state.showing)
                     recyclerView.postsList.isVisible = state.showing
                 }
             }
