@@ -1,15 +1,15 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
+import ru.netology.nmedia.repository.PostRepository.PostCallback
 import ru.netology.nmedia.util.SingleLiveEvent
-import java.io.IOException
-import java.util.*
 import kotlin.concurrent.thread
 
 private val empty = Post(
@@ -42,23 +42,19 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadPosts() {
-        thread {
-            // Включение состояния "загрузка"
-            _data.postValue(_data.value?.loading())
-            try {
-                val posts = repository.getAll()
-                // Если данные успешно получены, то отправляем их в data
-                _data.value?.showing(posts)
-            } catch (e: IOException) {
-                // Если получена ошибка
-                _data.value?.error()
+        // Включение состояния "загрузка"
+        _data.value = _data.value?.loading()
+        repository.getAll(object : PostCallback<List<Post>> {
+            // Если данные успешно получены, то отправляем их в data
+            override fun onSuccess(result: List<Post>) {
+                _data.postValue(_data.value?.showing(result))
             }
-                .also {
-                    _data.postValue(it)
-                }
-            // Альтернативный вариант записи:
-            /*.also(_data::postValue)*/
-        }
+            // Если получена ошибка
+            override fun onError(e: Exception) {
+                Log.d("EXCEPTION WHEN LOAD POSTS:", "$e")
+                _data.postValue(_data.value?.error())
+            }
+        })
     }
 
     private fun currentPostsList() =  _data.value?.posts.orEmpty()
@@ -68,19 +64,23 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun save(newContent: String) {
         edited.value?.let {
-            thread {
-                repository.save(
-                    it.copy(
-                        author = if (it.id == 0L)
-                            "Zakharov Roman, AN-34"
-                        else
-                            it.author,
-                        content = newContent,
-                        published = System.currentTimeMillis()
-                    )
-                )
-                _postEvent.postValue(Unit)
-            }
+            repository.save(
+                it.copy(
+                    author = if (it.id == 0L)
+                        "Zakharov Roman, AN-34"
+                    else
+                        it.author,
+                    content = newContent,
+                    published = System.currentTimeMillis()
+                ),
+                object : PostCallback<Int> {
+                    override fun onSuccess(result: Int) {}
+                    override fun onError(e: Exception) {
+                        Log.d("SAVING EXCEPTION. CODE:", "$e")
+                    }
+                }
+            )
+            _postEvent.postValue(Unit)
         }
     }
 
@@ -110,22 +110,26 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun likeById(post: Post) {
         _data.value = _data.value?.loading()
-        thread {
-            try {
-                val likedPost = repository.likeById(post.id, post.likedByMe)
-                _data.postValue(
-                    _data.value?.showing(
-                        currentPostsList().map {
-                            if (it.id == post.id)
-                                likedPost
-                            else it
-                        }
+        repository.likeById(
+            post.id,
+            post.likedByMe,
+            object : PostCallback<Post> {
+                override fun onSuccess(result: Post) {
+                    _data.postValue(
+                        _data.value?.showing(
+                            currentPostsList().map {
+                                if (it.id == post.id)
+                                    result
+                                else it
+                            }
+                        )
                     )
-                )
-            } catch (_: IOException) {
-                _data.postValue(_data.value?.error())
+                }
+                override fun onError(e: Exception) {
+                    _data.postValue(_data.value?.error())
+                }
             }
-        }
+        )
     }
 
     fun shareById(post: Post) {
@@ -145,35 +149,37 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun viewById(id: Long) {
         _data.value =
-            _data.value?.copy(
-                posts = currentPostsList().map {
+            _data.value?.showing(
+                currentPostsList().map {
                     if (it.id == id)
                         it.copy(views = it.views + 1)
                     else
                         it
                 }
             )
-        thread {
-            try {
-                repository.viewById(id)
-            } catch (_: IOException) {}
-        }
+        // Используется, когда viewById() реализован внутри сервера тоже
+//        thread {
+//            try {
+//                repository.viewById(id)
+//            } catch (_: IOException) {}
+//        }
     }
 
     fun removeById(id: Long) {
         _data.value = _data.value?.loading()
-        thread {
-            _data.postValue(
-                _data.value?.showing(
-                    currentPostsList().filter { it.id != id }
+        repository.removeById(id, object : PostCallback<Int> {
+            override fun onSuccess(result: Int) {
+                _data.postValue(
+                    _data.value?.showing(
+                        currentPostsList().filter { it.id != id }
+                    )
                 )
-            )
-            try {
-                repository.removeById(id)
-            } catch (e: IOException) {
+            }
+            override fun onError(e: Exception) {
+                Log.d("REMOVING EXCEPTION. CODE:", "$e")
                 _data.postValue(_data.value?.showing(currentPostsList()))
             }
-        }
+        })
     }
 
     fun singlePost(post: Post) {

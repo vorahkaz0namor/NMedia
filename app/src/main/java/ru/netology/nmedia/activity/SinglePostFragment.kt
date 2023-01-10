@@ -40,11 +40,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
         setupListeners()
     }
 
-    override fun onStop() {
-        super.onStop()
-        viewModel.loadPosts()
-    }
-
     private fun initViews() {
         if (arguments?.ATTACHMENT_PREVIEW == "Post view") {
             viewModel.viewById(arguments?.POST_ID!!)

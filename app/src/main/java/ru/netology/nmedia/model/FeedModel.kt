@@ -10,11 +10,25 @@ data class FeedModel(
     val showing: Boolean = false
 ) {
     fun loading() =
-        this.copy(loading = true, error = false, showing = false)
+        this.copy(
+            loading = true,
+            showing = false,
+            error = false
+        )
 
     fun showing(posts: List<Post>) =
-        this.copy(loading = false, posts = posts, empty = posts.isEmpty(), showing = true)
+        this.copy(
+            loading = false,
+            showing = true,
+                posts = posts,
+                empty = posts.isEmpty(),
+            error = false
+        )
 
     fun error() =
-        this.copy(loading = false, error = true)
+        this.copy(
+            loading = false,
+            showing = false,
+            error = true
+        )
 }
