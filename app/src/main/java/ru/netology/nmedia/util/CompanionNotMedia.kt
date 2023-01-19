@@ -3,7 +3,10 @@ package ru.netology.nmedia.util
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.DrawableRes
+import com.bumptech.glide.Glide
 import ru.netology.nmedia.R
 import java.util.*
 
@@ -35,5 +38,19 @@ object CompanionNotMedia {
                     ),
                     Toast.LENGTH_LONG
                 ).show()
+    }
+
+    fun ImageView.load(
+        url: String,
+        @DrawableRes placeholder: Int = R.drawable.ic_loading,
+        @DrawableRes fallback: Int = R.drawable.ic_error_loading,
+        timeOutMs: Int = 10_000
+    ) {
+        Glide.with(this)
+            .load(url)
+            .timeout(timeOutMs)
+            .placeholder(placeholder)
+            .error(fallback)
+            .into(this)
     }
 }

@@ -122,6 +122,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 recyclerView.refreshPosts.isRefreshing = false
                 viewModel.loadPosts()
             }
+            recyclerView.toLoadSampleImage.setOnClickListener {
+                navController.navigate(R.id.action_feedFragment_to_sampleFragment)
+            }
         }
     }
 }

@@ -10,7 +10,11 @@
         android:id="@+id/postsList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:constraint_referenced_ids="refresh_posts, fab_coordinator"
+        app:constraint_referenced_ids="
+            refresh_posts,
+            fab_coordinator,
+            fab_load_image_coordinator
+        "
         />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -43,6 +47,25 @@
             style="@style/Widget.AppTheme.FAB"
             android:src="@drawable/ic_add_new_post_24"
             android:contentDescription="@string/description_create_new_post" />
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/fab_load_image_coordinator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/FABindent"
+        app:layout_constraintBottom_toTopOf="@id/fab_coordinator"
+        app:layout_constraintStart_toStartOf="@id/fab_coordinator"
+        app:layout_constraintEnd_toEndOf="@id/fab_coordinator">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/to_load_sample_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Widget.AppTheme.FAB"
+            android:src="@drawable/ic_load_sample_image"
+            android:contentDescription="@string/to_load_sample_image_fragment" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

@@ -29,4 +29,7 @@
     <string name="error_loading">There\'s something wrong with the world today… But you can try again</string>
     <string name="retry_loading">Retry</string>
     <string name="empty_posts">The posts list is empty.\nIf you create a new post, it will appear here</string>
+    <string name="load_sample_image">Load Sample Image</string>
+    <string name="sample_image">The sample image would be show in here</string>
+    <string name="to_load_sample_image_fragment">Go to load sample image screen</string>
 </resources>
