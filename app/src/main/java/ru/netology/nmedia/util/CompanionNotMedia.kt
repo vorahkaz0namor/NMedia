@@ -18,6 +18,10 @@ object CompanionNotMedia {
     val actualTime = { now: Long ->
         SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
     }
+    enum class Type {
+        AVATAR,
+        IMAGE
+    }
 
     fun showToastAfterSave(
         fragmentContext: Context?,
@@ -42,6 +46,7 @@ object CompanionNotMedia {
 
     fun ImageView.load(
         url: String,
+        type: String = Type.AVATAR.name,
         @DrawableRes placeholder: Int = R.drawable.ic_loading,
         @DrawableRes fallback: Int = R.drawable.ic_error_loading,
         timeOutMs: Int = 10_000
@@ -50,8 +55,12 @@ object CompanionNotMedia {
             .load(url)
             .timeout(timeOutMs)
             .placeholder(placeholder)
-            .error(fallback)
-            .circleCrop()
-            .into(this)
+            .error(fallback).apply {
+                (if (type == Type.IMAGE.name)
+                    dontTransform()
+                else
+                    circleCrop()
+                ).into(this@load)
+            }
     }
 }

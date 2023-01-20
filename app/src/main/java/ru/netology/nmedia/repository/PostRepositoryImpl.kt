@@ -40,6 +40,7 @@ class PostRepositoryImpl: PostRepository {
         private val jsonType = "application/json".toMediaType()
         private const val PATH = "/api/slow/posts"
         private const val AVATAR_PATH = "/avatars/"
+        private const val IMAGE_PATH = "/images/"
     }
 
     override fun getAll(callback: PostCallback<List<Post>>) {
@@ -129,4 +130,6 @@ class PostRepositoryImpl: PostRepository {
     }
 
     override fun avatarUrl(authorAvatar: String) = "$BASE_URL$AVATAR_PATH$authorAvatar"
+
+    override fun attachmentUrl(url: String) = "$BASE_URL$IMAGE_PATH$url"
 }

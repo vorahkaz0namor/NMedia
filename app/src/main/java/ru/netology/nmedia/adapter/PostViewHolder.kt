@@ -1,7 +1,7 @@
 package ru.netology.nmedia.adapter
 
-import android.view.View
 import android.widget.PopupMenu
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
@@ -30,14 +30,17 @@ class PostViewHolder(
                 else
                     load(onInteractionListener.avatarUrl(post.authorAvatar))
             }
+            if (post.attachment != null) {
+                postAttachment.apply {
+                    isVisible = true
+                    contentDescription = post.attachment.description
+                    load(onInteractionListener.attachmentUrl(post.attachment.url), post.attachment.type)
+                }
+            }
+            postAttachment
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)
-            attachments.visibility =
-                if (post.attachments != null)
-                    View.VISIBLE
-                else
-                    View.INVISIBLE
             views.text = CountDisplay.show(post.views)
         }
     }

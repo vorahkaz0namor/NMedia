@@ -83,7 +83,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                             POST_CONTENT = post.content
                             // Аналогично FeedFragment
                             ATTACHMENT_PREVIEW = post.author
-                            ATTACHMENT_URI = post.attachments ?: "https://"
+                            ATTACHMENT_URI = post.attachment?.url ?: "https://"
                         }
                     )
                 }

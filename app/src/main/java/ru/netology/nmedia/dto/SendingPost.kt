@@ -7,7 +7,8 @@ data class SendingPost(
     val content: String,
     val published: Long,
     val likedByMe: Boolean,
-    val likes: Int = 0
+    val likes: Int = 0,
+    val attachment: Attachment? = null
 ) {
 
     companion object {
@@ -19,7 +20,8 @@ data class SendingPost(
                 content = dtoPost.content,
                 published = dtoPost.published,
                 likedByMe = dtoPost.likedByMe,
-                likes = dtoPost.likes
+                likes = dtoPost.likes,
+                attachment = dtoPost.attachment
             )
     }
 }

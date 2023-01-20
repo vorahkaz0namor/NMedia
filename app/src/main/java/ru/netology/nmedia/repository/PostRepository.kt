@@ -8,6 +8,7 @@ interface PostRepository {
     fun likeById(id: Long, likedByMe: Boolean, callback: PostCallback<Post>)
     fun removeById(id: Long, callback: PostCallback<Int>)
     fun avatarUrl(authorAvatar: String): String
+    fun attachmentUrl(url: String): String
 
     interface PostCallback<T> {
         fun onSuccess(result: T)

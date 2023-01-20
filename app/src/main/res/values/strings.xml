@@ -18,6 +18,7 @@
     <string name="show_post">Here will be appear the post…</string>
     <string name="chooser_share_post">Choose where you want to share the post</string>
     <string name="description_attachments">Attachments</string>
+    <string name="description_post_attachment">Post attachment</string>
     <string name="description_attachment_preview">@string/description_play</string>
     <string name="description_play">Play attachment</string>
     <string name="description_finish_attachments_view">Finish attachments view</string>

@@ -193,4 +193,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getAvatarUrl(authorAvatar: String) = repository.avatarUrl(authorAvatar)
+
+    fun getAttachmentUrl(url: String) = repository.attachmentUrl(url)
 }

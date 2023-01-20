@@ -19,6 +19,7 @@
     <string name="new_post_has_created">Новый пост успешно создан</string>
     <string name="post_has_edited">Пост успешно изменен</string>
     <string name="description_attachments">Вложения</string>
+    <string name="description_post_attachment">Вложение поста</string>
     <string name="description_attachment_preview">@string/description_play</string>
     <string name="description_play">Воспроизвести</string>
     <string name="description_finish_attachments_view">Завершение просмотра вложений</string>
