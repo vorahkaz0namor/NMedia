@@ -7,6 +7,7 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.util.CompanionNotMedia.actualTime
+import ru.netology.nmedia.util.CompanionNotMedia.load
 
 class PostViewHolder(
     private val binding: CardPostBinding,
@@ -23,15 +24,12 @@ class PostViewHolder(
             author.text = post.author
             published.text = actualTime(post.published)
             content.text = post.content
-            avatar.setImageResource(
-                if (author.text.contains("нетология", true))
-                    R.drawable.netology
+            avatar.apply {
+                if (post.authorAvatar == "localuser.jpg")
+                    setImageResource(R.drawable.ic_local_user_24)
                 else
-                    if (author.text.contains("гитарин", true))
-                        R.drawable.guitarin
-                    else
-                        R.drawable.ic_local_user_24
-            )
+                    load(onInteractionListener.avatarUrl(post.authorAvatar))
+            }
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)

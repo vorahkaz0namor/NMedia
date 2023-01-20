@@ -65,6 +65,7 @@
             android:layout_height="wrap_content"
             style="@style/Widget.AppTheme.FAB"
             android:src="@drawable/ic_load_sample_image"
+            android:visibility="gone"
             android:contentDescription="@string/to_load_sample_image_fragment" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
