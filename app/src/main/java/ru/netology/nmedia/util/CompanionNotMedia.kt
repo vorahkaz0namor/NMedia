@@ -51,6 +51,7 @@ object CompanionNotMedia {
             .timeout(timeOutMs)
             .placeholder(placeholder)
             .error(fallback)
+            .circleCrop()
             .into(this)
     }
 }

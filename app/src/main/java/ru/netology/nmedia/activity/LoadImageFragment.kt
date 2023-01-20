@@ -18,6 +18,10 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
         "netology.jpg",
         "sber.jpg",
         "tcs.jpg",
+        "avatar1.jpg",
+        "avatar2.jpg",
+        "Sneg.jpg",
+        "localuser.jpg",
         "404.jpg"
     )
     private var index = 0
