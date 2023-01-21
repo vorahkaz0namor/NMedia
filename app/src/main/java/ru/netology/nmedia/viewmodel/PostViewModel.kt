@@ -10,7 +10,6 @@ import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
 import ru.netology.nmedia.repository.PostRepository.PostCallback
 import ru.netology.nmedia.util.SingleLiveEvent
-import kotlin.concurrent.thread
 
 private val empty = Post(
     id = 0,
@@ -70,6 +69,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         "Zakharov Roman, AN-34"
                     else
                         it.author,
+                    authorAvatar = if (it.id == 0L)
+                        "localuser.jpg"
+                    else
+                        it.authorAvatar,
                     content = newContent,
                     published = System.currentTimeMillis()
                 ),
@@ -188,4 +191,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             value = empty
         }
     }
+
+    fun getAvatarUrl(authorAvatar: String) = repository.avatarUrl(authorAvatar)
+
+    fun getAttachmentUrl(url: String) = repository.attachmentUrl(url)
 }

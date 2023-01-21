@@ -29,4 +29,10 @@ class OnInteractionListenerImpl(
     override fun toSinglePost(post: Post) {
         viewModel.singlePost(post)
     }
+
+    override fun avatarUrl(authorAvatar: String) =
+        viewModel.getAvatarUrl(authorAvatar)
+
+    override fun attachmentUrl(url: String): String =
+        viewModel.getAttachmentUrl(url)
 }

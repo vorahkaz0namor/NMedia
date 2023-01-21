@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_feedFragment_to_singlePostFragment"
             app:destination="@id/singlePostFragment"/>
+        <action
+            android:id="@+id/action_feedFragment_to_sampleFragment"
+            app:destination="@id/sampleImageFragment"/>
     </fragment>
 
     <fragment
@@ -56,5 +59,10 @@
             android:id="@+id/action_singlePostFragment_to_attachmentsFragment"
             app:destination="@id/attachmentsFragment"/>
     </fragment>
+
+    <fragment
+        android:id="@+id/sampleImageFragment"
+        android:name="ru.netology.nmedia.activity.LoadImageFragment"
+        tools:layout="@layout/fragment_load_image"/>
 
 </navigation>

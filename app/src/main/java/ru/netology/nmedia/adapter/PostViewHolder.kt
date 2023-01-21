@@ -1,12 +1,13 @@
 package ru.netology.nmedia.adapter
 
-import android.view.View
 import android.widget.PopupMenu
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.util.CompanionNotMedia.actualTime
+import ru.netology.nmedia.util.CompanionNotMedia.load
 
 class PostViewHolder(
     private val binding: CardPostBinding,
@@ -23,23 +24,23 @@ class PostViewHolder(
             author.text = post.author
             published.text = actualTime(post.published)
             content.text = post.content
-            avatar.setImageResource(
-                if (author.text.contains("нетология", true))
-                    R.drawable.netology
+            avatar.apply {
+                if (post.authorAvatar == "localuser.jpg")
+                    setImageResource(R.drawable.ic_local_user_24)
                 else
-                    if (author.text.contains("гитарин", true))
-                        R.drawable.guitarin
-                    else
-                        R.drawable.ic_local_user_24
-            )
+                    load(onInteractionListener.avatarUrl(post.authorAvatar))
+            }
+            if (post.attachment != null) {
+                postAttachment.apply {
+                    isVisible = true
+                    contentDescription = post.attachment.description
+                    load(onInteractionListener.attachmentUrl(post.attachment.url), post.attachment.type)
+                }
+            }
+            postAttachment
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)
-            attachments.visibility =
-                if (post.attachments != null)
-                    View.VISIBLE
-                else
-                    View.INVISIBLE
             views.text = CountDisplay.show(post.views)
         }
     }
