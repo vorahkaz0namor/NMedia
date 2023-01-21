@@ -9,4 +9,6 @@ interface OnInteractionListener {
     fun onEdit(post: Post)
     fun onRemove(post: Post)
     fun toSinglePost(post: Post)
+    fun avatarUrl(authorAvatar: String): String
+    fun attachmentUrl(url: String): String
 }

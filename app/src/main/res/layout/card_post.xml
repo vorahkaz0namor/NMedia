@@ -63,8 +63,19 @@
         android:layout_height="wrap_content"
         android:layout_marginVertical="@dimen/indent"
         app:layout_constraintTop_toBottomOf="@id/barrierTop"
-        app:layout_constraintBottom_toTopOf="@id/barrierBottom"
+        app:layout_constraintBottom_toTopOf="@id/post_attachment"
         tools:text="@sample/posts.json/data/content" />
+
+    <ImageView
+        android:id="@+id/post_attachment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/indent"
+        app:layout_constraintTop_toBottomOf="@id/content"
+        app:layout_constraintBottom_toTopOf="@id/barrierBottom"
+        android:visibility="invisible"
+        tools:srcCompat="@sample/posts.json/data/attachment/url"
+        tools:contentDescription="@sample/posts.json/data/attachment/description"/>
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrierBottom"

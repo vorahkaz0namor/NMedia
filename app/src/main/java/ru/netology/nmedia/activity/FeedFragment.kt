@@ -100,7 +100,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                             POST_CONTENT = post.content
                             // Временно организовано определение preview по имени автора
                             ATTACHMENT_PREVIEW = post.author
-                            ATTACHMENT_URI = post.attachments ?: "https://"
+                            ATTACHMENT_URI = post.attachment?.url ?: "https://"
                         }
                     )
                 }
@@ -121,6 +121,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             recyclerView.refreshPosts.setOnRefreshListener {
                 recyclerView.refreshPosts.isRefreshing = false
                 viewModel.loadPosts()
+            }
+            recyclerView.toLoadSampleImage.setOnClickListener {
+                navController.navigate(R.id.action_feedFragment_to_sampleFragment)
             }
         }
     }

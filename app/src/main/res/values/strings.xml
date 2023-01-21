@@ -18,6 +18,7 @@
     <string name="show_post">Here will be appear the post…</string>
     <string name="chooser_share_post">Choose where you want to share the post</string>
     <string name="description_attachments">Attachments</string>
+    <string name="description_post_attachment">Post attachment</string>
     <string name="description_attachment_preview">@string/description_play</string>
     <string name="description_play">Play attachment</string>
     <string name="description_finish_attachments_view">Finish attachments view</string>
@@ -29,4 +30,7 @@
     <string name="error_loading">There\'s something wrong with the world today… But you can try again</string>
     <string name="retry_loading">Retry</string>
     <string name="empty_posts">The posts list is empty.\nIf you create a new post, it will appear here</string>
+    <string name="load_sample_image">Load Sample Image</string>
+    <string name="sample_image">The sample image would be show in here</string>
+    <string name="to_load_sample_image_fragment">Go to load sample image screen</string>
 </resources>

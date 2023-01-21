@@ -1,7 +1,7 @@
 package ru.netology.nmedia.dto
 
 data class Attachment(
-    val id: Long,
-    val preview: Int,
-    val attachment: String
+    val url: String,
+    val description: String,
+    val type: String
 )
