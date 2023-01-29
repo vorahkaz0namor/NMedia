@@ -5,10 +5,13 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import okhttp3.internal.http.HTTP_CONTINUE
+import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.repository.*
 import ru.netology.nmedia.repository.PostRepository.PostCallback
+import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.SingleLiveEvent
 
 private val empty = Post(
@@ -45,13 +48,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         _data.value = _data.value?.loading()
         repository.getAll(object : PostCallback<List<Post>> {
             // Если данные успешно получены, то отправляем их в data
-            override fun onSuccess(result: List<Post>) {
-                _data.postValue(_data.value?.showing(result))
+            override fun onSuccess(result: List<Post>, code: Int) {
+                // Поскольку Retrofit возвращает value в MainThread,
+                // то вместо .postValue() можно смело использовать .value =
+                _data.value = _data.value?.showing(posts = result, code = code)
+//                clearCode()
             }
             // Если получена ошибка
-            override fun onError(e: Exception) {
-                Log.d("EXCEPTION WHEN LOAD POSTS:", "$e")
-                _data.postValue(_data.value?.error())
+            override fun onError(code: Int) {
+                _data.value = _data.value?.error(code)
             }
         })
     }
@@ -76,19 +81,45 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                     content = newContent,
                     published = System.currentTimeMillis()
                 ),
-                object : PostCallback<Int> {
-                    override fun onSuccess(result: Int) {}
-                    override fun onError(e: Exception) {
-                        Log.d("SAVING EXCEPTION. CODE:", "$e")
+                object : PostCallback<Post> {
+                    override fun onSuccess(result: Post, code: Int) {
+                        _data.value =
+                            _data.value?.showing(
+                                posts = currentPostsList().let { postList ->
+                                    if (postList.none { it.id == result.id })
+                                        postList.plus(result).sortedByDescending { it.id }
+                                    else
+                                        postList.map { post ->
+                                            if (post.id == result.id)
+                                                post.copy(
+                                                    content = result.content,
+                                                    published = result.published
+                                                )
+                                            else
+                                                post
+                                        }
+                                },
+                                code = code
+                            )
+                        _postEvent.value = Unit
+                    }
+                    override fun onError(code: Int) {
+                        // Обновляется позже, чем показывается тост
+                        _data.value = _data.value?.copy(code = code)
+                        _postEvent.value = Unit
                     }
                 }
             )
-            _postEvent.postValue(Unit)
         }
     }
 
     fun clearEditedValue() {
         edited.value = empty
+    }
+
+    // Очистка кода ответа
+    fun clearCode() {
+        _data.value = _data.value?.copy(code = HTTP_CONTINUE)
     }
 
 //    fun saveDraftCopy(content: String?) {
@@ -101,7 +132,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun savePost(text: CharSequence?): Long? {
         if (validation(text)) {
             save(text.toString())
-        }
+        } else
+            _postEvent.value = Unit
         val result = edited.value?.id
         clearEditedValue()
         return result
@@ -117,19 +149,19 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             post.id,
             post.likedByMe,
             object : PostCallback<Post> {
-                override fun onSuccess(result: Post) {
-                    _data.postValue(
+                override fun onSuccess(result: Post, code: Int) {
+                    _data.value =
                         _data.value?.showing(
-                            currentPostsList().map {
+                            posts = currentPostsList().map {
                                 if (it.id == post.id)
                                     result
                                 else it
-                            }
+                            },
+                            code = code
                         )
-                    )
                 }
-                override fun onError(e: Exception) {
-                    _data.postValue(_data.value?.error())
+                override fun onError(code: Int) {
+                    _data.value = _data.value?.error(code)
                 }
             }
         )
@@ -153,12 +185,13 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun viewById(id: Long) {
         _data.value =
             _data.value?.showing(
-                currentPostsList().map {
+                posts = currentPostsList().map {
                     if (it.id == id)
                         it.copy(views = it.views + 1)
                     else
                         it
-                }
+                },
+                code = HTTP_OK
             )
         // Используется, когда viewById() реализован внутри сервера тоже
 //        thread {
@@ -170,17 +203,20 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun removeById(id: Long) {
         _data.value = _data.value?.loading()
-        repository.removeById(id, object : PostCallback<Int> {
-            override fun onSuccess(result: Int) {
-                _data.postValue(
+        repository.removeById(id, object : PostCallback<Unit> {
+            override fun onSuccess(result: Unit, code: Int) {
+                _data.value =
                     _data.value?.showing(
-                        currentPostsList().filter { it.id != id }
+                        posts = currentPostsList().filter { it.id != id },
+                        code = code
                     )
-                )
             }
-            override fun onError(e: Exception) {
-                Log.d("REMOVING EXCEPTION. CODE:", "$e")
-                _data.postValue(_data.value?.showing(currentPostsList()))
+            override fun onError(code: Int) {
+                Log.d("REMOVING EXCEPTION. CODE OVERVIEW:", overview(code))
+                _data.value = _data.value?.showing(
+                    posts = currentPostsList(),
+                    code = code
+                )
             }
         })
     }

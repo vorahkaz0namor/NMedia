@@ -27,9 +27,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             manifestPlaceholders.usesCleartextTraffic = false
+            buildConfigField "String", "BASE_URL", '"https://netomedia.ru"'
         }
         debug {
             manifestPlaceholders.usesCleartextTraffic = true
+            buildConfigField "String", "BASE_URL", '"http://192.168.31.16:9999"'
         }
     }
     compileOptions {
@@ -55,6 +57,8 @@ dependencies {
     def okhttp_version = '5.0.0-alpha.11'
     def swipe_refresh_version = "1.1.0"
     def glide_version = "4.14.2"
+    def retrofit_version = "2.9.0"
+    def okhttp_logging_version = "4.10.0"
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.5.1'
@@ -73,6 +77,8 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swipe_refresh_version"
     implementation "com.github.bumptech.glide:glide:$glide_version"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_logging_version"
 
     kapt "androidx.room:room-compiler:$room_version"
 

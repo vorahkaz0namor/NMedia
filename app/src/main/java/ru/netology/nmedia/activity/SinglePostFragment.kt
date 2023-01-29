@@ -28,11 +28,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
         PostViewHolder(binding.singlePost, OnInteractionListenerImpl(viewModel)).bind(post)
     }
 
-    private fun post() =
-        viewModel.data.value?.posts?.find { post ->
-            post.id == (arguments?.POST_ID)
-        }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
@@ -51,13 +46,18 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private fun subscribe() {
         viewModel.apply {
             data.observe(viewLifecycleOwner) { state ->
-                if (post() != null)
-                    postBind(post()!!)
+                val post = state.posts.find { it.id == arguments?.POST_ID }
+                if (post != null)
+                    postBind(post)
                 else
                     findNavController().navigateUp()
                 binding.apply {
                     progressBarView.progressBar.isVisible = state.loading
-                    errorView.errorGroup.isVisible = state.error
+                    errorView.apply {
+                        errorGroup.isVisible = state.error
+                        errorTitle.text =
+                            getString(R.string.error_loading, state.codeOverview)
+                    }
                     singlePostView.isVisible = state.showing
                 }
             }

@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import com.bumptech.glide.Glide
+import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import java.util.*
 
@@ -18,6 +19,14 @@ object CompanionNotMedia {
     val actualTime = { now: Long ->
         SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
     }
+    val overview = { code: Int ->
+        when (code) {
+            in 200..299 -> if (code == 204) "Body is null" else "Successful"
+            in 400..499 -> "Bad request"
+            in 500..599 -> "Internal server error"
+            else -> "Redirection"
+        }
+    }
     enum class Type {
         AVATAR,
         IMAGE
@@ -28,17 +37,21 @@ object CompanionNotMedia {
         viewContext: Context,
         postId: Long?,
         initialContent: String?,
-        newContent: String?
+        newContent: String?,
+        code: Int
     ) {
         if (newContent != initialContent)
             if (!newContent.isNullOrBlank())
                 Toast.makeText(
                     fragmentContext,
                     viewContext.getString(
-                        if (postId == 0L)
-                            R.string.new_post_has_created
-                        else
-                            R.string.post_has_edited
+                        if (code == HTTP_OK) {
+                            if (postId == 0L)
+                                R.string.new_post_has_created
+                            else
+                                R.string.post_has_edited
+                        } else
+                            R.string.error_saving, overview(code)
                     ),
                     Toast.LENGTH_LONG
                 ).show()
