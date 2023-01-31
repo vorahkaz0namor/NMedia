@@ -4,7 +4,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 
-class SingleLiveEvent<T> : MutableLiveData<T>() {
+class SingleLiveEvent<T>(code: T) : MutableLiveData<T>(code) {
     // Свойство pending отображает факт обработки события
     private var pending = false
 

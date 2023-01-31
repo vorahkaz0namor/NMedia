@@ -24,7 +24,7 @@ object CompanionNotMedia {
             in 200..299 -> if (code == 204) "Body is null" else "Successful"
             in 400..499 -> "Bad request"
             in 500..599 -> "Internal server error"
-            else -> "Redirection"
+            else -> "Continue..."
         }
     }
     enum class Type {

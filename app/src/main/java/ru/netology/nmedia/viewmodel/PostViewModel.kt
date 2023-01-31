@@ -27,8 +27,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val data: LiveData<FeedModel>
         get() = _data
     // Ручная реализация паттерна "слушатель-издатель" (одиночное событие)
-    private val _postEvent = SingleLiveEvent<Unit>()
-    val postEvent: LiveData<Unit>
+    private val _postEvent = SingleLiveEvent(HTTP_CONTINUE)
+    val postEvent: LiveData<Int>
         get() = _postEvent
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
@@ -52,7 +52,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 // Поскольку Retrofit возвращает value в MainThread,
                 // то вместо .postValue() можно смело использовать .value =
                 _data.value = _data.value?.showing(posts = result, code = code)
-//                clearCode()
             }
             // Если получена ошибка
             override fun onError(code: Int) {
@@ -101,12 +100,10 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                                 },
                                 code = code
                             )
-                        _postEvent.value = Unit
+                        _postEvent.value = code
                     }
                     override fun onError(code: Int) {
-                        // Обновляется позже, чем показывается тост
-                        _data.value = _data.value?.copy(code = code)
-                        _postEvent.value = Unit
+                        _postEvent.value = code
                     }
                 }
             )
@@ -115,11 +112,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearEditedValue() {
         edited.value = empty
-    }
-
-    // Очистка кода ответа
-    fun clearCode() {
-        _data.value = _data.value?.copy(code = HTTP_CONTINUE)
     }
 
 //    fun saveDraftCopy(content: String?) {
@@ -133,7 +125,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         if (validation(text)) {
             save(text.toString())
         } else
-            _postEvent.value = Unit
+            _postEvent.value = HTTP_CONTINUE
         val result = edited.value?.id
         clearEditedValue()
         return result

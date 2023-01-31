@@ -30,6 +30,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private val binding: FragmentNewPostBinding
         get() = _binding!!
     private var snackbar: Snackbar? = null
+    private var savedPostId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,18 +93,10 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 else {
                     // Изменение состояния отображения, пока не закончится
                     // уже запущенный процесс сохранения
-                    AndroidUtils.hideKeyboard(binding.newContent)
+                    AndroidUtils.hideKeyboard(newContent)
                     newPostGroup.isVisible = false
                     progressBarView.progressBar.isVisible = true
-                    val postId = viewModel.savePost(newContent.text.toString())
-                    showToastAfterSave(
-                        context,
-                        root.context,
-                        postId,
-                        arguments?.POST_CONTENT,
-                        newContent.text.toString(),
-                        viewModel.data.value?.code!!
-                    )
+                    savedPostId = viewModel.savePost(newContent.text.toString())
                 }
             }
             cancelEdit.setOnClickListener {
@@ -117,6 +110,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private fun subscribe() {
         viewModel.postEvent.observe(viewLifecycleOwner) {
             viewModel.loadPosts()
+            showToastAfterSave(
+                context,
+                binding.root.context,
+                savedPostId,
+                arguments?.POST_CONTENT,
+                binding.newContent.text.toString(),
+                viewModel.postEvent.value!!
+            )
             findNavController().navigateUp().also {
                 // Очистка черновика
 //                viewModel.saveDraftCopy(null)
