@@ -27,7 +27,8 @@
     <string name="notification_new_post">%1$s had published new post:</string>
     <string name="channel_remote_name">NMedia server notifications</string>
     <string name="channel_remote_description">Notifications from NMedia remote server</string>
-    <string name="error_loading">There\'s something wrong with the world today… But you can try again</string>
+    <string name="error_loading">There\'s something wrong with the world today…\n(%1$s)\nBut you can try again</string>
+    <string name="error_saving">The post wasn\'t saved…\n(%1$s)</string>
     <string name="retry_loading">Retry</string>
     <string name="empty_posts">The posts list is empty.\nIf you create a new post, it will appear here</string>
     <string name="load_sample_image">Load Sample Image</string>

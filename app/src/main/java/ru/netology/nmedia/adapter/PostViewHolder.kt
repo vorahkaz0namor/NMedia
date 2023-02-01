@@ -30,14 +30,17 @@ class PostViewHolder(
                 else
                     load(onInteractionListener.avatarUrl(post.authorAvatar))
             }
-            if (post.attachment != null) {
-                postAttachment.apply {
+            postAttachment.apply {
+                if (post.attachment != null) {
                     isVisible = true
                     contentDescription = post.attachment.description
-                    load(onInteractionListener.attachmentUrl(post.attachment.url), post.attachment.type)
-                }
+                    load(
+                        onInteractionListener.attachmentUrl(post.attachment.url),
+                        post.attachment.type
+                    )
+                } else
+                    isVisible = false
             }
-            postAttachment
             likes.isChecked = post.likedByMe
             likes.text = CountDisplay.show(post.likes)
             share.text = CountDisplay.show(post.shares)
