@@ -1,17 +1,15 @@
 package ru.netology.nmedia.viewmodel
 
 import android.app.Application
-import android.util.Log
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import okhttp3.internal.http.HTTP_CONTINUE
-import okhttp3.internal.http.HTTP_OK
+import androidx.lifecycle.*
+import kotlinx.coroutines.launch
+import okhttp3.internal.http.*
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
+import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.repository.*
-import ru.netology.nmedia.repository.PostRepository.PostCallback
-import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.SingleLiveEvent
 
 private val empty = Post(
@@ -22,11 +20,14 @@ private val empty = Post(
 )
 
 class PostViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: PostRepository = PostRepositoryImpl()
-    private val _data = MutableLiveData(FeedModel())
-    val data: LiveData<FeedModel>
-        get() = _data
-    // Ручная реализация паттерна "слушатель-издатель" (одиночное событие)
+    private val repository: PostRepository =
+        PostRepositoryImpl(AppDb.getInstance(application).postDao())
+    val data: LiveData<FeedModel> = repository.data.map { FeedModel(posts = it) }
+    private val _dataState = MutableLiveData(FeedModelState())
+    val dataState: LiveData<FeedModelState>
+        get() = _dataState
+    // Ручная реализация паттерна "слушатель-издатель" (одиночное событие),
+    // дополнительно - перехватывает HTTP-код ответа сервера
     private val _postEvent = SingleLiveEvent(HTTP_CONTINUE)
     val postEvent: LiveData<Int>
         get() = _postEvent
@@ -43,70 +44,64 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         loadPosts()
     }
 
-    fun loadPosts() {
-        // Включение состояния "загрузка"
-        _data.value = _data.value?.loading()
-        repository.getAll(object : PostCallback<List<Post>> {
-            // Если данные успешно получены, то отправляем их в data
-            override fun onSuccess(result: List<Post>, code: Int) {
-                // Поскольку Retrofit возвращает value в MainThread,
-                // то вместо .postValue() можно смело использовать .value =
-                _data.value = _data.value?.showing(posts = result, code = code)
+    fun loadPosts() =
+        // Для запуска корутин внутри ViewModel существует специальная
+        // функция-расширение viewModelScope
+        viewModelScope.launch {
+            try {
+                // Включение состояния "загрузка"
+                _dataState.value = _dataState.value?.loading()
+                repository.getAll()
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
             }
-            // Если получена ошибка
-            override fun onError(code: Int) {
-                _data.value = _data.value?.error(code)
+        }
+
+    fun refresh() {
+        viewModelScope.launch {
+            try {
+                _dataState.value = _dataState.value?.refreshing()
+                repository.getAll()
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
             }
-        })
+        }
     }
 
-    private fun currentPostsList() =  _data.value?.posts.orEmpty()
+    private fun currentPostsList() = data.value?.posts.orEmpty()
 
     private fun validation(text: CharSequence?) =
         (!text.isNullOrBlank() && edited.value?.content != text.trim())
 
     private fun save(newContent: String) {
-        edited.value?.let {
-            repository.save(
-                it.copy(
-                    author = if (it.id == 0L)
-                        "Zakharov Roman, AN-34"
-                    else
-                        it.author,
-                    authorAvatar = if (it.id == 0L)
-                        "localuser.jpg"
-                    else
-                        it.authorAvatar,
-                    content = newContent,
-                    published = System.currentTimeMillis()
-                ),
-                object : PostCallback<Post> {
-                    override fun onSuccess(result: Post, code: Int) {
-                        _data.value =
-                            _data.value?.showing(
-                                posts = currentPostsList().let { postList ->
-                                    if (postList.none { it.id == result.id })
-                                        postList.plus(result).sortedByDescending { it.id }
-                                    else
-                                        postList.map { post ->
-                                            if (post.id == result.id)
-                                                post.copy(
-                                                    content = result.content,
-                                                    published = result.published
-                                                )
-                                            else
-                                                post
-                                        }
-                                },
-                                code = code
-                            )
-                        _postEvent.value = code
-                    }
-                    override fun onError(code: Int) {
-                        _postEvent.value = code
-                    }
+        viewModelScope.launch {
+            try {
+                edited.value?.let {
+                    repository.save(
+                        it.copy(
+                            author = if (it.id == 0L)
+                                "Zakharov Roman, AN-34"
+                            else
+                                it.author,
+                            authorAvatar = if (it.id == 0L)
+                                "localuser.jpg"
+                            else
+                                it.authorAvatar,
+                            content = newContent,
+                            published = System.currentTimeMillis()
+                        )
+                    )
                 }
-            )
+                _dataState.value = _dataState.value?.showing()
+                _postEvent.value = HTTP_OK
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
+            }
         }
     }
 
@@ -125,7 +120,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         if (validation(text)) {
             save(text.toString())
         } else
-            _postEvent.value = HTTP_CONTINUE
+            _postEvent.value = HTTP_OK
         val result = edited.value?.id
         clearEditedValue()
         return result
@@ -136,27 +131,19 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun likeById(post: Post) {
-        _data.value = _data.value?.loading()
-        repository.likeById(
-            post.id,
-            post.likedByMe,
-            object : PostCallback<Post> {
-                override fun onSuccess(result: Post, code: Int) {
-                    _data.value =
-                        _data.value?.showing(
-                            posts = currentPostsList().map {
-                                if (it.id == post.id)
-                                    result
-                                else it
-                            },
-                            code = code
-                        )
-                }
-                override fun onError(code: Int) {
-                    _data.value = _data.value?.error(code)
-                }
+        viewModelScope.launch {
+            try {
+                _dataState.value = _dataState.value?.loading()
+                repository.likeById(
+                    post.id,
+                    post.likedByMe
+                )
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
             }
-        )
+        }
     }
 
     fun shareById(post: Post) {
@@ -175,42 +162,22 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun viewById(id: Long) {
-        _data.value =
-            _data.value?.showing(
-                posts = currentPostsList().map {
-                    if (it.id == id)
-                        it.copy(views = it.views + 1)
-                    else
-                        it
-                },
-                code = HTTP_OK
-            )
-        // Используется, когда viewById() реализован внутри сервера тоже
-//        thread {
-//            try {
-//                repository.viewById(id)
-//            } catch (_: IOException) {}
-//        }
+        viewModelScope.launch {
+            repository.viewById(id)
+        }
     }
 
     fun removeById(id: Long) {
-        _data.value = _data.value?.loading()
-        repository.removeById(id, object : PostCallback<Unit> {
-            override fun onSuccess(result: Unit, code: Int) {
-                _data.value =
-                    _data.value?.showing(
-                        posts = currentPostsList().filter { it.id != id },
-                        code = code
-                    )
+        viewModelScope.launch {
+            try {
+                _dataState.value = _dataState.value?.loading()
+                repository.removeById(id)
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
             }
-            override fun onError(code: Int) {
-                Log.d("REMOVING EXCEPTION. CODE OVERVIEW:", overview(code))
-                _data.value = _data.value?.showing(
-                    posts = currentPostsList(),
-                    code = code
-                )
-            }
-        })
+        }
     }
 
     fun singlePost(post: Post) {

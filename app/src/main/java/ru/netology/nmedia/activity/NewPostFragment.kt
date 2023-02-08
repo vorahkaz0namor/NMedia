@@ -5,7 +5,6 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
@@ -16,7 +15,6 @@ import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentNewPostBinding
 import ru.netology.nmedia.util.AndroidUtils
-import ru.netology.nmedia.util.CompanionNotMedia
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.CompanionNotMedia.showToastAfterSave
@@ -100,6 +98,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 }
             }
             cancelEdit.setOnClickListener {
+                viewModel.loadPosts()
                 findNavController().navigateUp().also {
 //                    viewModel.saveDraftCopy(null)
                 }
@@ -108,19 +107,34 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun subscribe() {
-        viewModel.postEvent.observe(viewLifecycleOwner) {
-            viewModel.loadPosts()
-            showToastAfterSave(
-                context,
-                binding.root.context,
-                savedPostId,
-                arguments?.POST_CONTENT,
-                binding.newContent.text.toString(),
-                viewModel.postEvent.value!!
-            )
-            findNavController().navigateUp().also {
-                // Очистка черновика
+        viewModel.postEvent.observe(viewLifecycleOwner) { code ->
+            binding.apply {
+                if (code == HTTP_OK) {
+                    showToastAfterSave(
+                        context,
+                        root.context,
+                        savedPostId,
+                        arguments?.POST_CONTENT,
+                        newContent.text.toString()
+                    )
+                    viewModel.loadPosts()
+                    findNavController().navigateUp().also {
+                        // Очистка черновика
 //                viewModel.saveDraftCopy(null)
+                    }
+                } else {
+                    snackbar = Snackbar.make(
+                        root,
+                        getString(R.string.error_saving, overview(code)),
+                        Snackbar.LENGTH_INDEFINITE
+                    )
+                        .setTextMaxLines(4)
+                        .setAction(android.R.string.ok) {
+                            newPostGroup.isVisible = true
+                            progressBarView.progressBar.isVisible = false
+                        }
+                    snackbar?.show()
+                }
             }
         }
     }

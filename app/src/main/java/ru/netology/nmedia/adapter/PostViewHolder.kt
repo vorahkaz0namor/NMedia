@@ -36,7 +36,7 @@ class PostViewHolder(
                     contentDescription = post.attachment.description
                     load(
                         onInteractionListener.attachmentUrl(post.attachment.url),
-                        post.attachment.type
+                        post.attachment.type.name
                     )
                 } else
                     isVisible = false

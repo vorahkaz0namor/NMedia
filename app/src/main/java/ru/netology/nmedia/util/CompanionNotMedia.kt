@@ -7,11 +7,17 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import com.bumptech.glide.Glide
-import okhttp3.internal.http.HTTP_OK
+import okhttp3.internal.http.HTTP_NO_CONTENT
+import retrofit2.HttpException
 import ru.netology.nmedia.R
+import java.net.ConnectException
 import java.util.*
 
 object CompanionNotMedia {
+    /** `520 Unknown Error` (non-standard HTTP code CloudFlare)  */
+    const val HTTP_UNKNOWN_ERROR = 520
+    /** `444 Connection Failed` (thought up code)  */
+    const val HTTP_CONNECTION_FAILED = 444
     var Bundle.POST_ID by LongArg
     var Bundle.POST_CONTENT by StringArg
     var Bundle.ATTACHMENT_PREVIEW by StringArg
@@ -21,10 +27,26 @@ object CompanionNotMedia {
     }
     val overview = { code: Int ->
         when (code) {
-            in 200..299 -> if (code == 204) "Body is null" else "Successful"
-            in 400..499 -> "Bad request"
-            in 500..599 -> "Internal server error"
+            in 200..299 -> if (code == HTTP_NO_CONTENT)
+                                     "Body is null"
+                                 else
+                                     "Successful"
+            in 400..499 -> if (code == HTTP_CONNECTION_FAILED)
+                                     "Connection failed"
+                                 else
+                                     "Bad request"
+            in 500..599 -> if (code == HTTP_UNKNOWN_ERROR)
+                                     "Unknown error"
+                                 else
+                                     "Internal server error"
             else -> "Continue..."
+        }
+    }
+    val exceptionCheck = { e: Exception ->
+        when (e) {
+            is HttpException -> e.code()
+            is ConnectException -> HTTP_CONNECTION_FAILED
+            else -> HTTP_UNKNOWN_ERROR
         }
     }
     enum class Type {
@@ -37,21 +59,17 @@ object CompanionNotMedia {
         viewContext: Context,
         postId: Long?,
         initialContent: String?,
-        newContent: String?,
-        code: Int
+        newContent: String?
     ) {
         if (newContent != initialContent)
             if (!newContent.isNullOrBlank())
                 Toast.makeText(
                     fragmentContext,
                     viewContext.getString(
-                        if (code == HTTP_OK) {
                             if (postId == 0L)
                                 R.string.new_post_has_created
                             else
                                 R.string.post_has_edited
-                        } else
-                            R.string.error_saving, overview(code)
                     ),
                     Toast.LENGTH_LONG
                 ).show()

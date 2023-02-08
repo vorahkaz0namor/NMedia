@@ -7,6 +7,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
+import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
@@ -17,6 +19,7 @@ import ru.netology.nmedia.adapter.PostViewHolder
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.databinding.SingleCardPostBinding
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class SinglePostFragment : Fragment(R.layout.single_card_post) {
@@ -45,21 +48,32 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
 
     private fun subscribe() {
         viewModel.apply {
-            data.observe(viewLifecycleOwner) { state ->
-                val post = state.posts.find { it.id == arguments?.POST_ID }
+            dataState.observe(viewLifecycleOwner) { state ->
+                binding.apply {
+                    progressBarView.progressBar.isVisible = state.loading
+                    errorView.errorTitle.isVisible = state.error
+                    singlePostView.isVisible = state.showing
+                    refreshPost.isRefreshing = state.refreshing
+                }
+            }
+            data.observe(viewLifecycleOwner) { data ->
+                val post = data.posts.find { it.id == arguments?.POST_ID }
                 if (post != null)
                     postBind(post)
                 else
                     findNavController().navigateUp()
-                binding.apply {
-                    progressBarView.progressBar.isVisible = state.loading
-                    errorView.apply {
-                        errorGroup.isVisible = state.error
-                        errorTitle.text =
-                            getString(R.string.error_loading, state.codeOverview)
-                    }
-                    singlePostView.isVisible = state.showing
-                }
+            }
+            postEvent.observe(viewLifecycleOwner) { code ->
+                if (code != HTTP_OK)
+                    Snackbar.make(
+                        binding.root,
+                        overview(code),
+                        Snackbar.LENGTH_INDEFINITE
+                    )
+                        .setAction(R.string.retry_loading) {
+                            loadPosts()
+                        }
+                        .show()
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -94,11 +108,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private fun setupListeners() {
         binding.apply {
             refreshPost.setOnRefreshListener {
-                viewModel.loadPosts()
-                binding.refreshPost.isRefreshing = false
-            }
-            errorView.retryButton.setOnClickListener {
-                viewModel.loadPosts()
+                viewModel.refresh()
             }
         }
     }
