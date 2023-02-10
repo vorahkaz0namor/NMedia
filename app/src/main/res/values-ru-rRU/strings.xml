@@ -29,10 +29,13 @@
     <string name="channel_remote_description">Уведомления с удаленного сервера NMedia</string>
     <string name="notification_new_post">%1$s опубликовал новый пост:</string>
     <string name="error_loading">Что-то пошло не так…\nПопробуйте снова.</string>
-    <string name="error_saving">Пост не был сохранен…\n(%1$s)\nПопробуйте снова.</string>
+    <string name="error_saving">Пост не был сохранен на сервер…\n(%1$s)\nПопробуйте повторить сохранение из карточки поста.</string>
+    <string name="error_editing">Отредактированный пост не был сохранен…\n(%1$s)</string>
     <string name="retry_loading">Повторить</string>
     <string name="empty_posts">Список постов пуст. Если Вы создадите новый пост, то он появится здесь</string>
     <string name="load_sample_image">Загрузить Пробное Изображение</string>
     <string name="sample_image">Пробное изображение будет показано здесь</string>
     <string name="to_load_sample_image_fragment">Перейти на экран загрузки пробного изображения</string>
+    <string name="repeat_save_on_server">Сохранить пост на сервере</string>
+    <string name="attachment_in_post_content">Вложенное изображение</string>
 </resources>

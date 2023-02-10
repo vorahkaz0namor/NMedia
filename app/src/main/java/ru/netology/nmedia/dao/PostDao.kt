@@ -11,7 +11,7 @@ import java.util.*
 
 @Dao
 interface PostDao {
-    // То, что возвращает "пописку" (LiveData) можно не оборачивать
+    // То, что возвращает "подписку" (LiveData) можно не оборачивать
     // в suspend, ибо это не такое уж "тяжелое" действие
     @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun getAll(): LiveData<List<PostEntity>>
@@ -47,20 +47,32 @@ interface PostDao {
         }
     }
 
-    @Insert(onConflict = REPLACE)
+    @Query("SELECT MAX(id) FROM PostEntity")
+    suspend fun getInsertedPostId(): Long
+
+    @Insert
     suspend fun insert(post: PostEntity)
 
-    @Insert(onConflict = REPLACE)
-    suspend fun insert(posts: List<PostEntity>)
+    @Query("""
+        UPDATE PostEntity SET 
+        idFromServer = :idFromServer,
+        content = :content, 
+        published = :published 
+        WHERE id = :id
+        """)
+    suspend fun updateContentById(id: Long, idFromServer: Long, content: String, published: Long)
 
-    @Query("UPDATE PostEntity SET content = :content, published = :published WHERE id = :id")
-    suspend fun updateContentById(id: Long, content: String, published: Long)
+    @Insert(onConflict = REPLACE)
+    suspend fun updatePostByIdFromServer(post: PostEntity)
 
     suspend fun save(post: PostEntity) =
-        if (post.id == 0L)
+        if (post.id == 0L) {
             insert(post)
+            getInsertedPostId()
+        }
         else {
-            updateContentById(post.id, post.content, post.published)
+            updateContentById(post.id, post.idFromServer, post.content, post.published)
+            post.id
         }
 
     @Query("""

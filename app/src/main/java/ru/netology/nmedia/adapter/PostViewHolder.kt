@@ -30,8 +30,17 @@ class PostViewHolder(
                 else
                     load(onInteractionListener.avatarUrl(post.authorAvatar))
             }
+            deprecatedActions.apply {
+                if (post.isOnServer) {
+                    isVisible = true
+                    repeatSavePost.isVisible = false
+                } else {
+                    isVisible = false
+                    repeatSavePost.isVisible = true
+                }
+            }
             postAttachment.apply {
-                if (post.attachment != null) {
+                if (post.attachment != null && post.isOnServer) {
                     isVisible = true
                     contentDescription = post.attachment.description
                     load(
@@ -62,6 +71,9 @@ class PostViewHolder(
             }
             attachments.setOnClickListener {
                 onInteractionListener.onAttachments(post)
+            }
+            repeatSavePost.setOnClickListener {
+                onInteractionListener.repeatSave(post)
             }
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {

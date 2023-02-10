@@ -5,6 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
@@ -94,7 +95,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     AndroidUtils.hideKeyboard(newContent)
                     newPostGroup.isVisible = false
                     progressBarView.progressBar.isVisible = true
-                    savedPostId = viewModel.savePost(newContent.text.toString())
+                    viewModel.savePost(newContent.text.toString())
                 }
             }
             cancelEdit.setOnClickListener {
@@ -109,32 +110,31 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private fun subscribe() {
         viewModel.postEvent.observe(viewLifecycleOwner) { code ->
             binding.apply {
-                if (code == HTTP_OK) {
+                if (code == HTTP_OK)
                     showToastAfterSave(
                         context,
                         root.context,
-                        savedPostId,
+                        viewModel.edited.value?.id,
                         arguments?.POST_CONTENT,
                         newContent.text.toString()
                     )
-                    viewModel.loadPosts()
-                    findNavController().navigateUp().also {
-                        // Очистка черновика
+                else
+                    Toast.makeText(
+                        context,
+                        root.context.getString(
+                            if (viewModel.edited.value?.idFromServer == 0L)
+                                R.string.error_saving
+                            else
+                                R.string.error_editing,
+                            overview(code)
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+            }
+            viewModel.loadPosts()
+            findNavController().navigateUp().also {
+                // Очистка черновика
 //                viewModel.saveDraftCopy(null)
-                    }
-                } else {
-                    snackbar = Snackbar.make(
-                        root,
-                        getString(R.string.error_saving, overview(code)),
-                        Snackbar.LENGTH_INDEFINITE
-                    )
-                        .setTextMaxLines(4)
-                        .setAction(android.R.string.ok) {
-                            newPostGroup.isVisible = true
-                            progressBarView.progressBar.isVisible = false
-                        }
-                    snackbar?.show()
-                }
             }
         }
     }

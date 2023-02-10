@@ -22,8 +22,12 @@ class OnInteractionListenerImpl(
         viewModel.edit(post)
     }
 
+    override fun repeatSave(post: Post) {
+        viewModel.repeatSavePost(post)
+    }
+
     override fun onRemove(post: Post) {
-        viewModel.removeById(post.id)
+        viewModel.removeById(post.id, post.idFromServer)
     }
 
     override fun toSinglePost(post: Post) {

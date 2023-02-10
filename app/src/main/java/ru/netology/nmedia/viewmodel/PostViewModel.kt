@@ -99,7 +99,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 _dataState.value = _dataState.value?.showing()
                 _postEvent.value = HTTP_OK
             } catch (e: Exception) {
-                _dataState.value = _dataState.value?.error()
                 _postEvent.value = exceptionCheck(e)
             }
         }
@@ -116,14 +115,24 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 //
 //    fun getDraftCopy() = repository.getDraftCopy()
 
-    fun savePost(text: CharSequence?): Long? {
+    fun savePost(text: CharSequence?) {
         if (validation(text)) {
             save(text.toString())
         } else
             _postEvent.value = HTTP_OK
-        val result = edited.value?.id
-        clearEditedValue()
-        return result
+    }
+
+    fun repeatSavePost(post: Post) {
+        viewModelScope.launch {
+            try {
+                _dataState.value = _dataState.value?.loading()
+                repository.save(post)
+                _dataState.value = _dataState.value?.showing()
+                _postEvent.value = HTTP_OK
+            } catch (e: Exception) {
+                _postEvent.value = exceptionCheck(e)
+            }
+        }
     }
 
     fun edit(post: Post) {
@@ -136,6 +145,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 _dataState.value = _dataState.value?.loading()
                 repository.likeById(
                     post.id,
+                    post.idFromServer,
                     post.likedByMe
                 )
                 _dataState.value = _dataState.value?.showing()
@@ -167,11 +177,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun removeById(id: Long) {
+    fun removeById(id: Long, idFromServer: Long) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.loading()
-                repository.removeById(id)
+                repository.removeById(id, idFromServer)
                 _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
