@@ -9,6 +9,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
+import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
@@ -17,6 +19,7 @@ import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
+import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
@@ -58,18 +61,29 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun subscribe() {
         viewModel.apply {
-            data.observe(viewLifecycleOwner) { state ->
-                adapter.submitList(state.posts)
+            dataState.observe(viewLifecycleOwner) { state ->
                 binding.apply {
                     progressBarView.progressBar.isVisible = state.loading
-                    errorView.apply {
-                        errorGroup.isVisible = state.error
-                        errorTitle.text =
-                            getString(R.string.error_loading, state.codeOverview)
-                    }
-                    emptyTextView.emptyText.isVisible = (state.empty && state.showing)
-                    recyclerView.postsList.isVisible = state.showing
+                    errorView.errorTitle.isVisible = state.error
+                    recyclerViewAndEmptyView.isVisible = state.showing
+                    recyclerView.refreshPosts.isRefreshing = state.refreshing
                 }
+            }
+            data.observe(viewLifecycleOwner) { data ->
+                adapter.submitList(data.posts)
+                binding.emptyTextView.emptyText.isVisible = data.empty
+            }
+            postEvent.observe(viewLifecycleOwner) { code ->
+                if (code != HTTP_OK)
+                    Snackbar.make(
+                        binding.root,
+                        overview(code),
+                        Snackbar.LENGTH_INDEFINITE
+                    )
+                        .setAction(R.string.retry_loading) {
+                            loadPosts()
+                        }
+                        .show()
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -119,12 +133,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     R.id.action_feedFragment_to_newPostFragment
                 )
             }
-            errorView.retryButton.setOnClickListener {
-                viewModel.loadPosts()
-            }
             recyclerView.refreshPosts.setOnRefreshListener {
-                recyclerView.refreshPosts.isRefreshing = false
-                viewModel.loadPosts()
+                viewModel.refresh()
             }
             recyclerView.toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)

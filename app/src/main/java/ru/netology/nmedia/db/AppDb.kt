@@ -34,7 +34,6 @@ abstract class AppDb : RoomDatabase() {
                 AppDb::class.java,
                 "nmedia.db"
             )
-                .allowMainThreadQueries()
                 .build()
     }
 }

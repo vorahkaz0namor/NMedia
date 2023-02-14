@@ -16,7 +16,6 @@ import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentNewPostBinding
 import ru.netology.nmedia.util.AndroidUtils
-import ru.netology.nmedia.util.CompanionNotMedia
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.CompanionNotMedia.showToastAfterSave
@@ -96,10 +95,11 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     AndroidUtils.hideKeyboard(newContent)
                     newPostGroup.isVisible = false
                     progressBarView.progressBar.isVisible = true
-                    savedPostId = viewModel.savePost(newContent.text.toString())
+                    viewModel.savePost(newContent.text.toString())
                 }
             }
             cancelEdit.setOnClickListener {
+                viewModel.loadPosts()
                 findNavController().navigateUp().also {
 //                    viewModel.saveDraftCopy(null)
                 }
@@ -108,16 +108,30 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun subscribe() {
-        viewModel.postEvent.observe(viewLifecycleOwner) {
+        viewModel.postEvent.observe(viewLifecycleOwner) { code ->
+            binding.apply {
+                if (code == HTTP_OK)
+                    showToastAfterSave(
+                        context,
+                        root.context,
+                        viewModel.edited.value?.id,
+                        arguments?.POST_CONTENT,
+                        newContent.text.toString()
+                    )
+                else
+                    Toast.makeText(
+                        context,
+                        root.context.getString(
+                            if (viewModel.edited.value?.idFromServer == 0L)
+                                R.string.error_saving
+                            else
+                                R.string.error_editing,
+                            overview(code)
+                        ),
+                        Toast.LENGTH_LONG
+                    ).show()
+            }
             viewModel.loadPosts()
-            showToastAfterSave(
-                context,
-                binding.root.context,
-                savedPostId,
-                arguments?.POST_CONTENT,
-                binding.newContent.text.toString(),
-                viewModel.postEvent.value!!
-            )
             findNavController().navigateUp().also {
                 // Очистка черновика
 //                viewModel.saveDraftCopy(null)

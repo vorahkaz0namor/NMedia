@@ -4,12 +4,15 @@ import android.database.Cursor
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
 
 @Dao
 interface PostDao {
+    // То, что возвращает "подписку" (LiveData) можно не оборачивать
+    // в suspend, ибо это не такое уж "тяжелое" действие
     @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     fun getAll(): LiveData<List<PostEntity>>
 
@@ -17,12 +20,12 @@ interface PostDao {
     fun cursor(): Cursor
 
     @Query("UPDATE DraftCopyEntity SET content = :content")
-    fun updateDraftCopy(content: String?)
+    suspend fun updateDraftCopy(content: String?)
 
     @Query("INSERT INTO DraftCopyEntity (content) VALUES (:content)")
-    fun insertDraftCopy(content: String?)
+    suspend fun insertDraftCopy(content: String?)
 
-    fun getDraftCopy(): String? {
+    suspend fun getDraftCopy(): String? {
         cursor().apply {
             return if (this.moveToFirst())
                 this.getString(
@@ -35,7 +38,7 @@ interface PostDao {
         }
     }
 
-    fun saveDraftCopy(content: String?) {
+    suspend fun saveDraftCopy(content: String?) {
         cursor().apply {
             if (this.moveToFirst())
                 updateDraftCopy(content)
@@ -44,17 +47,32 @@ interface PostDao {
         }
     }
 
+    @Query("SELECT MAX(id) FROM PostEntity")
+    suspend fun getInsertedPostId(): Long
+
     @Insert
-    fun insert(post: PostEntity)
+    suspend fun insert(post: PostEntity)
 
-    @Query("UPDATE PostEntity SET content = :content, published = :published WHERE id = :id")
-    fun updateContentById(id: Long, content: String, published: Long)
+    @Query("""
+        UPDATE PostEntity SET 
+        idFromServer = :idFromServer,
+        content = :content, 
+        published = :published 
+        WHERE id = :id
+        """)
+    suspend fun updateContentById(id: Long, idFromServer: Long, content: String, published: Long)
 
-    fun save(post: PostEntity) =
-        if (post.id == 0L)
+    @Insert(onConflict = REPLACE)
+    suspend fun updatePostByIdFromServer(post: PostEntity)
+
+    suspend fun save(post: PostEntity) =
+        if (post.id == 0L) {
             insert(post)
+            getInsertedPostId()
+        }
         else {
-            updateContentById(post.id, post.content, post.published)
+            updateContentById(post.id, post.idFromServer, post.content, post.published)
+            post.id
         }
 
     @Query("""
@@ -63,14 +81,14 @@ interface PostDao {
         likedByMe = CASE WHEN likedByMe THEN 0 ELSE 1 END
         WHERE id = :id
     """)
-    fun likeById(id: Long)
+    suspend fun likeById(id: Long)
 
     @Query("UPDATE PostEntity SET shares = shares + 1 WHERE id = :id")
-    fun shareById(id: Long)
+    suspend fun shareById(id: Long)
 
     @Query("UPDATE PostEntity SET views = views + 1 WHERE id = :id")
-    fun viewById(id: Long)
+    suspend fun viewById(id: Long)
 
     @Query("DELETE FROM PostEntity WHERE id = :id")
-    fun removeById(id: Long)
+    suspend fun removeById(id: Long)
 }
