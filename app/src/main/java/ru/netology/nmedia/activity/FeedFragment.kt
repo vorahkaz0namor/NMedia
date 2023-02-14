@@ -9,6 +9,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
@@ -73,6 +74,21 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 adapter.submitList(data.posts)
                 binding.emptyTextView.emptyText.isVisible = data.empty
             }
+            // Добавление плавного скролла при добавлении новых постов
+            adapter.registerAdapterDataObserver(
+                object : RecyclerView.AdapterDataObserver() {
+                    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                        // Если что-то добавилось наверх списка,
+                        if (positionStart == 0)
+                            // тогда плавно заскроллиться до самого верха
+                            binding.recyclerView.posts.smoothScrollToPosition(0)
+                    }
+                }
+            )
+            newerCount.observe(viewLifecycleOwner) { count ->
+                println("\nNEWER COUNT IS => $count\n\n")
+                binding.recyclerView.newPosts.isVisible = (count != 0)
+            }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK)
                     Snackbar.make(
@@ -127,17 +143,21 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun setupListeners() {
-        binding.apply {
-            recyclerView.addNewPost.setOnClickListener {
+        binding.recyclerView.apply {
+            addNewPost.setOnClickListener {
                 navController.navigate(
                     R.id.action_feedFragment_to_newPostFragment
                 )
             }
-            recyclerView.refreshPosts.setOnRefreshListener {
+            refreshPosts.setOnRefreshListener {
                 viewModel.refresh()
             }
-            recyclerView.toLoadSampleImage.setOnClickListener {
+            toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)
+            }
+            newPosts.setOnClickListener {
+                it.isVisible = false
+                viewModel.showUnreadPosts()
             }
         }
     }

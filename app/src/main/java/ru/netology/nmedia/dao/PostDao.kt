@@ -1,11 +1,11 @@
 package ru.netology.nmedia.dao
 
 import android.database.Cursor
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
 
@@ -13,39 +13,11 @@ import java.util.*
 interface PostDao {
     // То, что возвращает "подписку" (LiveData) можно не оборачивать
     // в suspend, ибо это не такое уж "тяжелое" действие
-    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
-    fun getAll(): LiveData<List<PostEntity>>
+    @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
+    fun getAll(): Flow<List<PostEntity>>
 
-    @Query("SELECT content FROM DraftCopyEntity")
-    fun cursor(): Cursor
-
-    @Query("UPDATE DraftCopyEntity SET content = :content")
-    suspend fun updateDraftCopy(content: String?)
-
-    @Query("INSERT INTO DraftCopyEntity (content) VALUES (:content)")
-    suspend fun insertDraftCopy(content: String?)
-
-    suspend fun getDraftCopy(): String? {
-        cursor().apply {
-            return if (this.moveToFirst())
-                this.getString(
-                    this.getColumnIndexOrThrow(
-                        this.columnNames.first()
-                    )
-                )
-            else
-                null
-        }
-    }
-
-    suspend fun saveDraftCopy(content: String?) {
-        cursor().apply {
-            if (this.moveToFirst())
-                updateDraftCopy(content)
-            else
-                insertDraftCopy(content)
-        }
-    }
+    @Query("SELECT id FROM PostEntity WHERE hidden = 1")
+    suspend fun getUnread(): List<Long>
 
     @Query("SELECT MAX(id) FROM PostEntity")
     suspend fun getInsertedPostId(): Long
@@ -89,6 +61,44 @@ interface PostDao {
     @Query("UPDATE PostEntity SET views = views + 1 WHERE id = :id")
     suspend fun viewById(id: Long)
 
+    @Query("""UPDATE PostEntity SET 
+        hidden = CASE WHEN hidden THEN 0 END 
+        WHERE id = :id""")
+    suspend fun updateHiddenToFalse(id: Long)
+
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
+
+    // Block to work with DraftCopy
+
+    @Query("SELECT content FROM DraftCopyEntity")
+    fun cursor(): Cursor
+
+    @Query("UPDATE DraftCopyEntity SET content = :content")
+    suspend fun updateDraftCopy(content: String?)
+
+    @Query("INSERT INTO DraftCopyEntity (content) VALUES (:content)")
+    suspend fun insertDraftCopy(content: String?)
+
+    suspend fun getDraftCopy(): String? {
+        cursor().apply {
+            return if (this.moveToFirst())
+                this.getString(
+                    this.getColumnIndexOrThrow(
+                        this.columnNames.first()
+                    )
+                )
+            else
+                null
+        }
+    }
+
+    suspend fun saveDraftCopy(content: String?) {
+        cursor().apply {
+            if (this.moveToFirst())
+                updateDraftCopy(content)
+            else
+                insertDraftCopy(content)
+        }
+    }
 }

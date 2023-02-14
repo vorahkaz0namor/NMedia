@@ -2,6 +2,8 @@ package ru.netology.nmedia.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
 import ru.netology.nmedia.db.AppDb
@@ -22,7 +24,16 @@ private val empty = Post(
 class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(application).postDao())
-    val data: LiveData<FeedModel> = repository.data.map { FeedModel(posts = it) }
+    val data: LiveData<FeedModel> =
+        repository.data.map { FeedModel(posts = it) }
+            .asLiveData(Dispatchers.Default)
+    val newerCount: LiveData<Int> =
+            data.switchMap {
+                val latestPostId = it.posts.maxOfOrNull { it.idFromServer } ?: 0L
+                val result = repository.getNewerCount(latestPostId).asLiveData()
+                println("\nLATEST READ POST ID => $latestPostId\n\n")
+                result
+            }
     private val _dataState = MutableLiveData(FeedModelState())
     val dataState: LiveData<FeedModelState>
         get() = _dataState
@@ -65,6 +76,17 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                 _dataState.value = _dataState.value?.refreshing()
                 repository.getAll()
                 _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
+            }
+        }
+    }
+
+    fun showUnreadPosts() {
+        viewModelScope.launch {
+            try {
+                repository.showUnreadPosts()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
                 _postEvent.value = exceptionCheck(e)

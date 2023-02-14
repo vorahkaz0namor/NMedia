@@ -7,6 +7,7 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import com.bumptech.glide.Glide
+import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_NO_CONTENT
 import retrofit2.HttpException
 import ru.netology.nmedia.R
@@ -15,9 +16,9 @@ import java.util.*
 
 object CompanionNotMedia {
     /** `520 Unknown Error` (non-standard HTTP code CloudFlare)  */
-    const val HTTP_UNKNOWN_ERROR = 520
+    private const val HTTP_UNKNOWN_ERROR = 520
     /** `444 Connection Failed` (thought up code)  */
-    const val HTTP_CONNECTION_FAILED = 444
+    private const val HTTP_CONNECTION_FAILED = 444
     var Bundle.POST_ID by LongArg
     var Bundle.POST_CONTENT by StringArg
     var Bundle.ATTACHMENT_PREVIEW by StringArg
@@ -31,10 +32,11 @@ object CompanionNotMedia {
                                      "Body is null"
                                  else
                                      "Successful"
-            in 400..499 -> if (code == HTTP_CONNECTION_FAILED)
-                                     "Connection failed"
-                                 else
-                                     "Bad request"
+            in 400..499 -> when (code) {
+                                     HTTP_CONNECTION_FAILED -> "Connection failed"
+                                     HTTP_NOT_FOUND -> "Not found"
+                                     else -> "Bad request"
+                                 }
             in 500..599 -> if (code == HTTP_UNKNOWN_ERROR)
                                      "Unknown error"
                                  else

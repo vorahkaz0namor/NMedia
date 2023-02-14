@@ -38,4 +38,5 @@
     <string name="to_load_sample_image_fragment">Перейти на экран загрузки пробного изображения</string>
     <string name="repeat_save_on_server">Сохранить пост на сервере</string>
     <string name="attachment_in_post_content">Вложенное изображение</string>
+    <string name="new_posts_notify">Новые посты</string>
 </resources>
