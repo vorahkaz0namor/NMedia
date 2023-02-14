@@ -131,7 +131,7 @@ class PostRepositoryImpl(
         id: Long,
         idFromServer: Long,
         likedByMe: Boolean
-    ): Post {
+    ) {
         dao.likeById(id)
         val postResponse = PostApi.service.let {
             if (likedByMe)
@@ -139,8 +139,15 @@ class PostRepositoryImpl(
             else
                 it.likeById(idFromServer)
         }
-        if (postResponse.isSuccessful)
-            return postResponse.body() ?: throw HttpException(postResponse)
+        if (postResponse.isSuccessful) {
+            val loadedPost = postResponse.body() ?: throw HttpException(postResponse)
+            dao.updatePostByIdFromServer(PostEntity.fromDto(
+                loadedPost.copy(
+                    id = id,
+                    idFromServer = idFromServer
+                )
+            ))
+        }
         else
             throw HttpException(postResponse)
     }

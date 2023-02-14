@@ -9,7 +9,7 @@ interface PostRepository {
     suspend fun getAll()
     suspend fun showUnreadPosts()
     suspend fun save(post: Post)
-    suspend fun likeById(id: Long, idFromServer: Long, likedByMe: Boolean): Post
+    suspend fun likeById(id: Long, idFromServer: Long, likedByMe: Boolean)
     suspend fun removeById(id: Long, idFromServer: Long)
     suspend fun viewById(id: Long)
     fun avatarUrl(authorAvatar: String): String
