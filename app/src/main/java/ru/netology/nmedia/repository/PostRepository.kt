@@ -2,6 +2,7 @@ package ru.netology.nmedia.repository
 
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.entity.PostEntity
 
 interface PostRepository {
     val data: Flow<List<Post>>
@@ -9,6 +10,10 @@ interface PostRepository {
     suspend fun getAll()
     suspend fun showUnreadPosts()
     suspend fun save(post: Post)
+    suspend fun updatePostsByIdFromServer(
+        posts: List<Post>,
+        hidden: Boolean
+    ): List<PostEntity>
     suspend fun likeById(id: Long, idFromServer: Long, likedByMe: Boolean)
     suspend fun removeById(id: Long, idFromServer: Long)
     suspend fun viewById(id: Long)

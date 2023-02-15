@@ -1,10 +1,8 @@
 package ru.netology.nmedia.util
 
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
+import androidx.lifecycle.*
 
-class SingleLiveEvent<T>(code: T) : MutableLiveData<T>(code) {
+class SingleLiveEvent<T>(value: T) : MutableLiveData<T>(value) {
     // Свойство pending отображает факт обработки события
     private var pending = false
 

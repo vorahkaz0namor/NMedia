@@ -14,7 +14,10 @@ interface PostDao {
     // То, что возвращает "подписку" (LiveData) можно не оборачивать
     // в suspend, ибо это не такое уж "тяжелое" действие
     @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
-    fun getAll(): Flow<List<PostEntity>>
+    fun getAllReaded(): Flow<List<PostEntity>>
+
+    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    suspend fun getAll(): List<PostEntity>
 
     @Query("SELECT id FROM PostEntity WHERE hidden = 1")
     suspend fun getUnread(): List<Long>
@@ -35,7 +38,7 @@ interface PostDao {
     suspend fun updateContentById(id: Long, idFromServer: Long, content: String, published: Long)
 
     @Insert(onConflict = REPLACE)
-    suspend fun updatePostByIdFromServer(post: PostEntity)
+    suspend fun updatePostsByIdFromServer(post: List<PostEntity>)
 
     suspend fun save(post: PostEntity) =
         if (post.id == 0L) {

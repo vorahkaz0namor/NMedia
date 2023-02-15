@@ -1,6 +1,5 @@
 package ru.netology.nmedia.repository
 
-import androidx.lifecycle.asLiveData
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,7 +21,7 @@ class PostRepositoryImpl(
         private const val IMAGE_PATH = "/images/"
     }
 
-    override val data = dao.getAll().map {
+    override val data = dao.getAllReaded().map {
             it.map(PostEntity::toDto)
         }
     // Операции, которые требуют максимальных ресурсов, рекомендуется выполнять
@@ -32,21 +31,13 @@ class PostRepositoryImpl(
     override fun getNewerCount(latestId: Long): Flow<Int> =
         flow {
             while (true) {
-                delay(30_000)
+                delay(50_000)
                 try {
                     val postsResponse = PostApi.service.getNewer(latestId)
-                    println("\nSIZE OF UNREAD POSTS LIST => ${postsResponse.body()?.size}\n\n")
                     if (postsResponse.isSuccessful) {
                         val newPosts = postsResponse.body().orEmpty().sortedBy { it.id }
-                        newPosts.map {
-                            dao.insert(
-                                PostEntity.fromDto(
-                                    it.copy(id = 0L, idFromServer = it.id)
-                                ).copy(hidden = true)
-                            )
-                        }
+                        updatePostsByIdFromServer(newPosts, true)
                         val unread = dao.getUnread().size
-                        println("\nFRESH UNREAD SIZE FROM DB => $unread")
                         emit(unread)
                     } else
                         throw HttpException(postsResponse)
@@ -70,46 +61,15 @@ class PostRepositoryImpl(
             val postsFromResponse = postsResponse.body().orEmpty().sortedBy { it.id }
             // { PostEntity.fromDto(it) } => Convert lambda to reference =>
             // => (PostEntity::fromDto)
-//            data.collect {
-//                it.map {
-//                    println("\nID FROM SERVER, IN DB => ${it.idFromServer}\n\n")
-//                }
-//            }
-//            val postsInDb: List<Post> = emptyList()
-//            data.collect {
-//                it.map { post ->
-//                    postsInDb.plus(post)
-//                }
-//            }
-            postsFromResponse.map { loadedPost ->
-                val existingPost =
-                    data.asLiveData().value?.let {
-                        it.find { it.idFromServer == loadedPost.id }
-                    }
-//                    postsInDb.find {
-//                        it.idFromServer == loadedPost.id
-//                    }
-                println("\nDETECTING EXISTING POST WHEN LOAD FROM SERVER, ID => " +
-                        "${existingPost?.idFromServer}\n\n")
-                if (existingPost != null)
-                    dao.updatePostByIdFromServer(PostEntity.fromDto(
-                            loadedPost.copy(
-                                id = existingPost.id,
-                                idFromServer = existingPost.idFromServer
-                            )
-                    ))
-                else
-                    dao.insert(PostEntity.fromDto(
-                            loadedPost.copy(id = 0L, idFromServer = loadedPost.id)
-                    ))
+            updatePostsByIdFromServer(postsFromResponse, false).map {
+                dao.removeById(it.id)
             }
         } else
             throw HttpException(postsResponse)
     }
 
     override suspend fun showUnreadPosts() {
-        val unread = dao.getUnread()
-        unread.map {
+        dao.getUnread().map {
             dao.updateHiddenToFalse(it)
         }
     }
@@ -127,6 +87,35 @@ class PostRepositoryImpl(
             throw HttpException(postResponse)
     }
 
+    override suspend fun updatePostsByIdFromServer(
+        posts: List<Post>,
+        hidden: Boolean
+    ): List<PostEntity> {
+        var loadedPosts: List<PostEntity> = emptyList()
+        val allExistingPosts = dao.getAll()
+        var postsToDelete = allExistingPosts
+        posts.map { singlePost ->
+            val findExistingPost =
+                allExistingPosts.find { it.idFromServer == singlePost.id }
+            loadedPosts = if (findExistingPost != null)
+                loadedPosts.plus(PostEntity.fromDto(
+                    singlePost.copy(
+                        id = findExistingPost.id,
+                        idFromServer = findExistingPost.idFromServer,
+                    )
+                ).copy(hidden = hidden))
+            else
+                loadedPosts.plus(PostEntity.fromDto(
+                    singlePost.copy(id = 0L, idFromServer = singlePost.id)
+                ).copy(hidden = hidden))
+            postsToDelete = postsToDelete.filter {
+                it.idFromServer != 0L && it.idFromServer != singlePost.id
+            }
+        }
+        dao.updatePostsByIdFromServer(loadedPosts)
+        return postsToDelete
+    }
+
     override suspend fun likeById(
         id: Long,
         idFromServer: Long,
@@ -141,12 +130,12 @@ class PostRepositoryImpl(
         }
         if (postResponse.isSuccessful) {
             val loadedPost = postResponse.body() ?: throw HttpException(postResponse)
-            dao.updatePostByIdFromServer(PostEntity.fromDto(
+            dao.updatePostsByIdFromServer( listOf( PostEntity.fromDto(
                 loadedPost.copy(
                     id = id,
                     idFromServer = idFromServer
                 )
-            ))
+            )))
         }
         else
             throw HttpException(postResponse)

@@ -86,8 +86,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
             )
             newerCount.observe(viewLifecycleOwner) { count ->
-                println("\nNEWER COUNT IS => $count\n\n")
-                binding.recyclerView.newPosts.isVisible = (count != 0)
+                binding.recyclerView.newPosts.apply {
+                    isVisible = (count != null && count != 0)
+                }
             }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK)

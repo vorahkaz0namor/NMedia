@@ -28,12 +28,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         repository.data.map { FeedModel(posts = it) }
             .asLiveData(Dispatchers.Default)
     val newerCount: LiveData<Int> =
-            data.switchMap {
-                val latestPostId = it.posts.maxOfOrNull { it.idFromServer } ?: 0L
-                val result = repository.getNewerCount(latestPostId).asLiveData()
-                println("\nLATEST READ POST ID => $latestPostId\n\n")
-                result
-            }
+        data.switchMap {
+            repository.getNewerCount(
+                it.posts.maxOfOrNull { it.idFromServer } ?: 0L
+            ).asLiveData()
+    }
     private val _dataState = MutableLiveData(FeedModelState())
     val dataState: LiveData<FeedModelState>
         get() = _dataState
@@ -86,15 +85,15 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     fun showUnreadPosts() {
         viewModelScope.launch {
             try {
+                _dataState.value = _dataState.value?.loading()
                 repository.showUnreadPosts()
+                _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
                 _postEvent.value = exceptionCheck(e)
             }
         }
     }
-
-    private fun currentPostsList() = data.value?.posts.orEmpty()
 
     private fun validation(text: CharSequence?) =
         (!text.isNullOrBlank() && edited.value?.content != text.trim())
