@@ -30,6 +30,7 @@ class PostRepositoryImpl(
 
     override fun getNewerCount(latestId: Long): Flow<Int> =
         flow {
+            emit(0)
             while (true) {
                 delay(50_000)
                 try {

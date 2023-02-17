@@ -27,6 +27,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     val data: LiveData<FeedModel> =
         repository.data.map { FeedModel(posts = it) }
             .asLiveData(Dispatchers.Default)
+            .distinctUntilChanged()
     val newerCount: LiveData<Int> =
         data.switchMap {
             repository.getNewerCount(
