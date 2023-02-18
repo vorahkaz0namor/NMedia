@@ -37,4 +37,5 @@
     <string name="to_load_sample_image_fragment">Go to load sample image screen</string>
     <string name="repeat_save_on_server">Save post to the server</string>
     <string name="attachment_in_post_content">Nested image</string>
+    <string name="new_posts_notify">New posts</string>
 </resources>

@@ -3,6 +3,7 @@ package ru.netology.nmedia.activity
 import android.os.Bundle
 import android.text.util.Linkify
 import android.view.View
+import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -29,6 +30,14 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private val binding by viewBinding(SingleCardPostBinding::bind)
     private val postBind = { post: Post ->
         PostViewHolder(binding.singlePost, OnInteractionListenerImpl(viewModel)).bind(post)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+            viewModel.loadPosts()
+            findNavController().navigateUp()
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

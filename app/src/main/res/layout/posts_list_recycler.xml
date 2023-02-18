@@ -6,6 +6,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/newPosts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="@style/Widget.AppTheme.FAB"
+        android:text="@string/new_posts_notify"
+        app:icon="@drawable/ic_new_posts_upper_24"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
     <androidx.constraintlayout.widget.Group
         android:id="@+id/postsList"
         android:layout_width="match_parent"

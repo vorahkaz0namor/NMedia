@@ -29,7 +29,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private val binding: FragmentNewPostBinding
         get() = _binding!!
     private var snackbar: Snackbar? = null
-    private var savedPostId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
