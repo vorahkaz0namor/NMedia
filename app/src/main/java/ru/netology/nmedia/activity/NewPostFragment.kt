@@ -1,15 +1,19 @@
 package ru.netology.nmedia.activity
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toFile
+import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_OK
@@ -28,6 +32,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     private var _binding: FragmentNewPostBinding? = null
     private val binding: FragmentNewPostBinding
         get() = _binding!!
+    private lateinit var photoLauncher: ActivityResultLauncher<Intent>
     private var snackbar: Snackbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +58,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         if (snackbar != null && snackbar?.isShown == true)
             snackbar?.dismiss()
         viewModel.clearEditedValue()
+        viewModel.clearPhoto()
         AndroidUtils.hideKeyboard(binding.newContent)
     }
 
@@ -75,27 +81,85 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
             setText(arguments?.POST_CONTENT /*?: viewModel.getDraftCopy()*/)
             requestFocus()
         }
+        photoLauncher =
+            registerForActivityResult(
+                ActivityResultContracts.StartActivityForResult()
+            ) {
+                when (it.resultCode) {
+                    ImagePicker.RESULT_ERROR -> Snackbar.make(
+                            binding.root,
+                            getString(R.string.error_load_photo),
+                            Snackbar.LENGTH_LONG
+                        )
+                            .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
+                            .show()
+                    else -> {
+                        val uri = it.data?.data ?: return@registerForActivityResult
+                        // Функция .toFile() на основе URI определяет, где расположен файл
+                        // и таким образом представляет URI в виде файла. Но эта функция
+                        // работает только если URI указывает на локальный ресурс, иначе
+                        // будет исключение.
+                        viewModel.changePhoto(uri.toFile(), uri)
+                    }
+                }
+            }
     }
 
     private fun setupListeners() {
         binding.apply {
-            saveThisPost.setOnClickListener {
-                if (newContent.text.isNullOrBlank()) {
-                    snackbar = Snackbar.make(
-                                   root,
-                                   R.string.empty_content,
-                                   BaseTransientBottomBar.LENGTH_INDEFINITE
-                               ).setAction(android.R.string.ok) {}
-                    snackbar?.show()
+            // Современный подход по созданию меню (2023 год).
+            // Здесь используется интерфейс addMenuProvider,
+            // который содержит в себе всю логику по созданию
+            // меню и обратботке кликов.
+            requireActivity().addMenuProvider(object : MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                    menuInflater.inflate(R.menu.new_post_menu, menu)
                 }
-                else {
-                    // Изменение состояния отображения, пока не закончится
-                    // уже запущенный процесс сохранения
-                    AndroidUtils.hideKeyboard(newContent)
-                    newPostGroup.isVisible = false
-                    progressBarView.progressBar.isVisible = true
-                    viewModel.savePost(newContent.text.toString())
-                }
+                override fun onMenuItemSelected(menuItem: MenuItem) =
+                    when (menuItem.itemId) {
+                        R.id.new_post -> {
+                            if (newContent.text.isNullOrBlank()) {
+                                snackbar = Snackbar.make(
+                                    root,
+                                    R.string.empty_content,
+                                    BaseTransientBottomBar.LENGTH_INDEFINITE
+                                ).setAction(android.R.string.ok) {}
+                                snackbar?.show()
+                            }
+                            else {
+                                // Изменение состояния отображения, пока не закончится
+                                // уже запущенный процесс сохранения
+                                AndroidUtils.hideKeyboard(newContent)
+                                newPostGroup.isVisible = false
+                                progressBarView.progressBar.isVisible = true
+                                viewModel.savePost(newContent.text.toString())
+                            }
+                            true
+                        }
+                        else -> false
+                    }
+            // Рекомендуется указывать LifecycleOwner (в случае с фрагментом -
+            // viewLifecycleOwner), чтобы когда фрагмент будет уничтожен,
+            // данное меню было скрыто.
+            }, viewLifecycleOwner)
+            imageFromGallery.setOnClickListener {
+                ImagePicker.with(this@NewPostFragment)
+                    .galleryOnly()
+                    .crop()
+                    .compress(2048)
+                    .createIntent {
+                        photoLauncher.launch(it)
+                    }
+            }
+            imageFromCamera.setOnClickListener {
+                ImagePicker.with(this@NewPostFragment)
+                    .cameraOnly()
+                    .crop()
+                    .compress(2048)
+                    .createIntent(photoLauncher::launch)
+            }
+            clearPreview.setOnClickListener {
+                viewModel.clearPhoto()
             }
             cancelEdit.setOnClickListener {
                 viewModel.loadPosts()
@@ -107,13 +171,18 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun subscribe() {
-        viewModel.postEvent.observe(viewLifecycleOwner) { code ->
+        viewModel.apply {
+            media.observe(viewLifecycleOwner) { image ->
+                binding.previewContainer.isVisible = (image != null)
+                binding.imagePreview.setImageURI(image?.uri)
+            }
+            postEvent.observe(viewLifecycleOwner) { code ->
             binding.apply {
                 if (code == HTTP_OK)
                     showToastAfterSave(
                         context,
                         root.context,
-                        viewModel.edited.value?.id,
+                        edited.value?.id,
                         arguments?.POST_CONTENT,
                         newContent.text.toString()
                     )
@@ -121,7 +190,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                     Toast.makeText(
                         context,
                         root.context.getString(
-                            if (viewModel.edited.value?.idFromServer == 0L)
+                            if (edited.value?.idFromServer == 0L)
                                 R.string.error_saving
                             else
                                 R.string.error_editing,
@@ -130,11 +199,12 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                         Toast.LENGTH_LONG
                     ).show()
             }
-            viewModel.loadPosts()
+            loadPosts()
             findNavController().navigateUp().also {
                 // Очистка черновика
-//                viewModel.saveDraftCopy(null)
+//                saveDraftCopy(null)
             }
+        }
         }
     }
 }

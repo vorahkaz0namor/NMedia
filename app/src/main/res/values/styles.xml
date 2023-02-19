@@ -10,6 +10,11 @@
         <item name="iconGravity">textEnd</item>
     </style>
 
+    <style name="Widget.AppTheme.ClearButton" parent="Widget.AppTheme.NMediaButton">
+        <item name="backgroundTint">@color/white</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
     <style name="Widget.AppTheme.NMediaButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">
         <item name="iconTint">?attr/colorControlNormal</item>
         <item name="android:minWidth">@dimen/zero_dp</item>

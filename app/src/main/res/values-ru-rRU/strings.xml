@@ -39,4 +39,7 @@
     <string name="repeat_save_on_server">Сохранить пост на сервере</string>
     <string name="attachment_in_post_content">Вложенное изображение</string>
     <string name="new_posts_notify">Новые посты</string>
+    <string name="add_post">Добавить пост</string>
+    <string name="clear_preview">Очистить</string>
+    <string name="error_load_photo">Ошибка</string>
 </resources>
