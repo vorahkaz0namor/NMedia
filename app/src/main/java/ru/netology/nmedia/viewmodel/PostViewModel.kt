@@ -102,8 +102,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun validation(text: CharSequence?) =
-        (!text.isNullOrBlank() && edited.value?.content != text.trim())
+    private fun validation(text: CharSequence?) = (
+            (!text.isNullOrBlank() &&
+            edited.value?.content != text.trim()) ||
+            media.value != null
+    )
 
     private fun save(newContent: String) {
         viewModelScope.launch {
@@ -121,6 +124,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         content = newContent,
                         published = System.currentTimeMillis()
                     )
+                    println("MEDIA LIKE URI  IS => ${media.value?.uri}")
+                    println("MEDIA LIKE FILE IS => ${media.value?.file}")
                     when (val media = media.value) {
                         null -> repository.save(post)
                         else -> repository.saveWithAttachment(post, media)
@@ -203,10 +208,11 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun showAttachments(post: Post) {
-        viewingAttachments.apply {
-            value = post
-            value = empty
-        }
+        viewingAttachments.value = post
+    }
+
+    fun clearAttachments() {
+        viewingAttachments.value = empty
     }
 
     fun viewById(id: Long) {

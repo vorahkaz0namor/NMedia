@@ -14,7 +14,7 @@ import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
-import ru.netology.nmedia.enum.AttachmentType
+import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.CompanionNotMedia.overview
@@ -24,7 +24,7 @@ class PostRepositoryImpl(
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
-        private const val IMAGE_PATH = "/images/"
+        private const val IMAGE_PATH = "/media/"
     }
 
     override val data = dao.getAllReaded().map {
@@ -97,10 +97,13 @@ class PostRepositoryImpl(
             val localSavedPostId = dao.save(PostEntity.fromDto(post))
             val uploaded = upload(media)
             val postResponse = PostApi.service.savePost(
-                post.copy(attachment = Attachment(
-                    url = uploaded.id,
-                    type = AttachmentType.IMAGE
-                ))
+                post.copy(
+                    id = post.idFromServer,
+                    attachment = Attachment(
+                        url = uploaded.id,
+                        type = AttachmentType.IMAGE
+                    )
+                )
             )
             if (postResponse.isSuccessful) {
                 val savedPost = postResponse.body() ?: throw HttpException(postResponse)
@@ -179,6 +182,7 @@ class PostRepositoryImpl(
                     idFromServer = idFromServer
                 )
             )))
+            showUnreadPosts()
         }
         else
             throw HttpException(postResponse)
@@ -188,7 +192,9 @@ class PostRepositoryImpl(
         dao.removeById(id)
         if (idFromServer != 0L) {
             val response = PostApi.service.removeById(idFromServer)
-            if (!response.isSuccessful)
+            if (response.isSuccessful)
+                showUnreadPosts()
+            else
                 throw HttpException(response)
         }
     }

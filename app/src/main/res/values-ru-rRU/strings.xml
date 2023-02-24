@@ -42,4 +42,7 @@
     <string name="add_post">Добавить пост</string>
     <string name="clear_preview">Очистить</string>
     <string name="error_load_photo">Ошибка</string>
+    <string name="attachment_preview">Предпросмотр вложения</string>
+    <string name="add_from_camera">Добавить с камеры</string>
+    <string name="add_from_gallery">Добавить из галереи</string>
 </resources>

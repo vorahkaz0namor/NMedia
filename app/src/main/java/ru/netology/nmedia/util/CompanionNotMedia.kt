@@ -53,7 +53,8 @@ object CompanionNotMedia {
     }
     enum class Type {
         AVATAR,
-        IMAGE
+        IMAGE,
+        VIDEO
     }
 
     fun showToastAfterSave(

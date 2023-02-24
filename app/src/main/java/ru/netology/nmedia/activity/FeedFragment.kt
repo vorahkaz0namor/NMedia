@@ -130,13 +130,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             viewingAttachments.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L) {
                     navController.navigate(
-                        R.id.action_feedFragment_to_attachmentsFragment,
-                        Bundle().apply {
-                            POST_CONTENT = post.content
-                            // Временно организовано определение preview по имени автора
-                            ATTACHMENT_PREVIEW = post.author
-                            ATTACHMENT_URI = post.attachment?.url ?: "https://"
-                        }
+                        R.id.action_feedFragment_to_attachmentsFragment
                     )
                 }
             }

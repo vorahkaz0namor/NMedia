@@ -3,16 +3,20 @@ package ru.netology.nmedia.activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
+import android.view.View.inflate
 import androidx.fragment.app.Fragment
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.widget.Toolbar
 import androidx.core.net.toFile
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupWithNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -40,7 +44,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         requireActivity().onBackPressedDispatcher.addCallback(this) {
             // Сохранение черновика
 //            viewModel.saveDraftCopy(binding.newContent.text.toString())
-            findNavController().navigateUp()
+            customNavigateUp()
         }
     }
 
@@ -57,8 +61,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onStop()
         if (snackbar != null && snackbar?.isShown == true)
             snackbar?.dismiss()
-        viewModel.clearEditedValue()
-        viewModel.clearPhoto()
         AndroidUtils.hideKeyboard(binding.newContent)
     }
 
@@ -162,10 +164,8 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 viewModel.clearPhoto()
             }
             cancelEdit.setOnClickListener {
-                viewModel.loadPosts()
-                findNavController().navigateUp().also {
 //                    viewModel.saveDraftCopy(null)
-                }
+                customNavigateUp()
             }
         }
     }
@@ -177,34 +177,41 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 binding.imagePreview.setImageURI(image?.uri)
             }
             postEvent.observe(viewLifecycleOwner) { code ->
-            binding.apply {
-                if (code == HTTP_OK)
-                    showToastAfterSave(
-                        context,
-                        root.context,
-                        edited.value?.id,
-                        arguments?.POST_CONTENT,
-                        newContent.text.toString()
-                    )
-                else
-                    Toast.makeText(
-                        context,
-                        root.context.getString(
-                            if (edited.value?.idFromServer == 0L)
-                                R.string.error_saving
-                            else
-                                R.string.error_editing,
-                            overview(code)
-                        ),
-                        Toast.LENGTH_LONG
-                    ).show()
-            }
-            loadPosts()
-            findNavController().navigateUp().also {
-                // Очистка черновика
+                binding.apply {
+                    if (code == HTTP_OK)
+                        showToastAfterSave(
+                            context,
+                            root.context,
+                            edited.value?.id,
+                            arguments?.POST_CONTENT,
+                            newContent.text.toString()
+                        )
+                    else
+                        Toast.makeText(
+                            context,
+                            root.context.getString(
+                                if (edited.value?.idFromServer == 0L)
+                                    R.string.error_saving
+                                else
+                                    R.string.error_editing,
+                                overview(code)
+                            ),
+                            Toast.LENGTH_LONG
+                        ).show()
+                }
+                    // Очистка черновика
 //                saveDraftCopy(null)
+                customNavigateUp()
             }
         }
+    }
+
+    private fun customNavigateUp() {
+        viewModel.apply {
+            clearEditedValue()
+            clearPhoto()
+            loadPosts()
         }
+        findNavController().navigateUp()
     }
 }

@@ -20,8 +20,8 @@ data class PostEntity(
     val shares: Int = 0,
     val views: Int = 0,
     val hidden: Boolean = false,
-//    @Embedded
-//    val attachment: AttachmentEmbeddable?
+    @Embedded
+    val attachment: Attachment?
 ) {
     fun toDto() =
         Post(
@@ -35,7 +35,7 @@ data class PostEntity(
             likedByMe = likedByMe,
             shares = shares,
             views = views,
-//            attachment = attachment?.toDto()
+            attachment = attachment
         )
 
     companion object {
@@ -51,7 +51,7 @@ data class PostEntity(
                 likedByMe = dtoPost.likedByMe,
                 shares = dtoPost.shares,
                 views = dtoPost.views,
-//                attachment = AttachmentEmbeddable.fromDto(dtoPost.attachment)
+                attachment = dtoPost.attachment
             )
     }
 }

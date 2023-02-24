@@ -12,7 +12,6 @@ import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
-import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
@@ -101,13 +100,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             viewingAttachments.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L) {
                     findNavController().navigate(
-                        R.id.action_singlePostFragment_to_attachmentsFragment,
-                        Bundle().apply {
-                            POST_CONTENT = post.content
-                            // Аналогично FeedFragment
-                            ATTACHMENT_PREVIEW = post.author
-                            ATTACHMENT_URI = post.attachment?.url ?: "https://"
-                        }
+                        R.id.action_singlePostFragment_to_attachmentsFragment
                     )
                 }
             }
