@@ -1,7 +1,7 @@
 package ru.netology.nmedia.entity
 
 import ru.netology.nmedia.dto.Attachment
-import ru.netology.nmedia.enum.AttachmentType
+import ru.netology.nmedia.enumeration.AttachmentType
 
 //@Embeddable - Unresolved reference
 data class AttachmentEmbeddable(

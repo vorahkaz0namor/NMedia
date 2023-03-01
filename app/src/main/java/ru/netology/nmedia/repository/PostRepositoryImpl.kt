@@ -4,12 +4,18 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.api.PostApi
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dto.Attachment
+import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
+import ru.netology.nmedia.enumeration.AttachmentType
+import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 
@@ -18,7 +24,7 @@ class PostRepositoryImpl(
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
-        private const val IMAGE_PATH = "/images/"
+        private const val IMAGE_PATH = "/media/"
     }
 
     override val data = dao.getAllReaded().map {
@@ -75,6 +81,45 @@ class PostRepositoryImpl(
         }
     }
 
+    private suspend fun upload(media: MediaModel): Media {
+        val part = MultipartBody.Part.createFormData(
+            "file", media.file.name, media.file.asRequestBody()
+        )
+        val response =  PostApi.service.uploadMedia(part)
+        if (!response.isSuccessful)
+            throw HttpException(response)
+        else
+            return requireNotNull(response.body())
+    }
+
+    override suspend fun saveWithAttachment(post: Post, media: MediaModel) {
+        try {
+            val localSavedPostId = dao.save(PostEntity.fromDto(post))
+            val uploaded = upload(media)
+            val postResponse = PostApi.service.savePost(
+                post.copy(
+                    id = post.idFromServer,
+                    attachment = Attachment(
+                        url = uploaded.id,
+                        type = AttachmentType.IMAGE
+                    )
+                )
+            )
+            if (postResponse.isSuccessful) {
+                val savedPost = postResponse.body() ?: throw HttpException(postResponse)
+                dao.save(PostEntity.fromDto(
+                    savedPost.copy(id = localSavedPostId, idFromServer = savedPost.id)
+                ))
+            }
+            else
+                throw HttpException(postResponse)
+        } catch (e: Exception) {
+            println("\nEXCEPTION WHEN SAVE WITH ATTACHMENT => $e\n" +
+                    "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
+
+        }
+    }
+
     override suspend fun save(post: Post) {
         val localSavedPostId = dao.save(PostEntity.fromDto(post))
         val postResponse = PostApi.service.savePost(post.copy(id = post.idFromServer))
@@ -88,7 +133,7 @@ class PostRepositoryImpl(
             throw HttpException(postResponse)
     }
 
-    override suspend fun updatePostsByIdFromServer(
+    private suspend fun updatePostsByIdFromServer(
         posts: List<Post>,
         hidden: Boolean
     ): List<PostEntity> {
@@ -137,6 +182,7 @@ class PostRepositoryImpl(
                     idFromServer = idFromServer
                 )
             )))
+            showUnreadPosts()
         }
         else
             throw HttpException(postResponse)
@@ -146,7 +192,9 @@ class PostRepositoryImpl(
         dao.removeById(id)
         if (idFromServer != 0L) {
             val response = PostApi.service.removeById(idFromServer)
-            if (!response.isSuccessful)
+            if (response.isSuccessful)
+                showUnreadPosts()
+            else
                 throw HttpException(response)
         }
     }

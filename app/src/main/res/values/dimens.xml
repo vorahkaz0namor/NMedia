@@ -3,6 +3,7 @@
     <dimen name="avatar_size">48dp</dimen>
     <dimen name="indent">16dp</dimen>
     <dimen name="FABindent">8dp</dimen>
+    <dimen name="play_corner_radius">6dp</dimen>
     <dimen name="zero_dp">0dp</dimen>
     <dimen name="post_hint">24sp</dimen>
     <dimen name="max_preview">320dp</dimen>

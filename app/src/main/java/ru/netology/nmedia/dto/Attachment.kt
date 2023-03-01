@@ -1,9 +1,9 @@
 package ru.netology.nmedia.dto
 
-import ru.netology.nmedia.enum.AttachmentType
+import ru.netology.nmedia.enumeration.AttachmentType
 
 data class Attachment(
     val url: String,
-    val description: String?,
+    val description: String? = null,
     val type: AttachmentType
 )

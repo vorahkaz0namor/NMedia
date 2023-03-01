@@ -69,7 +69,7 @@ class PostViewHolder(
             share.setOnClickListener {
                 onInteractionListener.onShare(post)
             }
-            attachments.setOnClickListener {
+            postAttachment.setOnClickListener {
                 onInteractionListener.onAttachments(post)
             }
             repeatSavePost.setOnClickListener {

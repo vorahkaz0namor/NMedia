@@ -38,4 +38,10 @@
     <string name="repeat_save_on_server">Save post to the server</string>
     <string name="attachment_in_post_content">Nested image</string>
     <string name="new_posts_notify">New posts</string>
+    <string name="add_post">Add post</string>
+    <string name="clear_preview">Clear</string>
+    <string name="error_load_photo">Error</string>
+    <string name="attachment_preview">Attachment preview</string>
+    <string name="add_from_camera">Add from camera</string>
+    <string name="add_from_gallery">Add from gallery</string>
 </resources>

@@ -4,29 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".activity.AttachmentsFragment">
-
-    <ImageView
-        android:id="@+id/attachment_preview"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/max_preview"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:contentDescription="@string/description_attachment_preview" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/play"
-        style="@style/Widget.AppTheme.MenuButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:icon="@drawable/ic_play_button_24"
-        app:iconTint="@color/white"
-        app:backgroundTint="@color/like_toggle_tint"
-        app:layout_constraintTop_toTopOf="@id/attachment_preview"
-        app:layout_constraintBottom_toBottomOf="@id/attachment_preview"
-        app:layout_constraintStart_toStartOf="@id/attachment_preview"
-        app:layout_constraintEnd_toEndOf="@id/attachment_preview"
-        android:contentDescription="@string/description_play" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/finish_view"
@@ -38,10 +17,50 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="@string/description_finish_attachments_view" />
 
-    <TextView
-        android:id="@+id/post_content"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/attachment_preview"/>
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:id="@+id/attachment_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/description_attachment_preview"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:srcCompat="@drawable/pickovskiy" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/play"
+                style="@style/Widget.AppTheme.MenuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/description_play"
+                app:backgroundTint="@color/like_toggle_tint"
+                app:cornerRadius="@dimen/play_corner_radius"
+                app:icon="@drawable/ic_play_button_24"
+                app:iconTint="@color/white"
+                app:layout_constraintBottom_toBottomOf="@id/attachment_preview"
+                app:layout_constraintEnd_toEndOf="@id/attachment_preview"
+                app:layout_constraintStart_toStartOf="@id/attachment_preview"
+                app:layout_constraintTop_toTopOf="@id/attachment_preview" />
+
+            <TextView
+                android:id="@+id/attachment_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                app:layout_constraintTop_toBottomOf="@id/attachment_preview"
+                tools:text="@string/attachment_preview" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
