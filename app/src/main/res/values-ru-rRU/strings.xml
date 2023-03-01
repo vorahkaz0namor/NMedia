@@ -54,4 +54,5 @@
     <string name="item_password">Пароль</string>
     <string name="enter_login">Введите логин здесь</string>
     <string name="enter_password">Введите пароль здесь</string>
+    <string name="wrong_login_password">Неверный логин или пароль</string>
 </resources>
