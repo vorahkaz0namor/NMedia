@@ -7,6 +7,7 @@ import kotlinx.parcelize.Parcelize
 data class Post(
     val id: Long,
     val idFromServer: Long = 0L,
+    val authorId: Long = 0L,
     val author: String,
     val authorAvatar: String = "",
     val published: Long,
@@ -16,5 +17,6 @@ data class Post(
     val shares: Int = 0,
     val views: Int = 0,
     val attachment: Attachment? = null,
-    val isOnServer: Boolean = idFromServer != 0L
+    val isOnServer: Boolean = idFromServer != 0L,
+    val ownedByMe: Boolean = false
 )/*: Parcelable*/

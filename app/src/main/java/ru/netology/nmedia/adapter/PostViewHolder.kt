@@ -30,6 +30,7 @@ class PostViewHolder(
                 else
                     load(onInteractionListener.avatarUrl(post.authorAvatar))
             }
+            menu.isVisible = post.ownedByMe
             deprecatedActions.apply {
                 if (post.isOnServer) {
                     isVisible = true

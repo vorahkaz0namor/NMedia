@@ -45,4 +45,13 @@
     <string name="attachment_preview">Предпросмотр вложения</string>
     <string name="add_from_camera">Добавить с камеры</string>
     <string name="add_from_gallery">Добавить из галереи</string>
+    <string name="make_logout">Вы уверены?</string>
+    <string name="item_login">Войти</string>
+    <string name="item_register">Зарегистрироваться</string>
+    <string name="item_logout">Выйти</string>
+    <string name="auth_dialog">Аутентификация</string>
+    <string name="cancel">Отмена</string>
+    <string name="item_password">Пароль</string>
+    <string name="enter_login">Введите логин здесь</string>
+    <string name="enter_password">Введите пароль здесь</string>
 </resources>

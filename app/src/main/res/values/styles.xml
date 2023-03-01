@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Widget.AppTheme.LikeButton" parent="Widget.AppTheme.NMediaButton">
         <item name="iconTint">@color/like_button_tint</item>
         <item name="backgroundTint">@android:color/transparent</item>
@@ -45,6 +45,12 @@
         <item name="android:paddingStart">@dimen/avatar_size</item>
         <item name="android:paddingEnd">@dimen/avatar_size</item>
         <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="Widget.AppTheme.NMediaOutlinedTextInput" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColorHint">@color/ripple_button</item>
+        <item name="hintAnimationEnabled">false</item>
     </style>
 
 </resources>

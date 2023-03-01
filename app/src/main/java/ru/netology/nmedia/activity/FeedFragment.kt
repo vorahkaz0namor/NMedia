@@ -21,11 +21,15 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
     private val viewModel: PostViewModel by viewModels(
         ownerProducer = ::requireParentFragment
+    )
+    private val authViewModel: AuthViewModel by viewModels(
+        ownerProducer = ::requireActivity
     )
     private var _binding: FragmentFeedBinding? = null
     private val binding: FragmentFeedBinding
@@ -134,6 +138,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     )
                 }
             }
+        }
+        authViewModel.data.observe(viewLifecycleOwner) {
+            viewModel.refresh()
         }
     }
 

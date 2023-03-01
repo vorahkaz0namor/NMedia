@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/authView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:constraint_referenced_ids="
+            auth_title, enter_login,
+            enter_password, login_field,
+            password_field, login_button,
+            cancel_button
+        "/>
+
+    <TextView
+        android:id="@+id/auth_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/play_corner_radius"
+        android:text="@string/auth_dialog"
+        android:textSize="@dimen/post_hint"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/enter_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/FABindent"
+        android:text="@string/item_login"
+        android:textSize="@dimen/static_text"
+        app:layout_constraintBottom_toBottomOf="@id/login_field"
+        app:layout_constraintEnd_toStartOf="@id/login_field"
+        app:layout_constraintTop_toTopOf="@id/login_field" />
+
+    <TextView
+        android:id="@+id/enter_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/FABindent"
+        android:text="@string/item_password"
+        android:textSize="@dimen/static_text"
+        app:layout_constraintBottom_toBottomOf="@id/password_field"
+        app:layout_constraintEnd_toStartOf="@id/password_field"
+        app:layout_constraintTop_toTopOf="@id/password_field" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/login_field"
+        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
+        android:hint="@string/enter_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/auth_title">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="@dimen/auth_input_line"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:padding="@dimen/auth_indent" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/password_field"
+        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
+        app:endIconMode="password_toggle"
+        android:hint="@string/enter_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/login_field">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="@dimen/auth_input_line"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:padding="@dimen/auth_indent" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrierBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="wrong_login_password" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/cancel_button"
+        style="@style/Widget.AppTheme.NMediaOutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/indent"
+        android:text="@string/cancel"
+        app:layout_constraintEnd_toStartOf="@id/login_button"
+        app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/login_button"
+        style="@style/Widget.AppTheme.NMediaOutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/item_login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
+
+    <TextView
+        android:id="@+id/wrong_login_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="@string/wrong_login_password"
+        android:textColor="@color/like_toggle_tint"
+        app:layout_constraintStart_toStartOf="@id/password_field"
+        app:layout_constraintEnd_toEndOf="@id/password_field"
+        app:layout_constraintTop_toBottomOf="@id/password_field"
+        />
+
+    <include
+        android:id="@+id/progressBarView"
+        layout="@layout/progress_bar_view"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
