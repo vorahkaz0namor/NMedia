@@ -20,15 +20,23 @@ import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.databinding.SingleCardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private val viewModel: PostViewModel by viewModels(
         ownerProducer = ::requireParentFragment
     )
+    private val authViewModel: AuthViewModel by viewModels(
+        ownerProducer = ::requireActivity
+    )
     private val binding by viewBinding(SingleCardPostBinding::bind)
     private val postBind = { post: Post ->
-        PostViewHolder(binding.singlePost, OnInteractionListenerImpl(viewModel)).bind(post)
+        PostViewHolder(
+            binding.singlePost,
+            OnInteractionListenerImpl( viewModel, authViewModel )
+        )
+            .bind(post)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -103,6 +111,14 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         R.id.action_singlePostFragment_to_attachmentsFragment
                     )
                 }
+            }
+            authViewModel.checkAuthorized.observe(viewLifecycleOwner) {
+                if (it != 0)
+                    if (!authViewModel.authorized)
+                        AuthDialogFragment().show(
+                            childFragmentManager,
+                            AuthDialogFragment.AUTH_TAG
+                        )
             }
         }
     }

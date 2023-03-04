@@ -5,9 +5,7 @@ import android.view.View
 import android.widget.EditText
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
-import androidx.core.widget.doAfterTextChanged
-import androidx.core.widget.doOnTextChanged
-import androidx.fragment.app.Fragment
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
@@ -21,7 +19,7 @@ import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
 
-class LoginFragment : Fragment(R.layout.login_layout) {
+class LoginFragment : DialogFragment(R.layout.login_layout) {
     private val authViewModel: AuthViewModel by viewModels(
         ownerProducer = ::requireActivity
     )
@@ -44,8 +42,6 @@ class LoginFragment : Fragment(R.layout.login_layout) {
             loginButton.setOnClickListener {
                 if (textValidation()) {
                     AndroidUtils.hideKeyboard(this.root)
-                    loginField.clearFocus()
-                    passwordField.clearFocus()
                     authViewModel.login(
                         login = loginField.editText?.text.toString(),
                         password = passwordField.editText?.text.toString()
@@ -99,4 +95,7 @@ class LoginFragment : Fragment(R.layout.login_layout) {
             }
         }
 
+    companion object {
+        const val LOGIN_TAG = "AuthenticationFragment"
+    }
 }

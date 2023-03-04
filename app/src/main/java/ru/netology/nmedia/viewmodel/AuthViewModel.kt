@@ -29,6 +29,7 @@ class AuthViewModel : ViewModel() {
         AppAuth.getInstance().data.asLiveData(Dispatchers.Default)
     val authorized: Boolean
         get() = data.value != null
+    val checkAuthorized = MutableLiveData(0)
 
     fun login(login: String, password: String) {
         viewModelScope.launch {
@@ -48,5 +49,10 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             repository.logout()
         }
+    }
+
+    fun checkAuth() {
+        checkAuthorized.value = checkAuthorized.value?.plus(1)
+        checkAuthorized.value = checkAuthorized.value?.minus(1)
     }
 }

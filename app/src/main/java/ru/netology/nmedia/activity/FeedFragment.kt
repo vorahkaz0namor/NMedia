@@ -59,7 +59,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun initViews() {
-        adapter = PostAdapter(OnInteractionListenerImpl(viewModel))
+        adapter = PostAdapter(OnInteractionListenerImpl(viewModel, authViewModel))
         binding.recyclerView.posts.adapter = adapter
         navController = findNavController()
     }
@@ -142,14 +142,31 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         authViewModel.data.observe(viewLifecycleOwner) {
             viewModel.refresh()
         }
+        authViewModel.checkAuthorized.observe(viewLifecycleOwner) {
+            if (it != 0) {
+                if (!authViewModel.authorized)
+                    AuthDialogFragment().show(
+                        childFragmentManager,
+                        AuthDialogFragment.AUTH_TAG
+                    )
+                if (!authViewModel.authorized)
+                    viewModel.refresh()
+            }
+        }
     }
 
     private fun setupListeners() {
         binding.recyclerView.apply {
             addNewPost.setOnClickListener {
-                navController.navigate(
-                    R.id.action_feedFragment_to_newPostFragment
-                )
+                if (!authViewModel.authorized)
+                    AuthDialogFragment().show(
+                        childFragmentManager,
+                        AuthDialogFragment.AUTH_TAG
+                    )
+                if (authViewModel.authorized)
+                    navController.navigate(
+                        R.id.action_feedFragment_to_newPostFragment
+                    )
             }
             refreshPosts.setOnRefreshListener {
                 viewModel.refresh()

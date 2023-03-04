@@ -54,4 +54,6 @@
     <string name="cancel">Cancel</string>
     <string name="item_password">Password</string>
     <string name="wrong_login_password">Wrong login or password</string>
+    <string name="must_to_login">There needs an authentication to perform the action.</string>
+    <string name="wish_to_login">Do you wish to login?</string>
 </resources>

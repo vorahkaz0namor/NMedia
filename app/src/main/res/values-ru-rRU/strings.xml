@@ -55,4 +55,6 @@
     <string name="enter_login">Введите логин здесь</string>
     <string name="enter_password">Введите пароль здесь</string>
     <string name="wrong_login_password">Неверный логин или пароль</string>
+    <string name="must_to_login">Для выполнения действия необходима аутентификация.</string>
+    <string name="wish_to_login">Желаете войти?</string>
 </resources>

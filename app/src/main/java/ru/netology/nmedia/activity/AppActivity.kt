@@ -9,16 +9,13 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.core.view.MenuProvider
-import androidx.fragment.app.viewModels
-import androidx.navigation.NavController
+import androidx.core.view.children
 import androidx.navigation.findNavController
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import ru.netology.nmedia.R
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.viewmodel.AuthViewModel
-import ru.netology.nmedia.viewmodel.PostViewModel
 
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
     private val authViewModel: AuthViewModel by viewModels()
@@ -60,9 +57,11 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 }
                 override fun onMenuItemSelected(menuItem: MenuItem) =
                     when (menuItem.itemId) {
-                        R.id.login -> {
-                            findNavController(R.id.nav_host_fragment)
-                                .navigate(R.id.loginFragment)
+                        R.id.login, R.id.register -> {
+                            LoginFragment().show(
+                                supportFragmentManager,
+                                LoginFragment.LOGIN_TAG
+                            )
                             true
                         }
                         R.id.logout -> {
