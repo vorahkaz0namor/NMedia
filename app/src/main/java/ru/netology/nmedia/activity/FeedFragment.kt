@@ -11,6 +11,8 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import okhttp3.internal.http.HTTP_BAD_REQUEST
+import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
@@ -139,20 +141,28 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
             }
         }
-        authViewModel.data.observe(viewLifecycleOwner) {
-            viewModel.refresh()
-        }
-        authViewModel.checkAuthorized.observe(viewLifecycleOwner) {
-            if (it != 0) {
-                if (!authViewModel.authorized)
-                    AuthDialogFragment().show(
-                        childFragmentManager,
-                        AuthDialogFragment.AUTH_TAG
-                    )
-                if (!authViewModel.authorized)
+        authViewModel.apply {
+            data.observe(viewLifecycleOwner) {
+                viewModel.refresh()
+            }
+            checkAuthorized.observe(viewLifecycleOwner) {
+                if (it) {
+                    if (!authViewModel.authorized)
+                        AuthDialogFragment().show(
+                            childFragmentManager,
+                            AuthDialogFragment.AUTH_TAG
+                        )
+                }
+            }
+            authError.observe(viewLifecycleOwner) { code ->
+                if ( code != HTTP_OK &&
+                    (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
+                    clearAuthError()
                     viewModel.refresh()
+                }
             }
         }
+
     }
 
     private fun setupListeners() {

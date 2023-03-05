@@ -49,7 +49,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                 }
             }
             cancelButton.setOnClickListener {
-                findNavController().navigateUp()
+                this@LoginFragment.dismiss()
             }
         }
     }
@@ -65,7 +65,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             authEvent.observe(viewLifecycleOwner) { code ->
                 if (code == HTTP_OK)
-                    findNavController().navigateUp()
+                    this@LoginFragment.dismiss()
                 else {
                     val condition = (code == HTTP_BAD_REQUEST || code == HTTP_NOT_FOUND)
                     binding.wrongLoginPassword.isVisible = condition
@@ -76,7 +76,8 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                             Snackbar.LENGTH_INDEFINITE
                         )
                             .setAction(android.R.string.ok) {
-                                findNavController().navigateUp()
+                                saveAuthError(code)
+                                this@LoginFragment.dismiss()
                             }
                             .show()
                 }

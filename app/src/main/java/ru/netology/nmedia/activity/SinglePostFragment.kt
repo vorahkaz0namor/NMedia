@@ -112,14 +112,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     )
                 }
             }
-            authViewModel.checkAuthorized.observe(viewLifecycleOwner) {
-                if (it != 0)
-                    if (!authViewModel.authorized)
-                        AuthDialogFragment().show(
-                            childFragmentManager,
-                            AuthDialogFragment.AUTH_TAG
-                        )
-            }
         }
     }
 

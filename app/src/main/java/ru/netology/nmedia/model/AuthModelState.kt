@@ -15,4 +15,10 @@ data class AuthModelState(
             loading = false,
             showing = true
         )
+
+    fun error() =
+        this.copy(
+            loading = false,
+            showing = false
+        )
 }

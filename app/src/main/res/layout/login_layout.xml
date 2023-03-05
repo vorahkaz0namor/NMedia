@@ -32,9 +32,27 @@
         android:padding="@dimen/FABindent"
         android:text="@string/item_login"
         android:textSize="@dimen/static_text"
-        app:layout_constraintBottom_toBottomOf="@id/login_field"
-        app:layout_constraintEnd_toStartOf="@id/login_field"
-        app:layout_constraintTop_toTopOf="@id/login_field" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/auth_title" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/login_field"
+        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
+        android:hint="@string/enter_login"
+        android:layout_width="@dimen/zero_dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/enter_login"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        >
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:padding="@dimen/auth_indent" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/enter_password"
@@ -43,44 +61,39 @@
         android:padding="@dimen/FABindent"
         android:text="@string/item_password"
         android:textSize="@dimen/static_text"
-        app:layout_constraintBottom_toBottomOf="@id/password_field"
-        app:layout_constraintEnd_toStartOf="@id/password_field"
-        app:layout_constraintTop_toTopOf="@id/password_field" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/login_field"
-        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
-        android:hint="@string/enter_login"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/auth_title">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:layout_width="@dimen/auth_input_line"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:padding="@dimen/auth_indent" />
-
-    </com.google.android.material.textfield.TextInputLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/login_field" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/password_field"
         style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
         app:endIconMode="password_toggle"
         android:hint="@string/enter_password"
-        android:layout_width="wrap_content"
+        android:layout_width="@dimen/zero_dp"
         android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/login_field">
+        app:layout_constraintTop_toBottomOf="@id/enter_password">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:layout_width="@dimen/auth_input_line"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
             android:padding="@dimen/auth_indent" />
 
     </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/wrong_login_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="@string/wrong_login_password"
+        android:textColor="@color/like_toggle_tint"
+        app:layout_constraintStart_toStartOf="@id/password_field"
+        app:layout_constraintEnd_toEndOf="@id/password_field"
+        app:layout_constraintTop_toBottomOf="@id/password_field"
+        />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/barrierBottom"
@@ -107,18 +120,6 @@
         android:text="@string/item_login"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
-
-    <TextView
-        android:id="@+id/wrong_login_password"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:text="@string/wrong_login_password"
-        android:textColor="@color/like_toggle_tint"
-        app:layout_constraintStart_toStartOf="@id/password_field"
-        app:layout_constraintEnd_toEndOf="@id/password_field"
-        app:layout_constraintTop_toBottomOf="@id/password_field"
-        />
 
     <include
         android:id="@+id/progressBarView"

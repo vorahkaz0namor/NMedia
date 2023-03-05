@@ -65,7 +65,9 @@ class PostViewHolder(
     private fun setupListeners(post: Post) {
         binding.apply {
             root.setOnClickListener {
-                onInteractionListener.toSinglePost(post)
+                onInteractionListener.checkAuth()
+                if (onInteractionListener.authorized)
+                    onInteractionListener.toSinglePost(post)
             }
             likes.setOnClickListener {
                 onInteractionListener.checkAuth()

@@ -29,7 +29,8 @@ class AuthViewModel : ViewModel() {
         AppAuth.getInstance().data.asLiveData(Dispatchers.Default)
     val authorized: Boolean
         get() = data.value != null
-    val checkAuthorized = MutableLiveData(0)
+    val checkAuthorized = MutableLiveData(false)
+    val authError = MutableLiveData(HTTP_OK)
 
     fun login(login: String, password: String) {
         viewModelScope.launch {
@@ -37,10 +38,10 @@ class AuthViewModel : ViewModel() {
                 _authState.value = _authState.value?.loading()
                 repository.login(login, password)
                 _authEvent.value = HTTP_OK
+                _authState.value = _authState.value?.showing()
             } catch (e: Exception) {
                 _authEvent.value = exceptionCheck(e)
-            } finally {
-                _authState.value = _authState.value?.showing()
+                _authState.value = _authState.value?.error()
             }
         }
     }
@@ -52,7 +53,22 @@ class AuthViewModel : ViewModel() {
     }
 
     fun checkAuth() {
-        checkAuthorized.value = checkAuthorized.value?.plus(1)
-        checkAuthorized.value = checkAuthorized.value?.minus(1)
+        viewModelScope.launch {
+            checkAuthorized.value = true
+            checkAuthorized.value = false
+        }
+    }
+
+    fun saveAuthError(code: Int) {
+        viewModelScope.launch {
+            authError.value = code
+        }
+    }
+
+    fun clearAuthError() {
+        viewModelScope.launch {
+            authError.value = HTTP_OK
+            _authState.value = _authState.value?.showing()
+        }
     }
 }
