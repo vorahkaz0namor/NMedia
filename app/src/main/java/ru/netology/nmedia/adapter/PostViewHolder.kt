@@ -73,6 +73,8 @@ class PostViewHolder(
                 onInteractionListener.checkAuth()
                 if (onInteractionListener.authorized)
                     onInteractionListener.onLike(post)
+                else
+                    likes.isChecked = false
             }
             // Click Share
             share.setOnClickListener {
