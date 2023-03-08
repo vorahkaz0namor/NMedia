@@ -13,7 +13,6 @@ import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_BAD_REQUEST
@@ -96,6 +95,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             regButton.setOnClickListener {
                 AndroidUtils.hideKeyboard(this.root)
+                avatarPreviewGroup.isVisible = false
                 if (textValidation() &&
                     passwordField.editText?.text
                         .contentEquals(confirmPasswordField.editText?.text)
@@ -140,7 +140,6 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             authEvent.observe(viewLifecycleOwner) { code ->
                 if (code == HTTP_OK) {
-                    println("\nAUTHSTATE.REGSHOWING => ${authState.value?.regShowing}")
                     if (authState.value?.regShowing == true)
                         Toast.makeText(
                             context,
@@ -150,7 +149,8 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                     this@LoginFragment.dismiss()
                 }
                 else {
-                    val condition = (code == HTTP_BAD_REQUEST || code == HTTP_NOT_FOUND)
+                    val condition = (authState.value?.authShowing == true &&
+                                     code == HTTP_BAD_REQUEST || code == HTTP_NOT_FOUND)
                     binding.wrongLoginPassword.isVisible = condition
                     if (!condition)
                         Snackbar.make(

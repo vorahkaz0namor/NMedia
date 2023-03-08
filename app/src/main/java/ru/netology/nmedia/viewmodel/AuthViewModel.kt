@@ -55,7 +55,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _authState.value = _authState.value?.loading()
-                repository.register(name, login, password)
+                repository.register(name, login, password, media.value)
                 _authState.value = _authState.value?.regShowing()
                 _authEvent.value = HTTP_OK
             } catch (e: Exception) {
