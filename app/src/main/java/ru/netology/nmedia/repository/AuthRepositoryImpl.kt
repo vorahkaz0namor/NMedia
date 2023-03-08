@@ -15,6 +15,16 @@ class AuthRepositoryImpl : AuthRepository {
             throw HttpException(response)
     }
 
+    override suspend fun register(name: String, login: String, password: String) {
+        val response = PostApi.service.register(login, password, name)
+        if (response.isSuccessful) {
+            val authModel = response.body() ?: throw HttpException(response)
+            AppAuth.getInstance().setAuth(authModel)
+        }
+        else
+            throw HttpException(response)
+    }
+
     override suspend fun logout() {
         AppAuth.getInstance().removeAuth()
     }

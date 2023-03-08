@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="avatar_size">48dp</dimen>
+    <dimen name="password_field_height">40dp</dimen>
+    <dimen name="add_avatar_size">80dp</dimen>
     <dimen name="indent">16dp</dimen>
     <dimen name="FABindent">8dp</dimen>
     <dimen name="play_corner_radius">6dp</dimen>

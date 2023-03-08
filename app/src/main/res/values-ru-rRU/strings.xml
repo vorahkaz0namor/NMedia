@@ -57,4 +57,12 @@
     <string name="wrong_login_password">Неверный логин или пароль</string>
     <string name="must_to_login">Для выполнения действия необходима аутентификация.</string>
     <string name="wish_to_login">Желаете войти?</string>
+    <string name="reg_dialog">Регистрация</string>
+    <string name="item_name">Имя</string>
+    <string name="enter_name">Введите имя здесь</string>
+    <string name="item_confirm_pass">Подтверждение пароля</string>
+    <string name="enter_confirm_pass">Подтвердите пароль здесь</string>
+    <string name="pass_don_t_match">Пароли не совпадают</string>
+    <string name="add_avatar">Добавить аватар</string>
+    <string name="avatar_preview">Предпросмотр аватара</string>
 </resources>

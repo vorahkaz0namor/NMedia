@@ -12,7 +12,7 @@
 
     <style name="Widget.AppTheme.ClearButton" parent="Widget.AppTheme.NMediaButton">
         <item name="backgroundTint">@color/white</item>
-        <item name="android:textColor">@color/black</item>
+        <item name="android:textColor">?attr/colorControlNormal</item>
     </style>
 
     <style name="Widget.AppTheme.NMediaButton" parent="Widget.MaterialComponents.Button.TextButton.Icon">

@@ -103,6 +103,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         overview(code),
                         Snackbar.LENGTH_INDEFINITE
                     )
+                        .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
                         .setAction(R.string.retry_loading) {
                             loadPosts()
                         }

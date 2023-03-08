@@ -57,7 +57,16 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                 }
                 override fun onMenuItemSelected(menuItem: MenuItem) =
                     when (menuItem.itemId) {
-                        R.id.login, R.id.register -> {
+                        R.id.login -> {
+                            authViewModel.authShowing()
+                            LoginFragment().show(
+                                supportFragmentManager,
+                                LoginFragment.LOGIN_TAG
+                            )
+                            true
+                        }
+                        R.id.register -> {
+                            authViewModel.regShowing()
                             LoginFragment().show(
                                 supportFragmentManager,
                                 LoginFragment.LOGIN_TAG
@@ -74,7 +83,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
                         else -> false
                     }
                 // Сохраняем новое меню как предыдущее
-            }.also { previousMenuProvider = it })
+            }.also { previousMenuProvider = it }, this)
         }
     }
 

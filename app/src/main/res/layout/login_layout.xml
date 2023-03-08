@@ -1,29 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+<androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/indent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:padding="@dimen/indent">
 
     <androidx.constraintlayout.widget.Group
-        android:id="@+id/authView"
+        android:id="@+id/auth_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:constraint_referenced_ids="
-            auth_title, enter_login,
-            enter_password, login_field,
-            password_field, login_button,
+            auth_title, login_button
+        "/>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/reg_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:constraint_referenced_ids="
+            reg_title, enter_name, name_field,
+            confirm_password, confirm_password_field,
+            reg_button, avatar_image
+        "/>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/common_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:constraint_referenced_ids="
+            enter_login, login_field,
+            enter_password, password_field,
             cancel_button
         "/>
 
     <TextView
         android:id="@+id/auth_title"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="@dimen/play_corner_radius"
         android:text="@string/auth_dialog"
         android:textSize="@dimen/post_hint"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/reg_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/play_corner_radius"
+        android:text="@string/reg_dialog"
+        android:textSize="@dimen/post_hint"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/auth_title" />
+
+    <TextView
+        android:id="@+id/enter_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/FABindent"
+        android:text="@string/item_name"
+        android:textSize="@dimen/static_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/reg_title" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/name_field"
+        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
+        android:hint="@string/enter_name"
+        android:layout_width="@dimen/zero_dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/enter_name"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        >
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+             />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/enter_login"
@@ -33,7 +96,7 @@
         android:text="@string/item_login"
         android:textSize="@dimen/static_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/auth_title" />
+        app:layout_constraintTop_toBottomOf="@id/name_field" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/login_field"
@@ -50,7 +113,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"
-            android:padding="@dimen/auth_indent" />
+             />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,9 +142,50 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="textPassword"
-            android:padding="@dimen/auth_indent" />
+             />
 
     </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/confirm_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/FABindent"
+        android:text="@string/item_confirm_pass"
+        android:textSize="@dimen/static_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/password_field" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/confirm_password_field"
+        style="@style/Widget.AppTheme.NMediaOutlinedTextInput"
+        app:endIconMode="password_toggle"
+        android:hint="@string/enter_confirm_pass"
+        android:layout_width="@dimen/zero_dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/confirm_password">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+             />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:id="@+id/passwords_dont_match"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="@string/pass_don_t_match"
+        android:textColor="@color/like_toggle_tint"
+        app:layout_constraintStart_toStartOf="@id/confirm_password_field"
+        app:layout_constraintEnd_toEndOf="@id/confirm_password_field"
+        app:layout_constraintTop_toBottomOf="@id/confirm_password_field"
+        />
 
     <TextView
         android:id="@+id/wrong_login_password"
@@ -90,9 +194,9 @@
         android:visibility="gone"
         android:text="@string/wrong_login_password"
         android:textColor="@color/like_toggle_tint"
-        app:layout_constraintStart_toStartOf="@id/password_field"
-        app:layout_constraintEnd_toEndOf="@id/password_field"
-        app:layout_constraintTop_toBottomOf="@id/password_field"
+        app:layout_constraintStart_toStartOf="@id/confirm_password_field"
+        app:layout_constraintEnd_toEndOf="@id/confirm_password_field"
+        app:layout_constraintTop_toBottomOf="@id/passwords_dont_match"
         />
 
     <androidx.constraintlayout.widget.Barrier
@@ -102,6 +206,19 @@
         app:barrierDirection="bottom"
         app:constraint_referenced_ids="wrong_login_password" />
 
+    <ImageView
+        android:id="@+id/avatar_image"
+        style="@style/Widget.AppTheme.MenuButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:srcCompat="@drawable/ic_add_from_gallery_32"
+        app:tint="?attr/colorControlNormal"
+        android:contentDescription="@string/add_avatar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/enter_name"
+        app:layout_constraintBottom_toBottomOf="@id/enter_name"
+        />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/cancel_button"
         style="@style/Widget.AppTheme.NMediaOutlinedButton"
@@ -109,6 +226,16 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/indent"
         android:text="@string/cancel"
+        app:layout_constraintEnd_toStartOf="@id/reg_button"
+        app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/reg_button"
+        style="@style/Widget.AppTheme.NMediaOutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/indent"
+        android:text="@string/item_register"
         app:layout_constraintEnd_toStartOf="@id/login_button"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
 
@@ -121,8 +248,37 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/barrierBottom" />
 
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/avatar_preview_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:constraint_referenced_ids="
+            avatar_preview, clear_avatar
+        " />
+
+        <ImageView
+            android:id="@+id/avatar_preview"
+            android:layout_width="@dimen/add_avatar_size"
+            android:layout_height="@dimen/add_avatar_size"
+            tools:srcCompat="@sample/posts.json/data/authorAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:contentDescription="@string/avatar_preview" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/clear_avatar"
+            style="@style/Widget.AppTheme.ClearButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/avatar_preview"
+            app:layout_constraintEnd_toEndOf="@id/avatar_preview"
+            app:layout_constraintBottom_toBottomOf="@id/avatar_preview"
+            android:text="@string/clear_preview" />
+
     <include
         android:id="@+id/progressBarView"
         layout="@layout/progress_bar_view"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</ScrollView>

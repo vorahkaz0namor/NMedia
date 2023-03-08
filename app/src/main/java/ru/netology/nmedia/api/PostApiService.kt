@@ -69,7 +69,24 @@ object PostApi {
 interface PostApiService {
     @FormUrlEncoded
     @POST("users/authentication")
-    suspend fun login(@Field("login") login: String, @Field("pass") password: String): Response<AuthModel>
+    suspend fun login(
+        @Field("login") login: String,
+        @Field("pass") password: String
+    ): Response<AuthModel>
+
+    @FormUrlEncoded
+    @POST("users/registration")
+    suspend fun register(
+        @Field("login") login: String,
+        @Field("pass") password: String,
+        @Field("name") name: String
+    ): Response<AuthModel>
+
+    @Multipart
+    @POST("users/registration")
+    suspend fun registerWithAvatar(
+
+    ): Response<AuthModel>
 
     @GET("posts")
     suspend fun getAll(): Response<List<Post>>
