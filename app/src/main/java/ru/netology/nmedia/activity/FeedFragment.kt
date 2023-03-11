@@ -11,6 +11,8 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import okhttp3.internal.http.HTTP_BAD_REQUEST
+import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
@@ -21,11 +23,15 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
     private val viewModel: PostViewModel by viewModels(
         ownerProducer = ::requireParentFragment
+    )
+    private val authViewModel: AuthViewModel by viewModels(
+        ownerProducer = ::requireActivity
     )
     private var _binding: FragmentFeedBinding? = null
     private val binding: FragmentFeedBinding
@@ -55,7 +61,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun initViews() {
-        adapter = PostAdapter(OnInteractionListenerImpl(viewModel))
+        adapter = PostAdapter(OnInteractionListenerImpl(viewModel, authViewModel))
         binding.recyclerView.posts.adapter = adapter
         navController = findNavController()
     }
@@ -97,6 +103,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         overview(code),
                         Snackbar.LENGTH_INDEFINITE
                     )
+                        .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
                         .setAction(R.string.retry_loading) {
                             loadPosts()
                         }
@@ -135,14 +142,42 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
             }
         }
+        authViewModel.apply {
+            data.observe(viewLifecycleOwner) {
+                viewModel.refresh()
+            }
+            checkAuthorized.observe(viewLifecycleOwner) {
+                if (it) {
+                    if (!authViewModel.authorized)
+                        AuthDialogFragment().show(
+                            childFragmentManager,
+                            AuthDialogFragment.AUTH_TAG
+                        )
+                }
+            }
+            authError.observe(viewLifecycleOwner) { code ->
+                if ( code != HTTP_OK &&
+                    (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
+                    clearAuthError()
+                    viewModel.refresh()
+                }
+            }
+        }
+
     }
 
     private fun setupListeners() {
         binding.recyclerView.apply {
             addNewPost.setOnClickListener {
-                navController.navigate(
-                    R.id.action_feedFragment_to_newPostFragment
-                )
+                if (!authViewModel.authorized)
+                    AuthDialogFragment().show(
+                        childFragmentManager,
+                        AuthDialogFragment.AUTH_TAG
+                    )
+                if (authViewModel.authorized)
+                    navController.navigate(
+                        R.id.action_feedFragment_to_newPostFragment
+                    )
             }
             refreshPosts.setOnRefreshListener {
                 viewModel.refresh()

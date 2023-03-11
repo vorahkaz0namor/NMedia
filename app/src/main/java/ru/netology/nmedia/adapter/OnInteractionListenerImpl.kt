@@ -1,11 +1,20 @@
 package ru.netology.nmedia.adapter
 
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class OnInteractionListenerImpl(
-    private val viewModel: PostViewModel
+    private val viewModel: PostViewModel,
+    private val authModel: AuthViewModel
 ) : OnInteractionListener {
+    override val authorized: Boolean
+        get() = authModel.authorized
+
+    override fun checkAuth() {
+        authModel.checkAuth()
+    }
+
     override fun onLike(post: Post) {
         viewModel.likeById(post)
     }

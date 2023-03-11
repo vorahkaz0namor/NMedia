@@ -4,9 +4,12 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
+import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
@@ -27,8 +30,17 @@ private val empty = Post(
 class PostViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: PostRepository =
         PostRepositoryImpl(AppDb.getInstance(application).postDao())
+    @OptIn(ExperimentalCoroutinesApi::class)
     val data: LiveData<FeedModel> =
-        repository.data.map { FeedModel(posts = it) }
+        AppAuth.getInstance().data
+            .flatMapLatest { authModel -> // it: AuthModel?
+                repository.data // Flow<List<Post>>
+                    .map { posts -> // it: List<Post>
+                        FeedModel(posts = posts.map {
+                            it.copy(ownedByMe = authModel?.id == it.authorId)
+                        })
+                    }
+            }
             .asLiveData(Dispatchers.Default)
             .distinctUntilChanged()
     val newerCount: LiveData<Int> =
@@ -124,8 +136,6 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         content = newContent,
                         published = System.currentTimeMillis()
                     )
-                    println("MEDIA LIKE URI  IS => ${media.value?.uri}")
-                    println("MEDIA LIKE FILE IS => ${media.value?.file}")
                     when (val media = media.value) {
                         null -> repository.save(post)
                         else -> repository.saveWithAttachment(post, media)

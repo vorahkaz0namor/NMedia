@@ -44,4 +44,25 @@
     <string name="attachment_preview">Attachment preview</string>
     <string name="add_from_camera">Add from camera</string>
     <string name="add_from_gallery">Add from gallery</string>
+    <string name="item_login">Login</string>
+    <string name="item_register">Register</string>
+    <string name="item_logout">Logout</string>
+    <string name="enter_login">Enter login here</string>
+    <string name="enter_password">Enter password here</string>
+    <string name="make_logout">Are you sure?</string>
+    <string name="auth_dialog">Authentication</string>
+    <string name="cancel">Cancel</string>
+    <string name="item_password">Password</string>
+    <string name="wrong_login_password">Wrong login or password</string>
+    <string name="must_to_login">There needs an authentication to perform the action.</string>
+    <string name="wish_to_login">Do you wish to login?</string>
+    <string name="reg_dialog">Registration</string>
+    <string name="item_name">Name</string>
+    <string name="enter_name">Enter name here</string>
+    <string name="item_confirm_pass">Confirm password</string>
+    <string name="enter_confirm_pass">Confirm password here</string>
+    <string name="pass_don_t_match">Passwords don\'t match</string>
+    <string name="add_avatar">Add an avatar</string>
+    <string name="avatar_preview">Avatar preview</string>
+    <string name="successful_regin">You are registered successfully</string>
 </resources>

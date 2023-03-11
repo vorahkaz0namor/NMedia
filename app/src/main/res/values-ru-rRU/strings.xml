@@ -45,4 +45,25 @@
     <string name="attachment_preview">Предпросмотр вложения</string>
     <string name="add_from_camera">Добавить с камеры</string>
     <string name="add_from_gallery">Добавить из галереи</string>
+    <string name="make_logout">Вы уверены?</string>
+    <string name="item_login">Войти</string>
+    <string name="item_register">Зарегистрироваться</string>
+    <string name="item_logout">Выйти</string>
+    <string name="auth_dialog">Аутентификация</string>
+    <string name="cancel">Отмена</string>
+    <string name="item_password">Пароль</string>
+    <string name="enter_login">Введите логин здесь</string>
+    <string name="enter_password">Введите пароль здесь</string>
+    <string name="wrong_login_password">Неверный логин или пароль</string>
+    <string name="must_to_login">Для выполнения действия необходима аутентификация.</string>
+    <string name="wish_to_login">Желаете войти?</string>
+    <string name="reg_dialog">Регистрация</string>
+    <string name="item_name">Имя</string>
+    <string name="enter_name">Введите имя здесь</string>
+    <string name="item_confirm_pass">Подтверждение пароля</string>
+    <string name="enter_confirm_pass">Подтвердите пароль здесь</string>
+    <string name="pass_don_t_match">Пароли не совпадают</string>
+    <string name="add_avatar">Добавить аватар</string>
+    <string name="avatar_preview">Предпросмотр аватара</string>
+    <string name="successful_regin">Вы успешно зарегистрированы</string>
 </resources>

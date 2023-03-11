@@ -61,6 +61,11 @@
     </fragment>
 
     <fragment
+        android:id="@+id/loginFragment"
+        android:name="ru.netology.nmedia.activity.LoginFragment"
+        tools:layout="@layout/login_layout"/>
+
+    <fragment
         android:id="@+id/sampleImageFragment"
         android:name="ru.netology.nmedia.activity.LoadImageFragment"
         tools:layout="@layout/fragment_load_image"/>
