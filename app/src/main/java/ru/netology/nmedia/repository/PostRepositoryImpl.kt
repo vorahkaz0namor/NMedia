@@ -54,7 +54,7 @@ class PostRepositoryImpl(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    println("\nCAUGHT EXCEPTION => $e\n" +
+                    println("CAUGHT EXCEPTION WHEN GET NEWER => $e\n" +
                             "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
                 }
             }

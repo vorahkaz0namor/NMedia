@@ -23,19 +23,19 @@ class AuthRepositoryImpl : AuthRepository {
     override suspend fun register(name: String, login: String, password: String, media: MediaModel?) {
         val response =
             PostApi.service.let {
-                if (media == null)
-                    it.register(login, password, name)
-                else {
-                    val mediaAsRequest = MultipartBody.Part.createFormData(
-                        "file", media.file.name, media.file.asRequestBody()
-                    )
-                    it.registerWithAvatar(
-                        login.toRequestBody("text/plain".toMediaType()),
-                        password.toRequestBody("text/plain".toMediaType()),
-                        name.toRequestBody("text/plain".toMediaType()),
-                        mediaAsRequest
-                    )
-                }
+                val mediaAsRequest =
+                    if (media != null)
+                        MultipartBody.Part.createFormData(
+                            "file", media.file.name, media.file.asRequestBody()
+                        )
+                    else
+                        null
+                it.registerWithAvatar(
+                    login.toRequestBody("text/plain".toMediaType()),
+                    password.toRequestBody("text/plain".toMediaType()),
+                    name.toRequestBody("text/plain".toMediaType()),
+                    mediaAsRequest
+                )
             }
         if (response.isSuccessful) {
             val authModel = response.body() ?: throw HttpException(response)

@@ -14,6 +14,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.AppActivity
+import ru.netology.nmedia.auth.AppAuth
 import kotlin.random.Random
 
 class FCMService : FirebaseMessagingService() {
@@ -47,6 +48,7 @@ class FCMService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("TOKEN: ", token)
+        AppAuth.getInstance().sendPushToken(token)
     }
 
     private fun handleMessage(action: String, content: MessageContent) {

@@ -2,8 +2,12 @@ package ru.netology.nmedia.activity
 
 import android.content.DialogInterface
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsets.Type
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -70,6 +74,12 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                     }
                 }
             }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R)
+            dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        else {
+            dialog?.window?.setDecorFitsSystemWindows(false)
+            binding.root.onApplyWindowInsets(WindowInsets.CONSUMED)
+        }
     }
 
     private fun setupListeners() {
