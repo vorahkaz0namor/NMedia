@@ -127,10 +127,9 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
     }
 
     private fun subscribe() {
-        binding.apply { setInvisibleError(loginField.editText, passwordField.editText) }
-        binding.confirmPasswordField.editText?.addTextChangedListener {
-            binding.passwordsDontMatch.isVisible =
-                (it?.contentEquals(binding.passwordField.editText?.text) == false)
+        binding.apply {
+            setInvisibleErrorWrongLoginPassword(loginField.editText, passwordField.editText)
+            setInvisibleErrorPasswordsDontMatch(passwordField.editText, confirmPasswordField.editText)
         }
         authViewModel.apply {
             authState.observe(viewLifecycleOwner) { state ->
@@ -183,10 +182,19 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
         !binding.passwordField.editText?.text.isNullOrBlank()
     )
 
-    private fun setInvisibleError(vararg text: EditText?) =
+    private fun setInvisibleErrorWrongLoginPassword(vararg text: EditText?) =
         text.map {
             it?.addTextChangedListener {
                 binding.wrongLoginPassword.isVisible = false
+            }
+        }
+
+    private fun setInvisibleErrorPasswordsDontMatch(vararg text: EditText?) =
+        text.map {
+            it?.addTextChangedListener { field ->
+                binding.passwordsDontMatch.isVisible =
+                    (field?.contentEquals(binding.passwordField.editText?.text) == false ||
+                            !field.contentEquals(binding.confirmPasswordField.editText?.text))
             }
         }
 

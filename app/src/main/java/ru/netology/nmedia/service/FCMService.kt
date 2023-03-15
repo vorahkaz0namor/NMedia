@@ -15,6 +15,7 @@ import com.google.gson.Gson
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.AppActivity
 import ru.netology.nmedia.auth.AppAuth
+import ru.netology.nmedia.dto.PushMessage
 import kotlin.random.Random
 
 class FCMService : FirebaseMessagingService() {
@@ -38,20 +39,61 @@ class FCMService : FirebaseMessagingService() {
         }
     }
 
-    override fun onMessageReceived(message: RemoteMessage) {
-        val incomingAction = message.data[action]
-        val incomingContent = message.data[content]
-        // Проверка входящего action'а на соответствие существующим в приложении
-        if (Action.values().find { it.name == incomingAction } != null)
-            handleMessage(incomingAction!!, gson.fromJson(incomingContent, MessageContent::class.java))
-    }
-
     override fun onNewToken(token: String) {
         Log.d("TOKEN: ", token)
         AppAuth.getInstance().sendPushToken(token)
     }
 
-    private fun handleMessage(action: String, content: MessageContent) {
+    override fun onMessageReceived(message: RemoteMessage) {
+        val currentUserId = AppAuth.getInstance().data.value?.id
+        val incomingContent = gson.fromJson(message.data[content], PushMessage::class.java)
+        val incomingRecipientId = incomingContent.recipientId
+        handleMessage(currentUserId, incomingRecipientId)
+    }
+
+    private fun handleMessage(currentUserId: Long?, recipientId: Long?) {
+        if (recipientId != null && recipientId != currentUserId)
+            AppAuth.getInstance().sendPushToken()
+        else {
+            val intent = Intent(applicationContext, AppActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                                    this,
+                                    0,
+                                    intent,
+                                    PendingIntent.FLAG_IMMUTABLE
+                                )
+            val notification = NotificationCompat.Builder(this, channelId).apply {
+                setSmallIcon(R.drawable.ic_notification)
+                when (recipientId) {
+                    null -> setContentTitle(getString(R.string.ads_push))
+                    currentUserId -> {
+                        val content = getString(R.string.ok_auth_push)
+                        setContentText(content.lines().first())
+                        setStyle( NotificationCompat.BigTextStyle().bigText(content) )
+                    }
+                }
+                priority = NotificationCompat.PRIORITY_DEFAULT
+                setContentIntent(pendingIntent)
+                setAutoCancel(true)
+            }.build()
+
+            NotificationManagerCompat.from(this)
+                .notify(Random.nextInt(100_000), notification)
+        }
+    }
+
+    fun onMessageReceivedOld(message: RemoteMessage) {
+        // Реализация к заданию 4.3 Notifications & Pushes
+        val incomingAction = message.data[action]
+        val incomingContent = message.data[content]
+        // Проверка входящего action'а на соответствие существующим в приложении
+        if (Action.values().find { it.name == incomingAction } != null)
+            handleMessageOld(incomingAction!!, gson.fromJson(incomingContent, MessageContent::class.java))
+    }
+
+    private fun handleMessageOld(action: String, content: MessageContent) {
         val intent = Intent(applicationContext, AppActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

@@ -38,6 +38,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         get() = _binding!!
     private lateinit var adapter: PostAdapter
     private lateinit var navController: NavController
+    private var snackbar: Snackbar? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -97,8 +98,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
             }
             postEvent.observe(viewLifecycleOwner) { code ->
-                if (code != HTTP_OK)
-                    Snackbar.make(
+                if (code != HTTP_OK) {
+                    snackbar = Snackbar.make(
                         binding.root,
                         overview(code),
                         Snackbar.LENGTH_INDEFINITE
@@ -107,7 +108,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         .setAction(R.string.retry_loading) {
                             loadPosts()
                         }
-                        .show()
+                    snackbar?.show()
+                }
             }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
@@ -144,6 +146,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
+                if (snackbar != null && snackbar?.isShown == true)
+                    snackbar?.dismiss()
                 viewModel.refresh()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
@@ -174,7 +178,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         childFragmentManager,
                         AuthDialogFragment.AUTH_TAG
                     )
-                if (authViewModel.authorized)
+                else
                     navController.navigate(
                         R.id.action_feedFragment_to_newPostFragment
                     )

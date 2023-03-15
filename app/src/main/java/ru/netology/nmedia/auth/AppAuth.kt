@@ -3,7 +3,6 @@ package ru.netology.nmedia.auth
 import android.content.Context
 import androidx.core.content.edit
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,10 +60,8 @@ class AppAuth private constructor(context: Context) {
 
     fun sendPushToken(token: String? = null) {
         CoroutineScope(Dispatchers.Default).launch {
-            val pushToken = PushToken(token ?: FirebaseMessaging.getInstance().token.await())
-            // Firebase.messaging.token.await()
-            println("GIVEN PUSHTOKEN => $token\n" +
-                    "PUSHTOKEN FROM FIREBASE => $pushToken")
+            val pushToken = PushToken(token ?: Firebase.messaging.token.await())
+            // FirebaseMessaging.getInstance().token.await()
             try {
                 PostApi.service.sendPushToken(pushToken)
             } catch (e: Exception) {
