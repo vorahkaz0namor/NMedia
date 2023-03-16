@@ -21,6 +21,7 @@ import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
 import java.util.concurrent.TimeUnit
 
@@ -75,22 +76,17 @@ interface PostApiService {
         @Field("pass") password: String
     ): Response<AuthModel>
 
-    @FormUrlEncoded
-    @POST("users/registration")
-    suspend fun register(
-        @Field("login") login: String,
-        @Field("pass") password: String,
-        @Field("name") name: String
-    ): Response<AuthModel>
-
     @Multipart
     @POST("users/registration")
     suspend fun registerWithAvatar(
         @Part("login") login: RequestBody,
         @Part("pass") pass: RequestBody,
         @Part("name") name: RequestBody,
-        @Part media: MultipartBody.Part
+        @Part media: MultipartBody.Part?
     ): Response<AuthModel>
+
+    @POST("users/push-tokens")
+    suspend fun sendPushToken(@Body token: PushToken)
 
     @GET("posts")
     suspend fun getAll(): Response<List<Post>>

@@ -45,8 +45,8 @@ class AuthViewModel : ViewModel() {
                 repository.login(login, password)
                 _authEvent.value = HTTP_OK
             } catch (e: Exception) {
+                _authState.value = _authState.value?.authShowing()
                 _authEvent.value = exceptionCheck(e)
-                _authState.value = _authState.value?.error()
             }
         }
     }
@@ -60,7 +60,6 @@ class AuthViewModel : ViewModel() {
                 _authEvent.value = HTTP_OK
             } catch (e: Exception) {
                 _authEvent.value = exceptionCheck(e)
-                _authState.value = _authState.value?.error()
             }
         }
     }
