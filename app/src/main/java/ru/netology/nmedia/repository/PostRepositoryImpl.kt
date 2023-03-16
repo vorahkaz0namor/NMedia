@@ -38,7 +38,7 @@ class PostRepositoryImpl(
         flow {
             emit(0)
             while (true) {
-                delay(1 * 60 * 1_000)
+                delay(25 * 60 * 1_000)
                 try {
                     val postsResponse = PostApi.service.getNewer(latestId)
                     if (postsResponse.isSuccessful) {

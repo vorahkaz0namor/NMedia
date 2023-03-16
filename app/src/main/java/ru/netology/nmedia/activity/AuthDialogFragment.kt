@@ -27,10 +27,9 @@ class AuthDialogFragment : DialogFragment() {
                     it.setTitle(getString(R.string.must_to_login))
                     it.setMessage(getString(R.string.wish_to_login))
                     it.setPositiveButton(getString(R.string.item_login)) { _, _ ->
-                        LoginFragment().show(
-                            requireActivity().supportFragmentManager,
-                            LoginFragment.LOGIN_TAG
-                        )
+                        authViewModel.authShowing()
+                        findNavController().navigate(R.id.loginFragment)
+                        this.dismiss()
                     }
                 }
             }

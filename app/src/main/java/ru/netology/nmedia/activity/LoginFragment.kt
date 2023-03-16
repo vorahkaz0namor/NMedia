@@ -6,7 +6,6 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
-import android.view.WindowInsets.Type
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
@@ -17,6 +16,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_BAD_REQUEST
@@ -46,8 +46,6 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
     override fun onStop() {
         super.onStop()
         AndroidUtils.hideKeyboard(binding.root)
-        binding.wrongLoginPassword.isVisible = false
-        binding.passwordsDontMatch.isVisible = false
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -121,7 +119,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                     )
             }
             cancelButton.setOnClickListener {
-                this@LoginFragment.dismiss()
+                customNavigateUp()
             }
         }
     }
@@ -129,7 +127,8 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
     private fun subscribe() {
         binding.apply {
             setInvisibleErrorWrongLoginPassword(loginField.editText, passwordField.editText)
-            setInvisibleErrorPasswordsDontMatch(passwordField.editText, confirmPasswordField.editText)
+            if (authViewModel.authState.value?.regShowing == true)
+                setInvisibleErrorPasswordsDontMatch(passwordField.editText, confirmPasswordField.editText)
         }
         authViewModel.apply {
             authState.observe(viewLifecycleOwner) { state ->
@@ -142,7 +141,8 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             media.observe(viewLifecycleOwner) { avatar ->
                 binding.apply {
-                    avatarImage.isVisible = (avatar == null)
+                    if (avatar != null)
+                        avatarImage.isVisible = false
                     avatarPreviewGroup.isVisible = (avatar != null)
                     avatarPreview.setImageURI(avatar?.uri)
                 }
@@ -155,7 +155,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                             getString(R.string.successful_regin),
                             Toast.LENGTH_LONG
                         ).show()
-                    this@LoginFragment.dismiss()
+                    customNavigateUp()
                 }
                 else {
                     val condition = (authState.value?.authShowing == true &&
@@ -169,7 +169,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                         )
                             .setAction(android.R.string.ok) {
                                 saveAuthError(code)
-                                this@LoginFragment.dismiss()
+                                customNavigateUp()
                             }
                             .show()
                 }
@@ -197,6 +197,11 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
                             !field.contentEquals(binding.confirmPasswordField.editText?.text))
             }
         }
+
+    private fun customNavigateUp() {
+        authViewModel.clearAvatar()
+        findNavController().navigateUp()
+    }
 
     companion object {
         const val LOGIN_TAG = "AuthenticationFragment"
