@@ -83,7 +83,9 @@ class PostViewHolder(
                     onInteractionListener.onShare(post)
             }
             postAttachment.setOnClickListener {
-                onInteractionListener.onAttachments(post)
+                onInteractionListener.checkAuth()
+                if (onInteractionListener.authorized)
+                    onInteractionListener.onAttachments(post)
             }
             repeatSavePost.setOnClickListener {
                 onInteractionListener.repeatSave(post)

@@ -7,11 +7,21 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import ru.netology.nmedia.R
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class AuthDialogFragment : DialogFragment() {
+    private val dependencyContainer = DependencyContainer.getInstance()
     private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
+        ownerProducer = ::requireActivity,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =

@@ -14,7 +14,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.AppActivity
-import ru.netology.nmedia.auth.AppAuth
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.dto.PushMessage
 import kotlin.random.Random
 
@@ -23,6 +23,7 @@ class FCMService : FirebaseMessagingService() {
     private val content = "content"
     private val channelId = "remote"
     private val gson = Gson()
+    private val appAuth = DependencyContainer.getInstance().appAuth
 
     override fun onCreate() {
         super.onCreate()
@@ -41,11 +42,11 @@ class FCMService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("TOKEN: ", token)
-        AppAuth.getInstance().sendPushToken(token)
+        appAuth.sendPushToken(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val currentUserId = AppAuth.getInstance().data.value?.id
+        val currentUserId = appAuth.data.value?.id
         val incomingContent = gson.fromJson(message.data[content], PushMessage::class.java)
         val incomingRecipientId = incomingContent.recipientId
         handleMessage(currentUserId, incomingRecipientId)
@@ -53,7 +54,7 @@ class FCMService : FirebaseMessagingService() {
 
     private fun handleMessage(currentUserId: Long?, recipientId: Long?) {
         if (recipientId != null && recipientId != currentUserId)
-            AppAuth.getInstance().sendPushToken()
+            appAuth.sendPushToken()
         else {
             val intent = Intent(applicationContext, AppActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

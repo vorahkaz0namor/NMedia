@@ -19,15 +19,25 @@ import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentNewPostBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.CompanionNotMedia.showToastAfterSave
 import ru.netology.nmedia.viewmodel.PostViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class NewPostFragment : Fragment(R.layout.fragment_new_post) {
+    private val dependencyContainer = DependencyContainer.getInstance()
     private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private var _binding: FragmentNewPostBinding? = null
     private val binding: FragmentNewPostBinding

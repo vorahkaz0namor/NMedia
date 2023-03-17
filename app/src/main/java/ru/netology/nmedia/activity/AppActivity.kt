@@ -16,13 +16,24 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import ru.netology.nmedia.R
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var nmediaNavController: NavController
-    private val authViewModel: AuthViewModel by viewModels()
+    private val dependencyContainer = DependencyContainer.getInstance()
+    private val authViewModel: AuthViewModel by viewModels(
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
+    )
     private var currentMenuProvider: MenuProvider? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {

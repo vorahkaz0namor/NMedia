@@ -22,16 +22,33 @@ import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
+    private val dependencyContainer = DependencyContainer.getInstance()
     private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
+        ownerProducer = ::requireActivity,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private var _binding: FragmentFeedBinding? = null
     private val binding: FragmentFeedBinding

@@ -24,14 +24,24 @@ import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.LoginLayoutBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.util.AndroidUtils
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class LoginFragment : DialogFragment(R.layout.login_layout) {
+    private val dependencyContainer = DependencyContainer.getInstance()
     private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
+        ownerProducer = ::requireActivity,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private val binding by viewBinding(LoginLayoutBinding::bind)
     private lateinit var avatarLauncher: ActivityResultLauncher<Intent>

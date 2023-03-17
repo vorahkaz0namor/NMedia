@@ -18,17 +18,34 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostViewHolder
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.databinding.SingleCardPostBinding
+import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
+import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class SinglePostFragment : Fragment(R.layout.single_card_post) {
+    private val dependencyContainer = DependencyContainer.getInstance()
     private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
+        ownerProducer = ::requireParentFragment,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
+        ownerProducer = ::requireActivity,
+        factoryProducer = {
+            ViewModelFactory(
+                dependencyContainer.postRepository,
+                dependencyContainer.authRepository,
+                dependencyContainer.appAuth
+            )
+        }
     )
     private val binding by viewBinding(SingleCardPostBinding::bind)
     private val postBind = { post: Post ->

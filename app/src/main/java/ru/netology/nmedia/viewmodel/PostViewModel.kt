@@ -1,6 +1,5 @@
 package ru.netology.nmedia.viewmodel
 
-import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +9,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
 import ru.netology.nmedia.auth.AppAuth
-import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
@@ -27,14 +25,15 @@ private val empty = Post(
     content = ""
 )
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: PostRepository =
-        PostRepositoryImpl(AppDb.getInstance(application).postDao())
+class PostViewModel(
+    private val postRepository: PostRepository,
+    private val appAuth: AppAuth
+) : ViewModel() {
     @OptIn(ExperimentalCoroutinesApi::class)
     val data: LiveData<FeedModel> =
-        AppAuth.getInstance().data
+        appAuth.data
             .flatMapLatest { authModel -> // it: AuthModel?
-                repository.data // Flow<List<Post>>
+                postRepository.data // Flow<List<Post>>
                     .map { posts -> // it: List<Post>
                         FeedModel(posts = posts.map {
                             it.copy(ownedByMe = authModel?.id == it.authorId)
@@ -45,7 +44,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             .distinctUntilChanged()
     val newerCount: LiveData<Int> =
         data.switchMap {
-            repository.getNewerCount(
+            postRepository.getNewerCount(
                 it.posts.maxOfOrNull { it.idFromServer } ?: 0L
             ).asLiveData()
     }
@@ -80,7 +79,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 // Включение состояния "загрузка"
                 _dataState.value = _dataState.value?.loading()
-                repository.getAll()
+                postRepository.getAll()
                 _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
@@ -92,7 +91,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.refreshing()
-                repository.getAll()
+                postRepository.getAll()
                 _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
@@ -105,7 +104,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.loading()
-                repository.showUnreadPosts()
+                postRepository.showUnreadPosts()
                 _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
@@ -137,8 +136,8 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
                         published = System.currentTimeMillis()
                     )
                     when (val media = media.value) {
-                        null -> repository.save(post)
-                        else -> repository.saveWithAttachment(post, media)
+                        null -> postRepository.save(post)
+                        else -> postRepository.saveWithAttachment(post, media)
                     }
                 }
                 _dataState.value = _dataState.value?.showing()
@@ -171,7 +170,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.loading()
-                repository.save(post)
+                postRepository.save(post)
                 _dataState.value = _dataState.value?.showing()
                 _postEvent.value = HTTP_OK
             } catch (e: Exception) {
@@ -196,7 +195,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.loading()
-                repository.likeById(
+                postRepository.likeById(
                     post.id,
                     post.idFromServer,
                     post.likedByMe
@@ -227,7 +226,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
 
     fun viewById(id: Long) {
         viewModelScope.launch {
-            repository.viewById(id)
+            postRepository.viewById(id)
         }
     }
 
@@ -235,7 +234,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 _dataState.value = _dataState.value?.loading()
-                repository.removeById(id, idFromServer)
+                postRepository.removeById(id, idFromServer)
                 _dataState.value = _dataState.value?.showing()
             } catch (e: Exception) {
                 _dataState.value = _dataState.value?.error()
@@ -251,7 +250,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getAvatarUrl(authorAvatar: String) = repository.avatarUrl(authorAvatar)
+    fun getAvatarUrl(authorAvatar: String) = postRepository.avatarUrl(authorAvatar)
 
-    fun getAttachmentUrl(url: String) = repository.attachmentUrl(url)
+    fun getAttachmentUrl(url: String) = postRepository.attachmentUrl(url)
 }
