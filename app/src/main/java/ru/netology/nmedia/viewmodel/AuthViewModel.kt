@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.HTTP_CONTINUE
@@ -18,8 +19,12 @@ import ru.netology.nmedia.repository.AuthRepository
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
+import javax.inject.Inject
 
-class AuthViewModel(
+// Также, аннотация @Inject позволяет отказаться от использования
+// ViewModelFactory
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val appAuth: AppAuth
 ) : ViewModel() {

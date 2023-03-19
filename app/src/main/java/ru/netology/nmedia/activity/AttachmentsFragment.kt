@@ -7,30 +7,18 @@ import androidx.fragment.app.Fragment
 import android.view.View
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentAttachmentsBinding
-import ru.netology.nmedia.di.DependencyContainer
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.util.*
 import ru.netology.nmedia.util.CompanionNotMedia.load
 import ru.netology.nmedia.util.CompanionNotMedia.Type
 import ru.netology.nmedia.viewmodel.PostViewModel
-import ru.netology.nmedia.viewmodel.ViewModelFactory
 
 class AttachmentsFragment : Fragment(R.layout.fragment_attachments) {
-    private val dependencyContainer = DependencyContainer.getInstance()
-    private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment,
-        factoryProducer = {
-            ViewModelFactory(
-                dependencyContainer.postRepository,
-                dependencyContainer.authRepository,
-                dependencyContainer.appAuth
-            )
-        }
-    )
+    private val viewModel: PostViewModel by activityViewModels()
     private val binding by viewBinding(FragmentAttachmentsBinding::bind)
     private lateinit var attachment: Attachment
 

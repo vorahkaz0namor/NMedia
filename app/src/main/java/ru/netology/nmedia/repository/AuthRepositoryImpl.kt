@@ -8,8 +8,9 @@ import retrofit2.HttpException
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.model.MediaModel
+import javax.inject.Inject
 
-class AuthRepositoryImpl(
+class AuthRepositoryImpl @Inject constructor(
     private val postApiService: PostApiService,
     private val appAuth: AppAuth
 ) : AuthRepository {

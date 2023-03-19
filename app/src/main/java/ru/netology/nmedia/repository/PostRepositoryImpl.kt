@@ -1,5 +1,6 @@
 package ru.netology.nmedia.repository
 
+import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -18,8 +19,12 @@ import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import javax.inject.Inject
 
-class PostRepositoryImpl(
+// В данном случае аннотация @Inject указывает на то, что
+// реализация интерфейса PostRepository должна осуществляться
+// на базе класса PostRepositoryImpl
+class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
     private val postApiService: PostApiService
 ): PostRepository {
@@ -115,9 +120,8 @@ class PostRepositoryImpl(
             else
                 throw HttpException(postResponse)
         } catch (e: Exception) {
-            println("\nEXCEPTION WHEN SAVE WITH ATTACHMENT => $e\n" +
-                    "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
-
+            Log.d("SAVING WITH ATTACHMENT", "CAUGHT EXCEPTION => $e\n" +
+                    "DESCRIPTION => ${overview(exceptionCheck(e))}")
         }
     }
 

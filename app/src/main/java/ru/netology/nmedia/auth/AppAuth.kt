@@ -1,19 +1,33 @@
 package ru.netology.nmedia.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
-import androidx.work.*
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.ktx.messaging
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import ru.netology.nmedia.api.PostApiService
+import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
-import ru.netology.nmedia.worker.SendPushTokenWorker
+import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
+import ru.netology.nmedia.util.CompanionNotMedia.overview
+import javax.inject.Inject
+import javax.inject.Singleton
 
-// Чтобы невозможно было создать несколько объектов данного типа,
-// вместе с использованием companion object следует использовать
-// приватный конструктор
-class AppAuth(
+@Singleton
+class AppAuth @Inject constructor(
+    @ApplicationContext
     private val context: Context,
-    private val workManager: WorkManager
 ) {
     companion object {
         private const val TOKEN_KEY = "TOKEN_KEY"
@@ -34,9 +48,7 @@ class AppAuth(
             prefs.edit { clear() }
         } else
             _data = MutableStateFlow(value = AuthModel(id, token))
-        // После реализации WorkManager'а можно не отправлять токен при
-        // инициализации данного объекта
-//        sendPushToken()
+        sendPushToken()
     }
 
     val data = _data.asStateFlow()
@@ -59,32 +71,32 @@ class AppAuth(
         sendPushToken()
     }
 
-    // После перехода на WorkManager данная функция будет вызывать
-    // соответствующий Worker
+    // В данном случае предоставление доступа к ApiService осуществляется
+    // достаточно нестандартным способом
+    // Для этого создается интерфейс
+    @InstallIn(SingletonComponent::class)
+    @EntryPoint
+    interface AppAuthEntryPoint {
+        fun getPostApiService(): PostApiService
+    }
+
     fun sendPushToken(token: String? = null) {
-        // Создается запрос с указанием типа Worker'а
-        val request = OneTimeWorkRequestBuilder<SendPushTokenWorker>()
-            // Для данного случая устанавливаются ограничения на Интернет
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
+        CoroutineScope(Dispatchers.Default).launch {
+            val pushToken = PushToken(
+                token ?: Firebase.messaging.token.await()
             )
-            // И передается токен для отправки
-            .setInputData(
-                Data.Builder()
-                    .putString(SendPushTokenWorker.TOKEN_KEY, token)
-                    .build()
+            // Чтобы получить объект с аннотацией @EntryPoint, необходимо
+            // использовать класс EntryPointAccessors
+            val entryPoint = EntryPointAccessors.fromApplication(
+                context,
+                AppAuthEntryPoint::class.java
             )
-            .build()
-        // По умолчанию WorkManager конфигурируется автоматически при
-        // запуске приложения
-        workManager.beginUniqueWork(
-            SendPushTokenWorker.NAME,
-            // При передаче нового токена предыдущий будет заменен
-            // в запросе на новый
-            ExistingWorkPolicy.REPLACE,
-            request
-        ).enqueue()
+            try {
+                entryPoint.getPostApiService().sendPushToken(pushToken)
+            } catch (e: Exception) {
+                Log.d("SENDING TOKEN", "CAUGHT EXCEPTION => $e\n" +
+                        "DESCRIPTION => ${overview(exceptionCheck(e))}")
+            }
+        }
     }
 }

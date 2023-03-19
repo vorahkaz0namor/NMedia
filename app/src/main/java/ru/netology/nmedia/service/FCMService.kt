@@ -12,18 +12,26 @@ import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.AppActivity
-import ru.netology.nmedia.di.DependencyContainer
+import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.PushMessage
+import javax.inject.Inject
 import kotlin.random.Random
 
+// Чтобы получить ссылки на объеты из графа зависимостей
+// (модулей), необходимо класс, который будет их использовать
+// пометить аннотацией @AndroidEntryPoint
+@AndroidEntryPoint
 class FCMService : FirebaseMessagingService() {
+    // А сами объекты внедряются в виде свойств
+    @Inject
+    lateinit var appAuth: AppAuth
     private val action = "action"
     private val content = "content"
     private val channelId = "remote"
     private val gson = Gson()
-    private val appAuth = DependencyContainer.getInstance().appAuth
 
     override fun onCreate() {
         super.onCreate()
