@@ -173,10 +173,12 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         childFragmentManager,
                         AuthDialogFragment.AUTH_TAG
                     )
-                else
+                else {
+                    viewModel.getDraftCopy()
                     navController.navigate(
                         R.id.action_feedFragment_to_newPostFragment
                     )
+                }
             }
             refreshPosts.setOnRefreshListener {
                 viewModel.refresh()

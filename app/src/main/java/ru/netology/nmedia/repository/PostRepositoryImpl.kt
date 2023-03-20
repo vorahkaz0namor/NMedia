@@ -14,6 +14,7 @@ import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
@@ -205,6 +206,18 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun viewById(id: Long) = dao.viewById(id)
+
+    override suspend fun getDraftCopy(): String {
+            val draftCopy = dao.newGetDraftCopy()
+            Log.d("GET D.C.in REPO.", draftCopy)
+            return draftCopy
+    }
+
+
+    override suspend fun saveDraftCopy(content: String?) {
+        dao.clearDraftCopy()
+        dao.newSaveDraftCopy(DraftCopyEntity.fromDto(content))
+    }
 
     override fun avatarUrl(authorAvatar: String) = "${BuildConfig.BASE_URL}$AVATAR_PATH$authorAvatar"
 

@@ -1,6 +1,7 @@
 package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.*
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
+import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 import javax.inject.Inject
@@ -62,6 +64,9 @@ class PostViewModel @Inject constructor(
     private val _postEvent = SingleLiveEvent(HTTP_CONTINUE)
     val postEvent: LiveData<Int>
         get() = _postEvent
+    private val _draftCopy = MutableLiveData<String?>(null)
+    val draftCopy: LiveData<String?>
+        get() = _draftCopy
     // Variable to hold editing post
     val edited = MutableLiveData(empty)
     // Variable to hold sharing post
@@ -155,12 +160,30 @@ class PostViewModel @Inject constructor(
         edited.value = empty
     }
 
-//    fun saveDraftCopy(content: String?) {
-//        if (edited.value?.id == 0L)
-//           repository.saveDraftCopy(content)
-//    }
-//
-//    fun getDraftCopy() = repository.getDraftCopy()
+    fun saveDraftCopy(content: String?) {
+            viewModelScope.launch {
+                if (edited.value?.id == 0L)
+                    try {
+                        postRepository.saveDraftCopy(content)
+                    } catch (e: Exception) {
+                        Log.d(
+                            "SAVING DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
+                                    "DESCRIPTION => ${overview(exceptionCheck(e))}"
+                        )
+                    }
+            }
+    }
+
+    fun getDraftCopy() {
+        viewModelScope.launch {
+            try {
+                _draftCopy.value = postRepository.getDraftCopy()
+            } catch (e: Exception) {
+                Log.d("GET DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
+                        "DESCRIPTION => ${overview(exceptionCheck(e))}")
+            }
+        }
+    }
 
     fun savePost(text: CharSequence?) {
         if (validation(text)) {

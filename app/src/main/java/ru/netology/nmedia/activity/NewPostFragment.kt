@@ -37,8 +37,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
             // Сохранение черновика
-//            viewModel.saveDraftCopy(binding.newContent.text.toString())
-            customNavigateUp()
+            customNavigateUp(binding.newContent.text.toString())
         }
     }
 
@@ -71,11 +70,19 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun initView() {
-        binding.newContent.apply {
-            // Загрузка переданного на редактирование content'а,
-            // или загрузка черновика, если он был сохранен
-            setText(arguments?.POST_CONTENT /*?: viewModel.getDraftCopy()*/)
-            requestFocus()
+        viewModel.draftCopy.observe(viewLifecycleOwner) { draftCopy ->
+            binding.newContent.apply {
+                // Загрузка переданного на редактирование content'а,
+                // или загрузка черновика, если он был сохранен
+                setText(
+                    arguments?.POST_CONTENT.let {
+                        if (it.isNullOrBlank()) {
+                            draftCopy ?: ""
+                        } else
+                            it
+                    })
+                requestFocus()
+            }
         }
         photoLauncher =
             registerForActivityResult(
@@ -158,8 +165,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 viewModel.clearPhoto()
             }
             cancelEdit.setOnClickListener {
-//                    viewModel.saveDraftCopy(null)
-                customNavigateUp()
+                customNavigateUp(null)
             }
         }
     }
@@ -194,14 +200,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                         ).show()
                 }
                     // Очистка черновика
-//                saveDraftCopy(null)
-                customNavigateUp()
+                customNavigateUp(null)
             }
         }
     }
 
-    private fun customNavigateUp() {
+    private fun customNavigateUp(draftCopy: String?) {
         viewModel.apply {
+            saveDraftCopy(draftCopy)
             clearEditedValue()
             clearPhoto()
             loadPosts()

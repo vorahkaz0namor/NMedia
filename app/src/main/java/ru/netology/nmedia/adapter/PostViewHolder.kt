@@ -1,13 +1,9 @@
 package ru.netology.nmedia.adapter
 
-import android.view.PointerIcon
 import android.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
-import ru.netology.nmedia.activity.AppActivity
-import ru.netology.nmedia.application.NMediaApp
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.util.CompanionNotMedia.actualTime

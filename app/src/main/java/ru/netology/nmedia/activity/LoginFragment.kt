@@ -139,8 +139,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             media.observe(viewLifecycleOwner) { avatar ->
                 binding.apply {
-                    if (avatar != null)
-                        avatarImage.isVisible = false
+                    avatarImage.isVisible = (avatar == null && authState.value?.regShowing == true)
                     avatarPreviewGroup.isVisible = (avatar != null)
                     avatarPreview.setImageURI(avatar?.uri)
                 }

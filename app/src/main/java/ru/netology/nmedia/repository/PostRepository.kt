@@ -15,6 +15,8 @@ interface PostRepository {
     suspend fun likeById(id: Long, idFromServer: Long, likedByMe: Boolean)
     suspend fun removeById(id: Long, idFromServer: Long)
     suspend fun viewById(id: Long)
+    suspend fun getDraftCopy(): String
+    suspend fun saveDraftCopy(content: String?)
     fun avatarUrl(authorAvatar: String): String
     fun attachmentUrl(url: String): String
 }
