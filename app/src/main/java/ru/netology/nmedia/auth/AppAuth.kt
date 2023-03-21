@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -28,6 +29,7 @@ import javax.inject.Singleton
 class AppAuth @Inject constructor(
     @ApplicationContext
     private val context: Context,
+//    private val firebaseMessaging: FirebaseMessaging
 ) {
     companion object {
         private const val TOKEN_KEY = "TOKEN_KEY"
@@ -82,9 +84,6 @@ class AppAuth @Inject constructor(
 
     fun sendPushToken(token: String? = null) {
         CoroutineScope(Dispatchers.Default).launch {
-            val pushToken = PushToken(
-                token ?: Firebase.messaging.token.await()
-            )
             // Чтобы получить объект с аннотацией @EntryPoint, необходимо
             // использовать класс EntryPointAccessors
             val entryPoint = EntryPointAccessors.fromApplication(
@@ -92,6 +91,9 @@ class AppAuth @Inject constructor(
                 AppAuthEntryPoint::class.java
             )
             try {
+                val pushToken = PushToken(
+                    token ?: Firebase.messaging.token.await()
+                )
                 entryPoint.getPostApiService().sendPushToken(pushToken)
             } catch (e: Exception) {
                 Log.d("SENDING TOKEN", "CAUGHT EXCEPTION => $e\n" +
