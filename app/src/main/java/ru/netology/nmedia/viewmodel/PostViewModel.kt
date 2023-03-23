@@ -3,16 +3,16 @@ package ru.netology.nmedia.viewmodel
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
+import androidx.paging.PagingData
+import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.*
@@ -35,24 +35,43 @@ class PostViewModel @Inject constructor(
     private val appAuth: AppAuth
 ) : ViewModel() {
     @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> =
-        appAuth.data
+    val data: Flow<PagingData<Post>> =
+        appAuth.data // StateFlow<AuthModel?>
             .flatMapLatest { authModel -> // it: AuthModel?
-                postRepository.data // Flow<List<Post>>
-                    .map { posts -> // it: List<Post>
-                        FeedModel(posts = posts.map {
-                            it.copy(ownedByMe = authModel?.id == it.authorId)
-                        })
+                postRepository.data // Flow<PagingData<Post>>
+                    .map { posts -> // it: PagingData<Post>
+                        posts.map { post -> // it: Post
+                            // Try to get post from DB, but this way don't work
+//                            val dPost = postRepository
+//                                .dataFromDao
+//                                .map { list ->
+//                                    Log.d("DATAFROMDAO=2", "${list.size}")
+//                                    list.find { it.idFromServer == post.id }
+//                                }
+//                                .value
+                            post.copy(
+                                // Ручное задание факта наличия поста на сервере
+                                idFromServer = post.id,
+                                isOnServer = true,
+                                ownedByMe = authModel?.id == post.authorId
+                                )
+                        }
                     }
             }
-            .asLiveData(Dispatchers.Default)
+            .flowOn(Dispatchers.Default)
             .distinctUntilChanged()
-    val newerCount: LiveData<Int> =
-        data.switchMap {
-            postRepository.getNewerCount(
-                it.posts.maxOfOrNull { it.idFromServer } ?: 0L
-            ).asLiveData()
-    }
+    // Try to get newer posts, but this way don't work,
+    // even don't compile
+//    val newerCount: Flow<Int> =
+//        data.switchMap { posts ->
+//            postRepository.getNewerCount(
+//                posts.map {
+//                    it.idFromServer
+//                }.filter {
+//                    maxOf(it)
+//                } ?: 0L
+//            )
+//    }
     private val _dataState = MutableLiveData(FeedModelState())
     val dataState: LiveData<FeedModelState>
         get() = _dataState

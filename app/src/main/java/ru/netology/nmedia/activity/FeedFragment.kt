@@ -1,16 +1,19 @@
 package ru.netology.nmedia.activity
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.RecyclerView
+import androidx.paging.*
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
@@ -22,33 +25,29 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
     private val viewModel: PostViewModel by activityViewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
-    private var _binding: FragmentFeedBinding? = null
-    private val binding: FragmentFeedBinding
-        get() = _binding!!
+    private val binding by viewBinding(FragmentFeedBinding::bind)
     private lateinit var adapter: PostAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        _binding = FragmentFeedBinding.inflate(inflater)
-        return binding.root
-    }
+    private lateinit var killingJob: Job
+    private lateinit var killingObserver: AdapterDataObserver
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        // Костыли после реализации бибилиотеки Paging,
+        // но они с каждым разом увеличивают количество запросов
+        killingJob.cancel()
+        adapter.unregisterAdapterDataObserver(killingObserver)
+        Log.d("JOB IS DEAD", "${killingJob.isActive}")
+        Log.d("OBS. IS DEAD", "${killingObserver.javaClass}")
     }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
@@ -72,13 +71,38 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     recyclerView.refreshPosts.isRefreshing = state.refreshing
                 }
             }
-            data.observe(viewLifecycleOwner) { data ->
-                adapter.submitList(data.posts)
-                binding.emptyTextView.emptyText.isVisible = data.empty
+            // Чтобы подписаться на PagingData<Post>, необходимо использовать
+            // корутину Fragment'а
+            lifecycleScope.launchWhenCreated {
+                data.collectLatest {
+                    adapter.submitData(it)
+                }
+            }
+            // А вот для отображения обноленного PostAdapter'а надо также
+            // как и выше запустить корутину
+            lifecycleScope.launchWhenCreated {
+                // Объект loadStateFlow отвечает за отображение загруженных
+                // данных в адаптер
+                adapter.loadStateFlow.collectLatest {
+                    // Индикатор обновления будет отображаться, когда
+                    // происходит refresh, либо когда запрашивается следующая
+                    // страница, либо когда запрашивается предыдущая страница
+                    binding.recyclerView.refreshPosts.isRefreshing =
+                        it.refresh is LoadState.Loading ||
+                        it.append is LoadState.Loading ||
+                        // При пролистывании вверх (запросе предыдущей страницы)
+                        // ничего не будет происходить, поскольку в классе PostPagingSource
+                        // состояние LoadParams.Prepend не обрабатывается
+                        it.prepend is LoadState.Loading
+                }
+
+            }.also {
+                killingJob = it
+                Log.d("JOB IS CREATED", "${killingJob.isActive}")
             }
             // Добавление плавного скролла при добавлении новых постов
             adapter.registerAdapterDataObserver(
-                object : RecyclerView.AdapterDataObserver() {
+                object : AdapterDataObserver() {
                     override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                         // Если что-то добавилось наверх списка,
                         if (positionStart == 0)
@@ -86,12 +110,16 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                             binding.recyclerView.posts.smoothScrollToPosition(0)
                     }
                 }
+                    .also {
+                        killingObserver = it
+                        Log.d("OBS. IS CREATED", "${killingObserver.javaClass}")
+                    }
             )
-            newerCount.observe(viewLifecycleOwner) { count ->
-                binding.recyclerView.newPosts.apply {
-                    isVisible = (count != null && count != 0)
-                }
-            }
+//            newerCount.observe(viewLifecycleOwner) { count ->
+//                binding.recyclerView.newPosts.apply {
+//                    isVisible = (count != null && count != 0)
+//                }
+//            }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK) {
                     snackbar = Snackbar.make(
@@ -181,7 +209,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
             }
             refreshPosts.setOnRefreshListener {
-                viewModel.refresh()
+                // Для реализации обновления данных необходимо
+                // вместо обновления списка постов через ViewModel
+                // запустить обновление PostAdapter'а
+                adapter.refresh()
             }
             toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)

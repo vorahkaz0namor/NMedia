@@ -1,12 +1,14 @@
 package ru.netology.nmedia.repository
 
+import androidx.lifecycle.LiveData
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.model.MediaModel
 
 interface PostRepository {
-    val data: Flow<List<Post>>
+    val data: Flow<PagingData<Post>>
+    val dataFromDao: LiveData<List<Post>>
     fun getNewerCount(latestId: Long): Flow<Int>
     suspend fun getAll()
     suspend fun showUnreadPosts()

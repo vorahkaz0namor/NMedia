@@ -2,13 +2,17 @@ package ru.netology.nmedia.activity
 
 import android.os.Bundle
 import android.text.util.Linkify
+import android.util.Log
 import android.view.View
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.map
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
@@ -68,13 +72,32 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     refreshPost.isRefreshing = state.refreshing
                 }
             }
-            data.observe(viewLifecycleOwner) { data ->
-                val post = data.posts.find { it.id == arguments?.POST_ID }
-                if (post != null)
-                    postBind(post)
-                else
-                    findNavController().navigateUp()
+            lifecycleScope.launchWhenCreated {
+                data.collectLatest {
+                    // Try to get post from PagingData, but this way don't work
+                    var post: Post? = null
+                    var dataIds: List<Long> = emptyList()
+                    it.map { existingPost ->
+                        dataIds = dataIds.plus(existingPost.id)
+                        if (existingPost.id == arguments?.POST_ID)
+                            post = existingPost
+                    }
+                    Log.d("POST_ID", "${arguments?.POST_ID}")
+                    Log.d("DATA IDs", "$dataIds")
+                    Log.d("SINGLE POST", "${post?.id}")
+                    if (post != null)
+                        postBind(post!!)
+                    else
+                        findNavController().navigateUp()
+                }
             }
+//            data.observe(viewLifecycleOwner) { data ->
+//                val post = data.posts.find { it.id == arguments?.POST_ID }
+//                if (post != null)
+//                    postBind(post)
+//                else
+//                    findNavController().navigateUp()
+//            }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK)
                     Snackbar.make(

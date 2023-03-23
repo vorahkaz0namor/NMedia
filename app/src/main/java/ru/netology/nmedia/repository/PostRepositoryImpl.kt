@@ -1,6 +1,9 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
+import androidx.lifecycle.asLiveData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -34,12 +37,30 @@ class PostRepositoryImpl @Inject constructor(
         private const val IMAGE_PATH = "/media/"
     }
 
-    override val data = dao.getAllReaded().map {
-            it.map(PostEntity::toDto)
+    // Для аргумента PagingConfig указываются следующие аргументы:
+    // - количество постов на странице (pageSize);
+    // - показ временного изображения, которое отображается,
+    //   пока не загрузится содержимое страницы (enablePlaceHolders).
+    // PagingSourceFactory - лямбда-выражение, которое возвращает
+    // объект PagingSource.
+    // Функция flow() вернет поток типа PagingData.
+    override val data = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false
+        ),
+        pagingSourceFactory = { PostPagingSource(postApiService) }
+    ).flow
+
+    // Свойство для определения наличия в БД постов, еще не сохраненных
+    // на сервере, но почему-то оно всегда null, хотя подписка на него вроде есть
+    override val dataFromDao = dao.getAllReaded().map {
+        it.map(PostEntity::toDto)
+    }
+        .asLiveData(Dispatchers.Default)
+        .also {
+            Log.d("DATAFROMDAO", "${it.value?.size}")
         }
-    // Операции, которые требуют максимальных ресурсов, рекомендуется выполнять
-    // на Dispatchers.Default, чтобы обеспечить максимальную производительность
-        .flowOn(Dispatchers.Default)
 
     override fun getNewerCount(latestId: Long): Flow<Int> =
         flow {
