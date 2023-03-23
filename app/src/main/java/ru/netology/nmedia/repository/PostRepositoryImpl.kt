@@ -1,5 +1,6 @@
 package ru.netology.nmedia.repository
 
+import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -8,19 +9,25 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import retrofit2.HttpException
 import ru.netology.nmedia.BuildConfig
-import ru.netology.nmedia.api.PostApi
+import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import javax.inject.Inject
 
-class PostRepositoryImpl(
-    private val dao: PostDao
+// В данном случае аннотация @Inject указывает на то, что
+// реализация интерфейса PostRepository должна осуществляться
+// на базе класса PostRepositoryImpl
+class PostRepositoryImpl @Inject constructor(
+    private val dao: PostDao,
+    private val postApiService: PostApiService
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
@@ -40,7 +47,7 @@ class PostRepositoryImpl(
             while (true) {
                 delay(25 * 60 * 1_000)
                 try {
-                    val postsResponse = PostApi.service.getNewer(latestId)
+                    val postsResponse = postApiService.getNewer(latestId)
                     if (postsResponse.isSuccessful) {
                         val newPosts = postsResponse.body().orEmpty().sortedBy { it.id }
                         updatePostsByIdFromServer(newPosts, true)
@@ -63,7 +70,7 @@ class PostRepositoryImpl(
 
     override suspend fun getAll() {
         // Асинхронно вызываем сетевой запрос с помощью функции getAll()
-        val postsResponse = PostApi.service.getAll()
+        val postsResponse = postApiService.getAll()
         if (postsResponse.isSuccessful) {
             val postsFromResponse = postsResponse.body().orEmpty().sortedBy { it.id }
             // { PostEntity.fromDto(it) } => Convert lambda to reference =>
@@ -85,7 +92,7 @@ class PostRepositoryImpl(
         val part = MultipartBody.Part.createFormData(
             "file", media.file.name, media.file.asRequestBody()
         )
-        val response =  PostApi.service.uploadMedia(part)
+        val response =  postApiService.uploadMedia(part)
         if (!response.isSuccessful)
             throw HttpException(response)
         else
@@ -96,7 +103,7 @@ class PostRepositoryImpl(
         try {
             val localSavedPostId = dao.save(PostEntity.fromDto(post))
             val uploaded = upload(media)
-            val postResponse = PostApi.service.savePost(
+            val postResponse = postApiService.savePost(
                 post.copy(
                     id = post.idFromServer,
                     attachment = Attachment(
@@ -114,15 +121,14 @@ class PostRepositoryImpl(
             else
                 throw HttpException(postResponse)
         } catch (e: Exception) {
-            println("\nEXCEPTION WHEN SAVE WITH ATTACHMENT => $e\n" +
-                    "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
-
+            Log.d("SAVING WITH ATTACHMENT", "CAUGHT EXCEPTION => $e\n" +
+                    "DESCRIPTION => ${overview(exceptionCheck(e))}")
         }
     }
 
     override suspend fun save(post: Post) {
         val localSavedPostId = dao.save(PostEntity.fromDto(post))
-        val postResponse = PostApi.service.savePost(post.copy(id = post.idFromServer))
+        val postResponse = postApiService.savePost(post.copy(id = post.idFromServer))
         if (postResponse.isSuccessful) {
             val savedPost = postResponse.body() ?: throw HttpException(postResponse)
             dao.save(PostEntity.fromDto(
@@ -168,7 +174,7 @@ class PostRepositoryImpl(
         likedByMe: Boolean
     ) {
         dao.likeById(id)
-        val postResponse = PostApi.service.let {
+        val postResponse = postApiService.let {
             if (likedByMe)
                 it.unlikeById(idFromServer)
             else
@@ -191,7 +197,7 @@ class PostRepositoryImpl(
     override suspend fun removeById(id: Long, idFromServer: Long) {
         dao.removeById(id)
         if (idFromServer != 0L) {
-            val response = PostApi.service.removeById(idFromServer)
+            val response = postApiService.removeById(idFromServer)
             if (response.isSuccessful)
                 showUnreadPosts()
             else
@@ -200,6 +206,18 @@ class PostRepositoryImpl(
     }
 
     override suspend fun viewById(id: Long) = dao.viewById(id)
+
+    override suspend fun getDraftCopy(): String {
+            val draftCopy = dao.newGetDraftCopy()
+            Log.d("GET D.C.in REPO.", draftCopy)
+            return draftCopy
+    }
+
+
+    override suspend fun saveDraftCopy(content: String?) {
+        dao.clearDraftCopy()
+        dao.newSaveDraftCopy(DraftCopyEntity.fromDto(content))
+    }
 
     override fun avatarUrl(authorAvatar: String) = "${BuildConfig.BASE_URL}$AVATAR_PATH$authorAvatar"
 

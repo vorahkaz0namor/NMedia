@@ -1,11 +1,11 @@
 package ru.netology.nmedia.dao
 
-import android.database.Cursor
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
+import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
 
@@ -75,33 +75,11 @@ interface PostDao {
     // Block to work with DraftCopy
 
     @Query("SELECT content FROM DraftCopyEntity")
-    fun cursor(): Cursor
+    suspend fun newGetDraftCopy(): String
 
-    @Query("UPDATE DraftCopyEntity SET content = :content")
-    suspend fun updateDraftCopy(content: String?)
+    @Query("DELETE FROM DraftCopyEntity")
+    suspend fun clearDraftCopy()
 
-    @Query("INSERT INTO DraftCopyEntity (content) VALUES (:content)")
-    suspend fun insertDraftCopy(content: String?)
-
-    suspend fun getDraftCopy(): String? {
-        cursor().apply {
-            return if (this.moveToFirst())
-                this.getString(
-                    this.getColumnIndexOrThrow(
-                        this.columnNames.first()
-                    )
-                )
-            else
-                null
-        }
-    }
-
-    suspend fun saveDraftCopy(content: String?) {
-        cursor().apply {
-            if (this.moveToFirst())
-                updateDraftCopy(content)
-            else
-                insertDraftCopy(content)
-        }
-    }
+    @Insert(onConflict = REPLACE)
+    suspend fun newSaveDraftCopy(draftCopy: DraftCopyEntity)
 }

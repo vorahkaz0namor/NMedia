@@ -15,11 +15,16 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.viewmodel.AuthViewModel
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AppActivity : AppCompatActivity(R.layout.activity_app) {
+    @Inject
+    lateinit var googleApiAvailability: GoogleApiAvailability
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var nmediaNavController: NavController
     private val authViewModel: AuthViewModel by viewModels()
@@ -106,7 +111,7 @@ class AppActivity : AppCompatActivity(R.layout.activity_app) {
     }
 
     private fun checkoutGoogleApiAvailability() {
-        GoogleApiAvailability.getInstance().apply {
+        googleApiAvailability.apply {
             val code = isGooglePlayServicesAvailable(this@AppActivity)
             val requestCode = 9000
             if (code != ConnectionResult.SUCCESS)

@@ -15,7 +15,7 @@ import androidx.core.net.toFile
 import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.Snackbar
@@ -30,9 +30,7 @@ import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
 
 class LoginFragment : DialogFragment(R.layout.login_layout) {
-    private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
-    )
+    private val authViewModel: AuthViewModel by activityViewModels()
     private val binding by viewBinding(LoginLayoutBinding::bind)
     private lateinit var avatarLauncher: ActivityResultLauncher<Intent>
 
@@ -141,8 +139,7 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
             }
             media.observe(viewLifecycleOwner) { avatar ->
                 binding.apply {
-                    if (avatar != null)
-                        avatarImage.isVisible = false
+                    avatarImage.isVisible = (avatar == null && authState.value?.regShowing == true)
                     avatarPreviewGroup.isVisible = (avatar != null)
                     avatarPreview.setImageURI(avatar?.uri)
                 }
@@ -201,9 +198,5 @@ class LoginFragment : DialogFragment(R.layout.login_layout) {
     private fun customNavigateUp() {
         authViewModel.clearAvatar()
         findNavController().navigateUp()
-    }
-
-    companion object {
-        const val LOGIN_TAG = "AuthenticationFragment"
     }
 }

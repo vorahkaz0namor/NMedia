@@ -12,13 +12,22 @@ import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.google.gson.Gson
+import dagger.hilt.android.AndroidEntryPoint
 import ru.netology.nmedia.R
 import ru.netology.nmedia.activity.AppActivity
 import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.PushMessage
+import javax.inject.Inject
 import kotlin.random.Random
 
+// Чтобы получить ссылки на объеты из графа зависимостей
+// (модулей), необходимо класс, который будет их использовать
+// пометить аннотацией @AndroidEntryPoint
+@AndroidEntryPoint
 class FCMService : FirebaseMessagingService() {
+    // А сами объекты внедряются в виде свойств
+    @Inject
+    lateinit var appAuth: AppAuth
     private val action = "action"
     private val content = "content"
     private val channelId = "remote"
@@ -41,11 +50,11 @@ class FCMService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("TOKEN: ", token)
-        AppAuth.getInstance().sendPushToken(token)
+        appAuth.sendPushToken(token)
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        val currentUserId = AppAuth.getInstance().data.value?.id
+        val currentUserId = appAuth.data.value?.id
         val incomingContent = gson.fromJson(message.data[content], PushMessage::class.java)
         val incomingRecipientId = incomingContent.recipientId
         handleMessage(currentUserId, incomingRecipientId)
@@ -53,7 +62,7 @@ class FCMService : FirebaseMessagingService() {
 
     private fun handleMessage(currentUserId: Long?, recipientId: Long?) {
         if (recipientId != null && recipientId != currentUserId)
-            AppAuth.getInstance().sendPushToken()
+            appAuth.sendPushToken()
         else {
             val intent = Intent(applicationContext, AppActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

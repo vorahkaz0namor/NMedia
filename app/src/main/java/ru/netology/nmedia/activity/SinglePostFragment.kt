@@ -6,7 +6,7 @@ import android.view.View
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.internal.http.HTTP_OK
@@ -24,12 +24,8 @@ import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class SinglePostFragment : Fragment(R.layout.single_card_post) {
-    private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
-    )
-    private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
-    )
+    private val viewModel: PostViewModel by activityViewModels()
+    private val authViewModel: AuthViewModel by activityViewModels()
     private val binding by viewBinding(SingleCardPostBinding::bind)
     private val postBind = { post: Post ->
         PostViewHolder(

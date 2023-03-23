@@ -1,25 +1,40 @@
 package ru.netology.nmedia.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.ktx.messaging
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import ru.netology.nmedia.api.PostApi
+import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dto.PushToken
 import ru.netology.nmedia.model.AuthModel
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.CompanionNotMedia.overview
+import javax.inject.Inject
+import javax.inject.Singleton
 
-// Чтобы невозможно было создать несколько объектов данного типа,
-// вместе с использованием companion object следует использовать
-// приватный конструктор
-class AppAuth private constructor(context: Context) {
+@Singleton
+class AppAuth @Inject constructor(
+    @ApplicationContext
+    private val context: Context,
+//    private val firebaseMessaging: FirebaseMessaging
+) {
+    companion object {
+        private const val TOKEN_KEY = "TOKEN_KEY"
+        private const val ID_KEY = "ID_KEY"
+    }
     private val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     private val _data: MutableStateFlow<AuthModel?>
 
@@ -58,33 +73,32 @@ class AppAuth private constructor(context: Context) {
         sendPushToken()
     }
 
-    fun sendPushToken(token: String? = null) {
-        CoroutineScope(Dispatchers.Default).launch {
-            val pushToken = PushToken(token ?: Firebase.messaging.token.await())
-            // FirebaseMessaging.getInstance().token.await()
-            try {
-                PostApi.service.sendPushToken(pushToken)
-            } catch (e: Exception) {
-                println("CAUGHT EXCEPTION WHEN SEND TOKEN => $e\n" +
-                        "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
-            }
-        }
+    // В данном случае предоставление доступа к ApiService осуществляется
+    // достаточно нестандартным способом
+    // Для этого создается интерфейс
+    @InstallIn(SingletonComponent::class)
+    @EntryPoint
+    interface AppAuthEntryPoint {
+        fun getPostApiService(): PostApiService
     }
 
-    companion object {
-        @Volatile
-        private var instance: AppAuth? = null
-        private const val TOKEN_KEY = "TOKEN_KEY"
-        private const val ID_KEY = "ID_KEY"
-
-        fun getInstance(): AppAuth = synchronized(this) {
-            requireNotNull(instance) {
-                "You must call init(context: Context) first!"
+    fun sendPushToken(token: String? = null) {
+        CoroutineScope(Dispatchers.Default).launch {
+            // Чтобы получить объект с аннотацией @EntryPoint, необходимо
+            // использовать класс EntryPointAccessors
+            val entryPoint = EntryPointAccessors.fromApplication(
+                context,
+                AppAuthEntryPoint::class.java
+            )
+            try {
+                val pushToken = PushToken(
+                    token ?: Firebase.messaging.token.await()
+                )
+                entryPoint.getPostApiService().sendPushToken(pushToken)
+            } catch (e: Exception) {
+                Log.d("SENDING TOKEN", "CAUGHT EXCEPTION => $e\n" +
+                        "DESCRIPTION => ${overview(exceptionCheck(e))}")
             }
-        }
-
-        fun init(context: Context): AppAuth = synchronized(this) {
-            instance ?: AppAuth(context).apply { instance = this }
         }
     }
 }

@@ -11,7 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.net.toFile
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -26,9 +26,7 @@ import ru.netology.nmedia.util.CompanionNotMedia.showToastAfterSave
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class NewPostFragment : Fragment(R.layout.fragment_new_post) {
-    private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
-    )
+    private val viewModel: PostViewModel by activityViewModels()
     private var _binding: FragmentNewPostBinding? = null
     private val binding: FragmentNewPostBinding
         get() = _binding!!
@@ -39,8 +37,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
             // Сохранение черновика
-//            viewModel.saveDraftCopy(binding.newContent.text.toString())
-            customNavigateUp()
+            customNavigateUp(binding.newContent.text.toString())
         }
     }
 
@@ -73,11 +70,19 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
     }
 
     private fun initView() {
-        binding.newContent.apply {
-            // Загрузка переданного на редактирование content'а,
-            // или загрузка черновика, если он был сохранен
-            setText(arguments?.POST_CONTENT /*?: viewModel.getDraftCopy()*/)
-            requestFocus()
+        viewModel.draftCopy.observe(viewLifecycleOwner) { draftCopy ->
+            binding.newContent.apply {
+                // Загрузка переданного на редактирование content'а,
+                // или загрузка черновика, если он был сохранен
+                setText(
+                    arguments?.POST_CONTENT.let {
+                        if (it.isNullOrBlank()) {
+                            draftCopy ?: ""
+                        } else
+                            it
+                    })
+                requestFocus()
+            }
         }
         photoLauncher =
             registerForActivityResult(
@@ -160,8 +165,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 viewModel.clearPhoto()
             }
             cancelEdit.setOnClickListener {
-//                    viewModel.saveDraftCopy(null)
-                customNavigateUp()
+                customNavigateUp(null)
             }
         }
     }
@@ -196,14 +200,14 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                         ).show()
                 }
                     // Очистка черновика
-//                saveDraftCopy(null)
-                customNavigateUp()
+                customNavigateUp(null)
             }
         }
     }
 
-    private fun customNavigateUp() {
+    private fun customNavigateUp(draftCopy: String?) {
         viewModel.apply {
+            saveDraftCopy(draftCopy)
             clearEditedValue()
             clearPhoto()
             loadPosts()

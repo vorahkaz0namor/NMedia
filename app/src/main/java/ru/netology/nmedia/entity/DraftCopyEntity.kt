@@ -6,6 +6,9 @@ import androidx.room.PrimaryKey
 @Entity
 data class DraftCopyEntity(
     @PrimaryKey
-    val id: Int,
-    val content: String? = null
-)
+    val content: String
+) {
+    companion object {
+        fun fromDto(draftCopy: String?) = DraftCopyEntity(draftCopy ?: "")
+    }
+}

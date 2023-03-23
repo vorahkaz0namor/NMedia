@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.HTTP_CONTINUE
@@ -15,13 +16,18 @@ import ru.netology.nmedia.model.AuthModel
 import ru.netology.nmedia.model.AuthModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.AuthRepository
-import ru.netology.nmedia.repository.AuthRepositoryImpl
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
+import javax.inject.Inject
 
-class AuthViewModel : ViewModel() {
-    private val repository: AuthRepository = AuthRepositoryImpl()
+// Также, аннотация @Inject позволяет отказаться от использования
+// ViewModelFactory
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val appAuth: AppAuth
+) : ViewModel() {
     private val _authEvent = SingleLiveEvent(HTTP_CONTINUE)
     val authEvent: LiveData<Int>
         get() = _authEvent
@@ -32,7 +38,7 @@ class AuthViewModel : ViewModel() {
     val media: LiveData<MediaModel?>
         get() = _media
     val data: LiveData<AuthModel?> =
-        AppAuth.getInstance().data.asLiveData(Dispatchers.Default)
+        appAuth.data.asLiveData(Dispatchers.Default)
     val authorized: Boolean
         get() = data.value != null
     val checkAuthorized = MutableLiveData(false)
@@ -42,7 +48,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _authState.value = _authState.value?.loading()
-                repository.login(login, password)
+                authRepository.login(login, password)
                 _authEvent.value = HTTP_OK
             } catch (e: Exception) {
                 _authState.value = _authState.value?.authShowing()
@@ -55,7 +61,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _authState.value = _authState.value?.loading()
-                repository.register(name, login, password, media.value)
+                authRepository.register(name, login, password, media.value)
                 _authState.value = _authState.value?.regShowing()
                 _authEvent.value = HTTP_OK
             } catch (e: Exception) {
@@ -65,7 +71,7 @@ class AuthViewModel : ViewModel() {
     }
 
     fun logout() {
-        viewModelScope.launch { repository.logout() }
+        viewModelScope.launch { authRepository.logout() }
     }
 
     fun checkAuth() {

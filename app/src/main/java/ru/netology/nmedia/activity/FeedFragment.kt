@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +16,6 @@ import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
-import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_URI
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
@@ -27,12 +26,8 @@ import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
-    private val viewModel: PostViewModel by viewModels(
-        ownerProducer = ::requireParentFragment
-    )
-    private val authViewModel: AuthViewModel by viewModels(
-        ownerProducer = ::requireActivity
-    )
+    private val viewModel: PostViewModel by activityViewModels()
+    private val authViewModel: AuthViewModel by activityViewModels()
     private var _binding: FragmentFeedBinding? = null
     private val binding: FragmentFeedBinding
         get() = _binding!!
@@ -178,10 +173,12 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         childFragmentManager,
                         AuthDialogFragment.AUTH_TAG
                     )
-                else
+                else {
+                    viewModel.getDraftCopy()
                     navController.navigate(
                         R.id.action_feedFragment_to_newPostFragment
                     )
+                }
             }
             refreshPosts.setOnRefreshListener {
                 viewModel.refresh()
