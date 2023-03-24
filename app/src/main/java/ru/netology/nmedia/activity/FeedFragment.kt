@@ -1,12 +1,13 @@
 package ru.netology.nmedia.activity
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.paging.*
@@ -36,18 +37,18 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     private lateinit var adapter: PostAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
-    private lateinit var killingJob: Job
     private lateinit var killingObserver: AdapterDataObserver
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Костыли после реализации бибилиотеки Paging,
-        // но они с каждым разом увеличивают количество запросов
-        killingJob.cancel()
+        if (snackbar != null && snackbar?.isShown == true)
+            snackbar?.dismiss()
+        // Костыль после реализации бибилиотеки Paging для исключения
+        // NullPointerException при обращении к свойству binding в
+        // adapter.registerAdapterDataObserver
         adapter.unregisterAdapterDataObserver(killingObserver)
-        Log.d("JOB IS DEAD", "${killingJob.isActive}")
-        Log.d("OBS. IS DEAD", "${killingObserver.javaClass}")
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initViews()
@@ -78,27 +79,30 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     adapter.submitData(it)
                 }
             }
-            // А вот для отображения обноленного PostAdapter'а надо также
+            // А вот для отображения обновленного PostAdapter'а надо также
             // как и выше запустить корутину
-            lifecycleScope.launchWhenCreated {
-                // Объект loadStateFlow отвечает за отображение загруженных
-                // данных в адаптер
-                adapter.loadStateFlow.collectLatest {
-                    // Индикатор обновления будет отображаться, когда
-                    // происходит refresh, либо когда запрашивается следующая
-                    // страница, либо когда запрашивается предыдущая страница
-                    binding.recyclerView.refreshPosts.isRefreshing =
-                        it.refresh is LoadState.Loading ||
-                        it.append is LoadState.Loading ||
-                        // При пролистывании вверх (запросе предыдущей страницы)
-                        // ничего не будет происходить, поскольку в классе PostPagingSource
-                        // состояние LoadParams.Prepend не обрабатывается
-                        it.prepend is LoadState.Loading
+            lifecycleScope.launch {
+                // В соответствии с рекомендациями, указанными в описании
+                // метода lifecycleScope.launchWhenCreated{}, использован
+                // метод lifecycle.repeatOnLifecycle().
+                // Применение данного метода позволяет исключить NullPointerException
+                // при обращении к свойству binding в adapter.loadStateFlow.collectLatest.
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    // Объект loadStateFlow отвечает за отображение загруженных
+                    // данных в адаптер
+                    adapter.loadStateFlow.collectLatest {
+                        // Индикатор обновления будет отображаться, когда
+                        // происходит refresh, либо когда запрашивается следующая
+                        // страница, либо когда запрашивается предыдущая страница
+                        binding.recyclerView.refreshPosts.isRefreshing =
+                            it.refresh is LoadState.Loading ||
+                            it.append is LoadState.Loading ||
+                            // При пролистывании вверх (запросе предыдущей страницы)
+                            // ничего не будет происходить, поскольку в классе PostPagingSource
+                            // состояние LoadParams.Prepend не обрабатывается
+                            it.prepend is LoadState.Loading
+                    }
                 }
-
-            }.also {
-                killingJob = it
-                Log.d("JOB IS CREATED", "${killingJob.isActive}")
             }
             // Добавление плавного скролла при добавлении новых постов
             adapter.registerAdapterDataObserver(
@@ -112,7 +116,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 }
                     .also {
                         killingObserver = it
-                        Log.d("OBS. IS CREATED", "${killingObserver.javaClass}")
                     }
             )
 //            newerCount.observe(viewLifecycleOwner) { count ->
@@ -129,7 +132,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     )
                         .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
                         .setAction(R.string.retry_loading) {
-                            loadPosts()
+                            adapter.refresh()
+                            refreshPagingData()
                         }
                     snackbar?.show()
                 }
@@ -169,9 +173,11 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
-                if (snackbar != null && snackbar?.isShown == true)
-                    snackbar?.dismiss()
-                viewModel.refresh()
+                if (this@FeedFragment.lifecycle.currentState == Lifecycle.State.STARTED &&
+                    snackbar != null &&
+                    snackbar?.isShown == true)
+                        snackbar?.dismiss()
+                viewModel.refreshPagingData()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
                 if (it) {
@@ -186,11 +192,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 if ( code != HTTP_OK &&
                     (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
                     clearAuthError()
-                    viewModel.refresh()
+                    viewModel.refreshPagingData()
                 }
             }
         }
-
     }
 
     private fun setupListeners() {
@@ -213,6 +218,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 // вместо обновления списка постов через ViewModel
                 // запустить обновление PostAdapter'а
                 adapter.refresh()
+                viewModel.refreshPagingData()
             }
             toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)

@@ -1,7 +1,6 @@
 package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.*
 import androidx.paging.PagingData
 import androidx.paging.map
@@ -16,8 +15,8 @@ import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.*
+import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
-import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 import javax.inject.Inject
@@ -96,7 +95,8 @@ class PostViewModel @Inject constructor(
     val singlePostToView = MutableLiveData(empty)
 
     init {
-        loadPosts()
+//        loadPosts()
+        refreshPagingData(true)
     }
 
     fun loadPosts() =
@@ -124,6 +124,23 @@ class PostViewModel @Inject constructor(
                 _dataState.value = _dataState.value?.error()
                 _postEvent.value = exceptionCheck(e)
             }
+        }
+    }
+
+    fun refreshPagingData(initialState: Boolean = false) {
+        viewModelScope.launch {
+                try {
+                    _dataState.value =
+                        if (initialState)
+                            _dataState.value?.loading()
+                        else
+                            _dataState.value?.refreshing()
+                    postRepository.getLatest(30)
+                    _dataState.value = _dataState.value?.showing()
+                } catch (e: Exception) {
+                    _dataState.value = _dataState.value?.error()
+                    _postEvent.value = exceptionCheck(e)
+                }
         }
     }
 
@@ -185,10 +202,7 @@ class PostViewModel @Inject constructor(
                     try {
                         postRepository.saveDraftCopy(content)
                     } catch (e: Exception) {
-                        Log.d(
-                            "SAVING DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
-                                    "DESCRIPTION => ${overview(exceptionCheck(e))}"
-                        )
+                        customLog("SAVING DRAFT COPY", e)
                     }
             }
     }
@@ -198,8 +212,7 @@ class PostViewModel @Inject constructor(
             try {
                 _draftCopy.value = postRepository.getDraftCopy()
             } catch (e: Exception) {
-                Log.d("GET DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
-                        "DESCRIPTION => ${overview(exceptionCheck(e))}")
+                customLog("GET DRAFT COPY", e)
             }
         }
     }

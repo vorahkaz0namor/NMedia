@@ -10,6 +10,7 @@ interface PostRepository {
     val data: Flow<PagingData<Post>>
     val dataFromDao: LiveData<List<Post>>
     fun getNewerCount(latestId: Long): Flow<Int>
+    suspend fun getLatest(count: Int)
     suspend fun getAll()
     suspend fun showUnreadPosts()
     suspend fun saveWithAttachment(post: Post, media: MediaModel)

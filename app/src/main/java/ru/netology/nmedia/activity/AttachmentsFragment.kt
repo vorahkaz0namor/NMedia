@@ -71,7 +71,7 @@ class AttachmentsFragment : Fragment(R.layout.fragment_attachments) {
 
     private fun customNavigateUp() {
         viewModel.clearAttachments()
-        viewModel.loadPosts()
+        viewModel.refreshPagingData()
         findNavController().navigateUp()
     }
 }

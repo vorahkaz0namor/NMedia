@@ -42,7 +42,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
-            viewModel.loadPosts()
+            viewModel.refreshPagingData()
             findNavController().navigateUp()
         }
     }
@@ -91,13 +91,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         findNavController().navigateUp()
                 }
             }
-//            data.observe(viewLifecycleOwner) { data ->
-//                val post = data.posts.find { it.id == arguments?.POST_ID }
-//                if (post != null)
-//                    postBind(post)
-//                else
-//                    findNavController().navigateUp()
-//            }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK)
                     Snackbar.make(
@@ -106,7 +99,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         Snackbar.LENGTH_INDEFINITE
                     )
                         .setAction(R.string.retry_loading) {
-                            loadPosts()
+                            refreshPagingData()
                         }
                         .show()
             }
@@ -137,7 +130,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private fun setupListeners() {
         binding.apply {
             refreshPost.setOnRefreshListener {
-                viewModel.refresh()
+                viewModel.refreshPagingData()
             }
         }
     }

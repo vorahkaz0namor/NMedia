@@ -1,14 +1,12 @@
 package ru.netology.nmedia.repository
 
-import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import okio.IOException
 import retrofit2.HttpException
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
-import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.util.CompanionNotMedia.customLog
 
 class PostPagingSource(
     private val postApiService: PostApiService
@@ -26,7 +24,6 @@ class PostPagingSource(
             val response = when (params) {
                 // Свойство loadSize возвращает размер страницы
                 is LoadParams.Refresh -> {
-                    Log.d("REFRESH FROM PAGER", "${params.loadSize}")
                     postApiService.getLatest(
                         count = params.loadSize
                     )
@@ -64,8 +61,7 @@ class PostPagingSource(
         } catch (e: IOException) {
             return LoadResult.Error(e)
         } catch (e: HttpException) {
-            Log.d("GET BY PAGING", "CAUGHT EXCEPTION => $e\n" +
-                    "DESCRIPTION => ${overview(exceptionCheck(e))}")
+            customLog("GET BY PAGING", e)
             return LoadResult.Error(e)
         }
     }

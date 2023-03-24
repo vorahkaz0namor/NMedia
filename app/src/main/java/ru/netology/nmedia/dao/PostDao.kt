@@ -75,11 +75,11 @@ interface PostDao {
     // Block to work with DraftCopy
 
     @Query("SELECT content FROM DraftCopyEntity")
-    suspend fun newGetDraftCopy(): String
+    suspend fun getDraftCopy(): String
 
     @Query("DELETE FROM DraftCopyEntity")
     suspend fun clearDraftCopy()
 
     @Insert(onConflict = REPLACE)
-    suspend fun newSaveDraftCopy(draftCopy: DraftCopyEntity)
+    suspend fun saveDraftCopy(draftCopy: DraftCopyEntity)
 }

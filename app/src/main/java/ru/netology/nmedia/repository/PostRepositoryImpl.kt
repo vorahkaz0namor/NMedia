@@ -21,8 +21,7 @@ import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
-import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
-import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import javax.inject.Inject
 
 // В данном случае аннотация @Inject указывает на то, что
@@ -62,6 +61,12 @@ class PostRepositoryImpl @Inject constructor(
             Log.d("DATAFROMDAO", "${it.value?.size}")
         }
 
+    override suspend fun getLatest(count: Int) {
+        val response = postApiService.getLatest(count)
+        if (!response.isSuccessful)
+            throw HttpException(response)
+    }
+
     override fun getNewerCount(latestId: Long): Flow<Int> =
         flow {
             emit(0)
@@ -82,8 +87,7 @@ class PostRepositoryImpl @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    println("CAUGHT EXCEPTION WHEN GET NEWER => $e\n" +
-                            "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
+                    customLog("GET NEWER", e)
                 }
             }
         }
@@ -142,8 +146,7 @@ class PostRepositoryImpl @Inject constructor(
             else
                 throw HttpException(postResponse)
         } catch (e: Exception) {
-            Log.d("SAVING WITH ATTACHMENT", "CAUGHT EXCEPTION => $e\n" +
-                    "DESCRIPTION => ${overview(exceptionCheck(e))}")
+            customLog("SAVING WITH ATTACHMENT", e)
         }
     }
 
@@ -228,16 +231,11 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun viewById(id: Long) = dao.viewById(id)
 
-    override suspend fun getDraftCopy(): String {
-            val draftCopy = dao.newGetDraftCopy()
-            Log.d("GET D.C.in REPO.", draftCopy)
-            return draftCopy
-    }
-
+    override suspend fun getDraftCopy(): String = dao.getDraftCopy()
 
     override suspend fun saveDraftCopy(content: String?) {
         dao.clearDraftCopy()
-        dao.newSaveDraftCopy(DraftCopyEntity.fromDto(content))
+        dao.saveDraftCopy(DraftCopyEntity.fromDto(content))
     }
 
     override fun avatarUrl(authorAvatar: String) = "${BuildConfig.BASE_URL}$AVATAR_PATH$authorAvatar"

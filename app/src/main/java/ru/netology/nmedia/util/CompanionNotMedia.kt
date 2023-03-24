@@ -3,6 +3,7 @@ package ru.netology.nmedia.util
 import android.content.Context
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
@@ -78,6 +79,11 @@ object CompanionNotMedia {
                     ),
                     Toast.LENGTH_LONG
                 ).show()
+    }
+
+    fun customLog(action: String, e: Exception) {
+        Log.d(action, "CAUGHT EXCEPTION => $e\n" +
+                "DESCRIPTION => ${overview(exceptionCheck(e))}")
     }
 
     fun ImageView.load(
