@@ -13,6 +13,8 @@ import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_NO_CONTENT
 import retrofit2.HttpException
 import ru.netology.nmedia.R
+import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
 import java.util.*
 
@@ -26,7 +28,7 @@ object CompanionNotMedia {
     var Bundle.ATTACHMENT_PREVIEW by StringArg
     var Bundle.ATTACHMENT_URI by StringArg
     val actualTime = { now: Long ->
-        SimpleDateFormat("dd MMMM, H:mm", Locale.US).format(Date(now))
+        SimpleDateFormat("dd MMMM, H:mm:ss", Locale.US).format(Date(now))
     }
     val overview = { code: Int ->
         when (code) {
@@ -85,6 +87,15 @@ object CompanionNotMedia {
         Log.d(action, "CAUGHT EXCEPTION => $e\n" +
                 "DESCRIPTION => ${overview(exceptionCheck(e))}")
     }
+
+    fun listToString(list: List<Any>) =
+        "${list.map {
+            when (it) {
+                is Post -> "id = ${it.id}, idFromServer = ${it.idFromServer}"
+                is PostEntity -> "id = ${it.id}, idFromServer = ${it.idFromServer}"
+                else -> return "Can't cast to known class"
+            }
+        }}"
 
     fun ImageView.load(
         url: String,

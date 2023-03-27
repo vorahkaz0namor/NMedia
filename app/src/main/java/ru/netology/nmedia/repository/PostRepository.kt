@@ -8,7 +8,7 @@ import ru.netology.nmedia.model.MediaModel
 
 interface PostRepository {
     val data: Flow<PagingData<Post>>
-    val dataFromDao: LiveData<List<Post>>
+    val dataFromDao: Flow<PagingData<Post>>
     fun getNewerCount(latestId: Long): Flow<Int>
     suspend fun getLatest(count: Int)
     suspend fun getAll()

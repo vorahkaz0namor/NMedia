@@ -37,7 +37,7 @@ class PostViewModel @Inject constructor(
     val data: Flow<PagingData<Post>> =
         appAuth.data // StateFlow<AuthModel?>
             .flatMapLatest { authModel -> // it: AuthModel?
-                postRepository.data // Flow<PagingData<Post>>
+                postRepository.dataFromDao // Flow<PagingData<Post>>
                     .map { posts -> // it: PagingData<Post>
                         posts.map { post -> // it: Post
                             // Try to get post from DB, but this way don't work
@@ -50,7 +50,7 @@ class PostViewModel @Inject constructor(
 //                                .value
                             post.copy(
                                 // Ручное задание факта наличия поста на сервере
-                                idFromServer = post.id,
+//                                idFromServer = post.id,
                                 isOnServer = true,
                                 ownedByMe = authModel?.id == post.authorId
                                 )

@@ -1,9 +1,7 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
-import androidx.lifecycle.asLiveData
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
+import androidx.paging.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,6 +20,7 @@ import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.customLog
+import ru.netology.nmedia.util.CompanionNotMedia.listToString
 import javax.inject.Inject
 
 // В данном случае аннотация @Inject указывает на то, что
@@ -51,19 +50,28 @@ class PostRepositoryImpl @Inject constructor(
         pagingSourceFactory = { PostPagingSource(postApiService) }
     ).flow
 
-    // Свойство для определения наличия в БД постов, еще не сохраненных
-    // на сервере, но почему-то оно всегда null, хотя подписка на него вроде есть
-    override val dataFromDao = dao.getAllReaded().map {
-        it.map(PostEntity::toDto)
-    }
-        .asLiveData(Dispatchers.Default)
-        .also {
-            Log.d("DATAFROMDAO", "${it.value?.size}")
+    // Свойство для получения постов из БД с использованием библиотеки Paging
+    override val dataFromDao = Pager(
+        config = PagingConfig(
+            pageSize = 30,
+            enablePlaceholders = false
+        )
+    ) {
+        dao.getAllRead()
+    }.flow
+        .map { pagingData ->
+            pagingData.map { postEntity ->
+                postEntity.toDto()
+            }
         }
 
     override suspend fun getLatest(count: Int) {
         val response = postApiService.getLatest(count)
-        if (!response.isSuccessful)
+        if (response.isSuccessful) {
+            val postsFromResponse = response.body().orEmpty().sortedBy { it.id }
+            updatePostsByIdFromServer(postsFromResponse, false)
+                .map { dao.removeById(it.id) }
+        } else
             throw HttpException(response)
     }
 
@@ -100,9 +108,10 @@ class PostRepositoryImpl @Inject constructor(
             val postsFromResponse = postsResponse.body().orEmpty().sortedBy { it.id }
             // { PostEntity.fromDto(it) } => Convert lambda to reference =>
             // => (PostEntity::fromDto)
-            updatePostsByIdFromServer(postsFromResponse, false).map {
-                dao.removeById(it.id)
-            }
+            updatePostsByIdFromServer(postsFromResponse, false)
+                // Удаление из БД несуществующих на сервере постов в случае
+                // перезапуска сервера "с нуля"
+                .map { dao.removeById(it.id) }
         } else
             throw HttpException(postsResponse)
     }
@@ -188,6 +197,14 @@ class PostRepositoryImpl @Inject constructor(
                 it.idFromServer != 0L && it.idFromServer != singlePost.id
             }
         }
+        // Контроль синхронизации постов, пришедших с сервера и постов,
+        // находящихся в базе
+        Log.d(
+            "CTRL SYNC",
+            "form server => ${listToString(posts)}\n" +
+                    "from DB => ${listToString(allExistingPosts)}\n" +
+                    "to update => ${listToString(loadedPosts)}"
+        )
         dao.updatePostsByIdFromServer(loadedPosts)
         return postsToDelete
     }

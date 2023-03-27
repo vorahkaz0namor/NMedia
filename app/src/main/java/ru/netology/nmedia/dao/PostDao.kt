@@ -1,10 +1,10 @@
 package ru.netology.nmedia.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
@@ -12,9 +12,11 @@ import java.util.*
 @Dao
 interface PostDao {
     // То, что возвращает "подписку" (LiveData) можно не оборачивать
-    // в suspend, ибо это не такое уж "тяжелое" действие
+    // в suspend, ибо это не такое уж "тяжелое" действие.
+    // В проекте https://github.com/android/architecture-components-samples/tree/main/PagingSample
+    // аналогичная функция также не является suspend
     @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
-    fun getAllReaded(): Flow<List<PostEntity>>
+    fun getAllRead(): PagingSource<Int, PostEntity>
 
     @Query("SELECT * FROM PostEntity ORDER BY id DESC")
     suspend fun getAll(): List<PostEntity>
@@ -46,7 +48,8 @@ interface PostDao {
             getInsertedPostId()
         }
         else {
-            updateContentById(post.id, post.idFromServer, post.content, post.published)
+//            updateContentById(post.id, post.idFromServer, post.content, post.published)
+            updatePostsByIdFromServer(listOf(post))
             post.id
         }
 

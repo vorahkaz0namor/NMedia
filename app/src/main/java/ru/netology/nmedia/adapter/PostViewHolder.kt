@@ -25,7 +25,8 @@ class PostViewHolder(
             published.text = actualTime(post.published)
             content.text = post.content
             avatar.apply {
-                if (post.authorAvatar == "localuser.jpg")
+                if (post.authorAvatar == "localuser.jpg" ||
+                    post.authorAvatar == "")
                     setImageResource(R.drawable.ic_local_user_24)
                 else
                     load(onInteractionListener.avatarUrl(post.authorAvatar))

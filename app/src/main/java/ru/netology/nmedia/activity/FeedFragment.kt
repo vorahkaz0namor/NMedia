@@ -26,43 +26,36 @@ import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.util.CompanionNotMedia.overview
-import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
     private val viewModel: PostViewModel by activityViewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
-    private val binding by viewBinding(FragmentFeedBinding::bind)
     private lateinit var adapter: PostAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
-    private lateinit var killingObserver: AdapterDataObserver
 
     override fun onDestroyView() {
         super.onDestroyView()
-        if (snackbar != null && snackbar?.isShown == true)
-            snackbar?.dismiss()
-        // Костыль после реализации бибилиотеки Paging для исключения
-        // NullPointerException при обращении к свойству binding в
-        // adapter.registerAdapterDataObserver
-        adapter.unregisterAdapterDataObserver(killingObserver)
+        snackbarDismiss()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        initViews()
-        subscribe()
-        setupListeners()
+        val binding = FragmentFeedBinding.bind(view)
+        initViews(binding)
+        subscribe(binding)
+        setupListeners(binding)
     }
 
-    private fun initViews() {
+    private fun initViews(binding: FragmentFeedBinding) {
         adapter = PostAdapter(OnInteractionListenerImpl(viewModel, authViewModel))
         binding.recyclerView.posts.adapter = adapter
         navController = findNavController()
     }
 
-    private fun subscribe() {
+    private fun subscribe(binding: FragmentFeedBinding) {
         viewModel.apply {
             dataState.observe(viewLifecycleOwner) { state ->
                 binding.apply {
@@ -114,9 +107,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                             binding.recyclerView.posts.smoothScrollToPosition(0)
                     }
                 }
-                    .also {
-                        killingObserver = it
-                    }
             )
 //            newerCount.observe(viewLifecycleOwner) { count ->
 //                binding.recyclerView.newPosts.apply {
@@ -173,11 +163,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
-                if (this@FeedFragment.lifecycle.currentState == Lifecycle.State.STARTED &&
-                    snackbar != null &&
-                    snackbar?.isShown == true)
-                        snackbar?.dismiss()
-                viewModel.refreshPagingData()
+                snackbarDismiss()
+                if (data.hasActiveObservers())
+                    viewModel.refreshPagingData()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
                 if (it) {
@@ -198,7 +186,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
     }
 
-    private fun setupListeners() {
+    private fun setupListeners(binding: FragmentFeedBinding) {
         binding.recyclerView.apply {
             addNewPost.setOnClickListener {
                 if (!authViewModel.authorized)
@@ -228,5 +216,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 viewModel.showUnreadPosts()
             }
         }
+    }
+
+    private fun snackbarDismiss() {
+        if (snackbar != null && snackbar?.isShown == true)
+            snackbar?.dismiss()
     }
 }
