@@ -37,7 +37,7 @@ class PostViewModel @Inject constructor(
     val data: Flow<PagingData<Post>> =
         appAuth.data // StateFlow<AuthModel?>
             .flatMapLatest { authModel -> // it: AuthModel?
-                postRepository.dataFromDao // Flow<PagingData<Post>>
+                postRepository.data // Flow<PagingData<Post>>
                     .map { posts -> // it: PagingData<Post>
                         posts.map { post -> // it: Post
                             // Try to get post from DB, but this way don't work

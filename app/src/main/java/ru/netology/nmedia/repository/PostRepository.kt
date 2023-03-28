@@ -1,6 +1,5 @@
 package ru.netology.nmedia.repository
 
-import androidx.lifecycle.LiveData
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.dto.Post

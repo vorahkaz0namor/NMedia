@@ -26,8 +26,9 @@ import javax.inject.Inject
 // В данном случае аннотация @Inject указывает на то, что
 // реализация интерфейса PostRepository должна осуществляться
 // на базе класса PostRepositoryImpl
+@OptIn(ExperimentalPagingApi::class)
 class PostRepositoryImpl @Inject constructor(
-    private val dao: PostDao,
+    private val postDao: PostDao,
     private val postApiService: PostApiService
 ): PostRepository {
     companion object {
@@ -42,13 +43,21 @@ class PostRepositoryImpl @Inject constructor(
     // PagingSourceFactory - лямбда-выражение, которое возвращает
     // объект PagingSource.
     // Функция flow() вернет поток типа PagingData.
+    // ===> МОЖНО ПОПРОБОВАТЬ ПЕРЕДАТЬ СЮДА Pager ЧЕРЕЗ DI <===
     override val data = Pager(
         config = PagingConfig(
             pageSize = 10,
             enablePlaceholders = false
         ),
-        pagingSourceFactory = { PostPagingSource(postApiService) }
+        pagingSourceFactory = { postDao.getAllRead() },
+        remoteMediator = PostRemoteMediator(
+            service = postApiService,
+            postDao = postDao
+        )
     ).flow
+        .map {
+            it.map(PostEntity::toDto)
+        }
 
     // Свойство для получения постов из БД с использованием библиотеки Paging
     override val dataFromDao = Pager(
@@ -57,7 +66,7 @@ class PostRepositoryImpl @Inject constructor(
             enablePlaceholders = false
         )
     ) {
-        dao.getAllRead()
+        postDao.getAllRead()
     }.flow
         .map { pagingData ->
             pagingData.map { postEntity ->
@@ -70,7 +79,7 @@ class PostRepositoryImpl @Inject constructor(
         if (response.isSuccessful) {
             val postsFromResponse = response.body().orEmpty().sortedBy { it.id }
             updatePostsByIdFromServer(postsFromResponse, false)
-                .map { dao.removeById(it.id) }
+//                .map { dao.removeById(it.id) }
         } else
             throw HttpException(response)
     }
@@ -85,7 +94,7 @@ class PostRepositoryImpl @Inject constructor(
                     if (postsResponse.isSuccessful) {
                         val newPosts = postsResponse.body().orEmpty().sortedBy { it.id }
                         updatePostsByIdFromServer(newPosts, true)
-                        val unread = dao.getUnread().size
+                        val unread = postDao.getUnread().size
                         emit(unread)
                     } else
                         throw HttpException(postsResponse)
@@ -111,14 +120,14 @@ class PostRepositoryImpl @Inject constructor(
             updatePostsByIdFromServer(postsFromResponse, false)
                 // Удаление из БД несуществующих на сервере постов в случае
                 // перезапуска сервера "с нуля"
-                .map { dao.removeById(it.id) }
+                .map { postDao.removeById(it.id) }
         } else
             throw HttpException(postsResponse)
     }
 
     override suspend fun showUnreadPosts() {
-        dao.getUnread().map {
-            dao.updateHiddenToFalse(it)
+        postDao.getUnread().map {
+            postDao.updateHiddenToFalse(it)
         }
     }
 
@@ -135,7 +144,7 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun saveWithAttachment(post: Post, media: MediaModel) {
         try {
-            val localSavedPostId = dao.save(PostEntity.fromDto(post))
+            val localSavedPostId = postDao.save(PostEntity.fromDto(post))
             val uploaded = upload(media)
             val postResponse = postApiService.savePost(
                 post.copy(
@@ -148,7 +157,7 @@ class PostRepositoryImpl @Inject constructor(
             )
             if (postResponse.isSuccessful) {
                 val savedPost = postResponse.body() ?: throw HttpException(postResponse)
-                dao.save(PostEntity.fromDto(
+                postDao.save(PostEntity.fromDto(
                     savedPost.copy(id = localSavedPostId, idFromServer = savedPost.id)
                 ))
             }
@@ -160,11 +169,11 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun save(post: Post) {
-        val localSavedPostId = dao.save(PostEntity.fromDto(post))
+        val localSavedPostId = postDao.save(PostEntity.fromDto(post))
         val postResponse = postApiService.savePost(post.copy(id = post.idFromServer))
         if (postResponse.isSuccessful) {
             val savedPost = postResponse.body() ?: throw HttpException(postResponse)
-            dao.save(PostEntity.fromDto(
+            postDao.save(PostEntity.fromDto(
                 savedPost.copy(id = localSavedPostId, idFromServer = savedPost.id)
             ))
         }
@@ -177,7 +186,7 @@ class PostRepositoryImpl @Inject constructor(
         hidden: Boolean
     ): List<PostEntity> {
         var loadedPosts: List<PostEntity> = emptyList()
-        val allExistingPosts = dao.getAll()
+        val allExistingPosts = postDao.getAll()
         var postsToDelete = allExistingPosts
         posts.map { singlePost ->
             val findExistingPost =
@@ -205,7 +214,7 @@ class PostRepositoryImpl @Inject constructor(
                     "from DB => ${listToString(allExistingPosts)}\n" +
                     "to update => ${listToString(loadedPosts)}"
         )
-        dao.updatePostsByIdFromServer(loadedPosts)
+        postDao.updatePostsByIdFromServer(loadedPosts)
         return postsToDelete
     }
 
@@ -214,7 +223,7 @@ class PostRepositoryImpl @Inject constructor(
         idFromServer: Long,
         likedByMe: Boolean
     ) {
-        dao.likeById(id)
+        postDao.likeById(id)
         val postResponse = postApiService.let {
             if (likedByMe)
                 it.unlikeById(idFromServer)
@@ -223,7 +232,7 @@ class PostRepositoryImpl @Inject constructor(
         }
         if (postResponse.isSuccessful) {
             val loadedPost = postResponse.body() ?: throw HttpException(postResponse)
-            dao.updatePostsByIdFromServer( listOf( PostEntity.fromDto(
+            postDao.updatePostsByIdFromServer( listOf( PostEntity.fromDto(
                 loadedPost.copy(
                     id = id,
                     idFromServer = idFromServer
@@ -236,7 +245,7 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeById(id: Long, idFromServer: Long) {
-        dao.removeById(id)
+        postDao.removeById(id)
         if (idFromServer != 0L) {
             val response = postApiService.removeById(idFromServer)
             if (response.isSuccessful)
@@ -246,13 +255,13 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun viewById(id: Long) = dao.viewById(id)
+    override suspend fun viewById(id: Long) = postDao.viewById(id)
 
-    override suspend fun getDraftCopy(): String = dao.getDraftCopy()
+    override suspend fun getDraftCopy(): String = postDao.getDraftCopy()
 
     override suspend fun saveDraftCopy(content: String?) {
-        dao.clearDraftCopy()
-        dao.saveDraftCopy(DraftCopyEntity.fromDto(content))
+        postDao.clearDraftCopy()
+        postDao.saveDraftCopy(DraftCopyEntity.fromDto(content))
     }
 
     override fun avatarUrl(authorAvatar: String) = "${BuildConfig.BASE_URL}$AVATAR_PATH$authorAvatar"
