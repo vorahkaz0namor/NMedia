@@ -35,6 +35,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     private lateinit var adapter: PostAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
+    private val Fragment.viewScope
+        get() = viewLifecycleOwner.lifecycleScope
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -67,14 +69,14 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             }
             // Чтобы подписаться на PagingData<Post>, необходимо использовать
             // корутину Fragment'а
-            lifecycleScope.launchWhenCreated {
+            viewScope.launchWhenCreated {
                 data.collectLatest {
                     adapter.submitData(it)
                 }
             }
             // А вот для отображения обновленного PostAdapter'а надо также
             // как и выше запустить корутину
-            lifecycleScope.launch {
+            viewScope.launch {
                 // В соответствии с рекомендациями, указанными в описании
                 // метода lifecycleScope.launchWhenCreated{}, использован
                 // метод lifecycle.repeatOnLifecycle().
@@ -164,7 +166,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
                 snackbarDismiss()
-                if (data.hasActiveObservers())
+//                if (data.hasActiveObservers())
                     viewModel.refreshPagingData()
             }
             checkAuthorized.observe(viewLifecycleOwner) {

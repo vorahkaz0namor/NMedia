@@ -75,6 +75,9 @@ interface PostDao {
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
 
+    @Query("DELETE FROM PostEntity")
+    suspend fun removeAllPosts()
+
     // Block to work with DraftCopy
 
     @Query("SELECT content FROM DraftCopyEntity")

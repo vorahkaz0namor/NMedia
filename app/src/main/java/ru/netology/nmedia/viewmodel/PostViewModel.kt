@@ -3,6 +3,7 @@ package ru.netology.nmedia.viewmodel
 import android.net.Uri
 import androidx.lifecycle.*
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -135,7 +136,7 @@ class PostViewModel @Inject constructor(
                             _dataState.value?.loading()
                         else
                             _dataState.value?.refreshing()
-                    postRepository.getLatest(30)
+                    val cacheData = postRepository.data.retry()
                     _dataState.value = _dataState.value?.showing()
                 } catch (e: Exception) {
                     _dataState.value = _dataState.value?.error()

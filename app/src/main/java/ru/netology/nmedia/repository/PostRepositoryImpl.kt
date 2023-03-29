@@ -12,6 +12,8 @@ import retrofit2.HttpException
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
+import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
@@ -29,7 +31,9 @@ import javax.inject.Inject
 @OptIn(ExperimentalPagingApi::class)
 class PostRepositoryImpl @Inject constructor(
     private val postDao: PostDao,
-    private val postApiService: PostApiService
+    private val postApiService: PostApiService,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
+    private val appDb: AppDb
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
@@ -52,7 +56,9 @@ class PostRepositoryImpl @Inject constructor(
         pagingSourceFactory = { postDao.getAllRead() },
         remoteMediator = PostRemoteMediator(
             service = postApiService,
-            postDao = postDao
+            postDao = postDao,
+            postRemoteKeyDao = postRemoteKeyDao,
+            appDb = appDb
         )
     ).flow
         .map {
