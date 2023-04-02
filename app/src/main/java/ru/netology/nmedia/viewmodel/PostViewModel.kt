@@ -3,7 +3,6 @@ package ru.netology.nmedia.viewmodel
 import android.net.Uri
 import androidx.lifecycle.*
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import androidx.paging.map
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -34,32 +33,9 @@ class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val appAuth: AppAuth
 ) : ViewModel() {
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val data: Flow<PagingData<Post>> =
-        appAuth.data // StateFlow<AuthModel?>
-            .flatMapLatest { authModel -> // it: AuthModel?
-                postRepository.data // Flow<PagingData<Post>>
-                    .map { posts -> // it: PagingData<Post>
-                        posts.map { post -> // it: Post
-                            // Try to get post from DB, but this way don't work
-//                            val dPost = postRepository
-//                                .dataFromDao
-//                                .map { list ->
-//                                    Log.d("DATAFROMDAO=2", "${list.size}")
-//                                    list.find { it.idFromServer == post.id }
-//                                }
-//                                .value
-                            post.copy(
-                                // Ручное задание факта наличия поста на сервере
-//                                idFromServer = post.id,
-                                isOnServer = true,
-                                ownedByMe = authModel?.id == post.authorId
-                                )
-                        }
-                    }
-            }
-            .flowOn(Dispatchers.Default)
-            .distinctUntilChanged()
+    private var _dataFlow: Flow<PagingData<Post>>? = null
+    val dataFlow: Flow<PagingData<Post>>?
+        get() = _dataFlow
     // Try to get newer posts, but this way don't work,
     // even don't compile
 //    val newerCount: Flow<Int> =
@@ -83,6 +59,28 @@ class PostViewModel @Inject constructor(
     private val _postEvent = SingleLiveEvent(HTTP_CONTINUE)
     val postEvent: LiveData<Int>
         get() = _postEvent
+//    @OptIn(ExperimentalCoroutinesApi::class)
+//    val data: Flow<PagingData<Post>> =
+//        appAuth.data // StateFlow<AuthModel?>
+//            .flatMapLatest { authModel -> // it: AuthModel?
+//                _dataState.value = _dataState.value?.loading()
+//                postRepository.data // Flow<PagingData<Post>>
+//                    .map { posts -> // it: PagingData<Post>
+//                        posts.map { post -> // it: Post
+//                            post.copy(ownedByMe = authModel?.id == post.authorId)
+//                        }
+//                    }
+//                    .also { _dataState.value = _dataState.value?.showing() }
+//            }
+//            .catch {
+//                _dataState.value = _dataState.value?.error()
+//                _postEvent.value = exceptionCheck(Exception(it))
+//                Log.d("THROW FROM MEDIATOR", "${Exception(it)}")
+//            }
+//            .apply {
+//                flowOn(Dispatchers.Default)
+//                distinctUntilChanged()
+//            }
     private val _draftCopy = MutableLiveData<String?>(null)
     val draftCopy: LiveData<String?>
         get() = _draftCopy
@@ -97,7 +95,7 @@ class PostViewModel @Inject constructor(
 
     init {
 //        loadPosts()
-        refreshPagingData(true)
+        flowPosts(true)
     }
 
     fun loadPosts() =
@@ -114,6 +112,36 @@ class PostViewModel @Inject constructor(
                 _postEvent.value = exceptionCheck(e)
             }
         }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun flowPosts(initialState: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                _dataState.value =
+                    if (initialState)
+                        _dataState.value?.loading()
+                    else
+                        _dataState.value?.refreshing()
+                _dataFlow =
+                    appAuth.data // StateFlow<AuthModel?>
+                        .flatMapLatest { authModel -> // it: AuthModel?
+                            postRepository.data // Flow<PagingData<Post>>
+                                .map { posts -> // it: PagingData<Post>
+                                    posts.map { post -> // it: Post
+                                        post.copy(ownedByMe = authModel?.id == post.authorId)
+                                    }
+                                }
+                        }
+                        .flowOn(Dispatchers.Default)
+                        .distinctUntilChanged()
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
+                _dataFlow = null
+            }
+        }
+    }
 
     fun refresh() {
         viewModelScope.launch {
@@ -136,7 +164,7 @@ class PostViewModel @Inject constructor(
                             _dataState.value?.loading()
                         else
                             _dataState.value?.refreshing()
-                    val cacheData = postRepository.data.retry()
+                    dataFlow?.collect()
                     _dataState.value = _dataState.value?.showing()
                 } catch (e: Exception) {
                     _dataState.value = _dataState.value?.error()

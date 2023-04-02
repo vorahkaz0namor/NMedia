@@ -1,10 +1,9 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
+import androidx.lifecycle.asLiveData
 import androidx.paging.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -13,7 +12,6 @@ import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dao.PostRemoteKeyDao
-import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
@@ -31,9 +29,9 @@ import javax.inject.Inject
 @OptIn(ExperimentalPagingApi::class)
 class PostRepositoryImpl @Inject constructor(
     private val postDao: PostDao,
-    private val postApiService: PostApiService,
     private val postRemoteKeyDao: PostRemoteKeyDao,
-    private val appDb: AppDb
+    private val postApiService: PostApiService,
+    private val postRemoteMediator: PostRemoteMediator
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
@@ -48,36 +46,22 @@ class PostRepositoryImpl @Inject constructor(
     // объект PagingSource.
     // Функция flow() вернет поток типа PagingData.
     // ===> МОЖНО ПОПРОБОВАТЬ ПЕРЕДАТЬ СЮДА Pager ЧЕРЕЗ DI <===
+    // Пока что через DI передается RemoteMediator
     override val data = Pager(
         config = PagingConfig(
             pageSize = 10,
             enablePlaceholders = false
         ),
-        pagingSourceFactory = { postDao.getAllRead() },
-        remoteMediator = PostRemoteMediator(
-            service = postApiService,
-            postDao = postDao,
-            postRemoteKeyDao = postRemoteKeyDao,
-            appDb = appDb
-        )
+        pagingSourceFactory = {
+                postDao.getAllRead(
+                    lastId = postRemoteKeyDao.before() ?: 0,
+                    firstId = postRemoteKeyDao.after() ?: 0
+                )
+        },
+        remoteMediator = postRemoteMediator
     ).flow
         .map {
             it.map(PostEntity::toDto)
-        }
-
-    // Свойство для получения постов из БД с использованием библиотеки Paging
-    override val dataFromDao = Pager(
-        config = PagingConfig(
-            pageSize = 30,
-            enablePlaceholders = false
-        )
-    ) {
-        postDao.getAllRead()
-    }.flow
-        .map { pagingData ->
-            pagingData.map { postEntity ->
-                postEntity.toDto()
-            }
         }
 
     override suspend fun getLatest(count: Int) {
@@ -85,7 +69,6 @@ class PostRepositoryImpl @Inject constructor(
         if (response.isSuccessful) {
             val postsFromResponse = response.body().orEmpty().sortedBy { it.id }
             updatePostsByIdFromServer(postsFromResponse, false)
-//                .map { dao.removeById(it.id) }
         } else
             throw HttpException(response)
     }
@@ -215,7 +198,7 @@ class PostRepositoryImpl @Inject constructor(
         // Контроль синхронизации постов, пришедших с сервера и постов,
         // находящихся в базе
         Log.d(
-            "CTRL SYNC",
+            "CTRL SYNC / uREPO",
             "form server => ${listToString(posts)}\n" +
                     "from DB => ${listToString(allExistingPosts)}\n" +
                     "to update => ${listToString(loadedPosts)}"

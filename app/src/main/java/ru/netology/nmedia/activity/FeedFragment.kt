@@ -14,7 +14,9 @@ import androidx.paging.*
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.conflate
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
@@ -70,7 +72,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             // Чтобы подписаться на PagingData<Post>, необходимо использовать
             // корутину Fragment'а
             viewScope.launchWhenCreated {
-                data.collectLatest {
+                dataFlow?.collectLatest {
                     adapter.submitData(it)
                 }
             }
@@ -103,10 +105,16 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             adapter.registerAdapterDataObserver(
                 object : AdapterDataObserver() {
                     override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                        // Если что-то добавилось наверх списка,
-                        if (positionStart == 0)
-                            // тогда плавно заскроллиться до самого верха
-                            binding.recyclerView.posts.smoothScrollToPosition(0)
+                        viewScope.launch {
+                            // Если что-то добавилось наверх списка,
+                            adapter.loadStateFlow.collectLatest {
+                                if ((it.refresh is LoadState.Loading ||
+                                     it.prepend is LoadState.Loading) &&
+                                        positionStart == 0)
+                                    // тогда плавно заскроллиться до самого верха
+                                    binding.recyclerView.posts.smoothScrollToPosition(0)
+                            }
+                        }
                     }
                 }
             )
@@ -125,7 +133,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
                         .setAction(R.string.retry_loading) {
                             adapter.refresh()
-                            refreshPagingData()
+                            flowPosts()
                         }
                     snackbar?.show()
                 }
@@ -166,8 +174,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
                 snackbarDismiss()
-//                if (data.hasActiveObservers())
-                    viewModel.refreshPagingData()
+                viewModel.flowPosts()
+                adapter.refresh()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
                 if (it) {
@@ -182,7 +190,8 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 if ( code != HTTP_OK &&
                     (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
                     clearAuthError()
-                    viewModel.refreshPagingData()
+                    viewModel.flowPosts()
+                    adapter.refresh()
                 }
             }
         }
@@ -208,7 +217,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 // вместо обновления списка постов через ViewModel
                 // запустить обновление PostAdapter'а
                 adapter.refresh()
-                viewModel.refreshPagingData()
             }
             toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)

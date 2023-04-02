@@ -210,7 +210,7 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
             saveDraftCopy(draftCopy)
             clearEditedValue()
             clearPhoto()
-            refreshPagingData()
+            flowPosts()
         }
         findNavController().navigateUp()
     }

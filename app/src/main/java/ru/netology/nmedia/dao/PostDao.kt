@@ -15,10 +15,10 @@ interface PostDao {
     // в suspend, ибо это не такое уж "тяжелое" действие.
     // В проекте https://github.com/android/architecture-components-samples/tree/main/PagingSample
     // аналогичная функция также не является suspend
-    @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
-    fun getAllRead(): PagingSource<Int, PostEntity>
+    @Query("SELECT * FROM PostEntity WHERE hidden = 0 AND idFromServer BETWEEN :lastId AND :firstId ORDER BY idFromServer DESC")
+    fun getAllRead(lastId: Long, firstId: Long): PagingSource<Int, PostEntity>
 
-    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    @Query("SELECT * FROM PostEntity ORDER BY idFromServer DESC")
     suspend fun getAll(): List<PostEntity>
 
     @Query("SELECT id FROM PostEntity WHERE hidden = 1")

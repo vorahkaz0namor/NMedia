@@ -42,7 +42,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
-            viewModel.refreshPagingData()
+            viewModel.flowPosts()
             findNavController().navigateUp()
         }
     }
@@ -73,7 +73,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                 }
             }
             lifecycleScope.launchWhenCreated {
-                data.collectLatest {
+                dataFlow?.collectLatest {
                     // Try to get post from PagingData, but this way don't work
                     var post: Post? = null
                     var dataIds: List<Long> = emptyList()
@@ -99,7 +99,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         Snackbar.LENGTH_INDEFINITE
                     )
                         .setAction(R.string.retry_loading) {
-                            refreshPagingData()
+                            flowPosts()
                         }
                         .show()
             }
@@ -130,7 +130,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private fun setupListeners() {
         binding.apply {
             refreshPost.setOnRefreshListener {
-                viewModel.refreshPagingData()
+                viewModel.flowPosts()
             }
         }
     }
