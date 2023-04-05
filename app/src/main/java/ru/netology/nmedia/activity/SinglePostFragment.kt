@@ -42,7 +42,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
-            viewModel.flowPosts()
             findNavController().navigateUp()
         }
     }
@@ -59,6 +58,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             viewModel.viewById(arguments?.POST_ID!!)
             arguments?.ATTACHMENT_PREVIEW = ""
         }
+        viewModel.clearSinglePostToView()
         binding.singlePost.content.autoLinkMask = Linkify.WEB_URLS
     }
 
@@ -73,20 +73,10 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                 }
             }
             lifecycleScope.launchWhenCreated {
-                dataFlow?.collectLatest {
-                    // Try to get post from PagingData, but this way don't work
-                    var post: Post? = null
-                    var dataIds: List<Long> = emptyList()
-                    it.map { existingPost ->
-                        dataIds = dataIds.plus(existingPost.id)
-                        if (existingPost.id == arguments?.POST_ID)
-                            post = existingPost
-                    }
-                    Log.d("POST_ID", "${arguments?.POST_ID}")
-                    Log.d("DATA IDs", "$dataIds")
-                    Log.d("SINGLE POST", "${post?.id}")
+                dataFlow.collectLatest {
+                    val post: Post? = viewModel.getPostById(arguments?.POST_ID!!)
                     if (post != null)
-                        postBind(post!!)
+                        postBind(post)
                     else
                         findNavController().navigateUp()
                 }
@@ -98,8 +88,8 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         overview(code),
                         Snackbar.LENGTH_INDEFINITE
                     )
-                        .setAction(R.string.retry_loading) {
-                            flowPosts()
+                        .setAction(android.R.string.ok) {
+                            findNavController().navigateUp()
                         }
                         .show()
             }

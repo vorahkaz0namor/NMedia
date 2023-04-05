@@ -1,7 +1,6 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
-import androidx.lifecycle.asLiveData
 import androidx.paging.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -98,6 +97,8 @@ class PostRepositoryImpl @Inject constructor(
             }
         }
             .flowOn(Dispatchers.Default)
+
+    override suspend fun getPostById(id: Long): Post = postDao.getPostById(id).toDto()
 
     override suspend fun getAll() {
         // Асинхронно вызываем сетевой запрос с помощью функции getAll()

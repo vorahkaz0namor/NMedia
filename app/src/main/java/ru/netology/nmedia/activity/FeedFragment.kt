@@ -14,9 +14,7 @@ import androidx.paging.*
 import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.conflate
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
@@ -27,7 +25,6 @@ import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
 import ru.netology.nmedia.adapter.PostAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
-import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
@@ -61,14 +58,14 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 
     private fun subscribe(binding: FragmentFeedBinding) {
         viewModel.apply {
-            dataState.observe(viewLifecycleOwner) { state ->
-                binding.apply {
-                    progressBarView.progressBar.isVisible = state.loading
-                    errorView.errorTitle.isVisible = state.error
-                    recyclerViewAndEmptyView.isVisible = state.showing
-                    recyclerView.refreshPosts.isRefreshing = state.refreshing
-                }
-            }
+//            dataState.observe(viewLifecycleOwner) { state ->
+//                binding.apply {
+//                    progressBarView.progressBar.isVisible = state.loading
+//                    errorView.errorTitle.isVisible = state.error
+//                    recyclerViewAndEmptyView.isVisible = state.showing
+//                    recyclerView.refreshPosts.isRefreshing = state.refreshing
+//                }
+//            }
             // Чтобы подписаться на PagingData<Post>, необходимо использовать
             // корутину Fragment'а
             viewScope.launchWhenCreated {
@@ -91,13 +88,41 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                         // Индикатор обновления будет отображаться, когда
                         // происходит refresh, либо когда запрашивается следующая
                         // страница, либо когда запрашивается предыдущая страница
-                        binding.recyclerView.refreshPosts.isRefreshing =
-                            it.refresh is LoadState.Loading ||
-                            it.append is LoadState.Loading ||
-                            // При пролистывании вверх (запросе предыдущей страницы)
-                            // ничего не будет происходить, поскольку в классе PostPagingSource
-                            // состояние LoadParams.Prepend не обрабатывается
-                            it.prepend is LoadState.Loading
+                        snackbarDismiss()
+                        binding.apply {
+                            errorView.errorTitle.isVisible =
+                                it.refresh is LoadState.Error ||
+                                it.prepend is LoadState.Error ||
+                                it.append is LoadState.Error
+                            recyclerViewAndEmptyView.isVisible =
+                                it.refresh !is LoadState.Error &&
+                                it.prepend !is LoadState.Error &&
+                                it.append !is LoadState.Error
+                            recyclerView.refreshPosts.isRefreshing =
+                                it.refresh is LoadState.Loading ||
+                                it.prepend is LoadState.Loading ||
+                                it.append is LoadState.Loading
+                        }
+                        when {
+                            it.refresh is LoadState.Error -> it.refresh as LoadState.Error
+                            it.prepend is LoadState.Error -> it.prepend as LoadState.Error
+                            it.append is LoadState.Error -> it.append as LoadState.Error
+                            else -> null
+                        }?.also { state ->
+                            state.error.message?.let { message ->
+                                snackbar = Snackbar.make(
+                                    binding.root,
+                                    message,
+                                    Snackbar.LENGTH_INDEFINITE
+                                )
+                                    .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
+                                    .setAction(R.string.retry_loading) {
+                                        snackbarDismiss()
+                                        adapter.refresh()
+                                    }
+                                snackbar?.show()
+                            }
+                        }
                     }
                 }
             }
@@ -123,21 +148,21 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
 //                    isVisible = (count != null && count != 0)
 //                }
 //            }
-            postEvent.observe(viewLifecycleOwner) { code ->
-                if (code != HTTP_OK) {
-                    snackbar = Snackbar.make(
-                        binding.root,
-                        overview(code),
-                        Snackbar.LENGTH_INDEFINITE
-                    )
-                        .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
-                        .setAction(R.string.retry_loading) {
-                            adapter.refresh()
-                            flowPosts()
-                        }
-                    snackbar?.show()
-                }
-            }
+//            postEvent.observe(viewLifecycleOwner) { code ->
+//                if (code != HTTP_OK) {
+//                    snackbar = Snackbar.make(
+//                        binding.root,
+//                        overview(code),
+//                        Snackbar.LENGTH_INDEFINITE
+//                    )
+//                        .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
+//                        .setAction(R.string.retry_loading) {
+//                            adapter.refresh()
+//                            flowPosts()
+//                        }
+//                    snackbar?.show()
+//                }
+//            }
             edited.observe(viewLifecycleOwner) { post ->
                 if (post.id != 0L)
                     navController.navigate(
@@ -174,7 +199,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
                 snackbarDismiss()
-                viewModel.flowPosts()
+//                viewModel.flowPosts()
                 adapter.refresh()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
@@ -190,7 +215,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 if ( code != HTTP_OK &&
                     (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
                     clearAuthError()
-                    viewModel.flowPosts()
+//                    viewModel.flowPosts()
                     adapter.refresh()
                 }
             }
@@ -229,7 +254,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun snackbarDismiss() {
-        if (snackbar != null && snackbar?.isShown == true)
+        if (snackbar != null && snackbar?.isShown == true) {
             snackbar?.dismiss()
+            snackbar = null
+        }
     }
 }

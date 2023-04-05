@@ -15,7 +15,6 @@ import ru.netology.nmedia.db.AppDb
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.entity.PostRemoteKeyEntity
-import ru.netology.nmedia.util.CompanionNotMedia.listToString
 
 @OptIn(ExperimentalPagingApi::class)
 class PostRemoteMediator(
@@ -45,14 +44,15 @@ class PostRemoteMediator(
                     // Здесь, в случае отсутствия latestIdOnCurrentPage
                     // следует указать, что конец/начало страницы еще не достигнут.
                     // Хотя в официальной документации на сайте developer.android.com
-                    // в примерах рекоментуется указывать значение true.
-                    latestIdOnCurrentPage ?: return MediatorResult.Success(false)
-                    Log.d("PREPEND FROM MEDIATOR",
-                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
-                    postApiService.getAfter(
-                        latestIdOnCurrentPage,
-                        state.config.pageSize
-                    )
+                    // в одном из примеров рекоментуется указывать значение true.
+//                    latestIdOnCurrentPage ?:
+                    return MediatorResult.Success(true)
+//                    Log.d("PREPEND FROM MEDIATOR",
+//                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
+//                    postApiService.getAfter(
+//                        latestIdOnCurrentPage,
+//                        state.config.pageSize
+//                    )
                 }
                 // Скролл вниз
                 APPEND -> {
@@ -109,12 +109,7 @@ class PostRemoteMediator(
                         // ...а потом еще и сохранить эти данные в БД
                         updatePostsByIdFromServer(posts = body)
                     }
-                return MediatorResult.Success(
-                    if (loadType == PREPEND)
-                        true
-                    else
-                        body.isEmpty()
-                )
+                return MediatorResult.Success(body.isEmpty())
             } else
                 throw HttpException(response)
         } catch (e: Exception) {

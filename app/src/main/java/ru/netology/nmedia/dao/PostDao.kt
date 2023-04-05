@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
+import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
@@ -17,6 +18,9 @@ interface PostDao {
     // аналогичная функция также не является suspend
     @Query("SELECT * FROM PostEntity WHERE hidden = 0 AND idFromServer BETWEEN :lastId AND :firstId ORDER BY idFromServer DESC")
     fun getAllRead(lastId: Long, firstId: Long): PagingSource<Int, PostEntity>
+
+    @Query("SELECT * FROM PostEntity WHERE id = :id")
+    suspend fun getPostById(id: Long): PostEntity
 
     @Query("SELECT * FROM PostEntity ORDER BY idFromServer DESC")
     suspend fun getAll(): List<PostEntity>
