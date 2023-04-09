@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
+import ru.netology.nmedia.dto.FeedItem
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
@@ -31,8 +32,8 @@ class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
 ) : ViewModel() {
     private val defaultDispatcher = Dispatchers.Default
-    private var _dataFlow: Flow<PagingData<Post>>? = null
-    val dataFlow: Flow<PagingData<Post>>
+    private var _dataFlow: Flow<PagingData<FeedItem>>? = null
+    val dataFlow: Flow<PagingData<FeedItem>>
         get() = cachedPagingDataFromRepo
     private val cachedPagingDataFromRepo =
         postRepository.data // Flow<PagingData<Post>>
@@ -66,24 +67,15 @@ class PostViewModel @Inject constructor(
 //    val data: Flow<PagingData<Post>> =
 //        appAuth.data // StateFlow<AuthModel?>
 //            .flatMapLatest { authModel -> // it: AuthModel?
-//                _dataState.value = _dataState.value?.loading()
 //                postRepository.data // Flow<PagingData<Post>>
 //                    .map { posts -> // it: PagingData<Post>
 //                        posts.map { post -> // it: Post
 //                            post.copy(ownedByMe = authModel?.id == post.authorId)
 //                        }
 //                    }
-//                    .also { _dataState.value = _dataState.value?.showing() }
 //            }
-//            .catch {
-//                _dataState.value = _dataState.value?.error()
-//                _postEvent.value = exceptionCheck(Exception(it))
-//                Log.d("THROW FROM MEDIATOR", "${Exception(it)}")
-//            }
-//            .apply {
-//                flowOn(defaultDispatcher)
-//                distinctUntilChanged()
-//            }
+//                .flowOn(defaultDispatcher)
+//                .distinctUntilChanged()
     private val _draftCopy = MutableLiveData<String?>(null)
     val draftCopy: LiveData<String?>
         get() = _draftCopy
