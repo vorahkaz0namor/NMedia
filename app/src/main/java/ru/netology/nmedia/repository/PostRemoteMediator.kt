@@ -45,14 +45,13 @@ class PostRemoteMediator(
                     // следует указать, что конец/начало страницы еще не достигнут.
                     // Хотя в официальной документации на сайте developer.android.com
                     // в одном из примеров рекоментуется указывать значение true.
-//                    latestIdOnCurrentPage ?:
-                    return MediatorResult.Success(true)
-//                    Log.d("PREPEND FROM MEDIATOR",
-//                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
-//                    postApiService.getAfter(
-//                        latestIdOnCurrentPage,
-//                        state.config.pageSize
-//                    )
+                    latestIdOnCurrentPage ?: return MediatorResult.Success(false)
+                    Log.d("PREPEND FROM MEDIATOR",
+                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
+                    postApiService.getAfter(
+                        latestIdOnCurrentPage,
+                        state.config.pageSize
+                    )
                 }
                 // Скролл вниз
                 APPEND -> {

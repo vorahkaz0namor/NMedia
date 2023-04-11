@@ -7,6 +7,7 @@ import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.paging.CombinedLoadStates
 import com.bumptech.glide.Glide
 import okhttp3.internal.http.HTTP_FORBIDDEN
 import okhttp3.internal.http.HTTP_NOT_FOUND
@@ -96,6 +97,11 @@ object CompanionNotMedia {
                 else -> return "Can't cast to known class"
             }
         }}"
+
+    fun CombinedLoadStates.allStatesToString(): String =
+        "CombinedLoadStates:\nrefresh = $refresh,\nprepend = $prepend,\nappend = $append;\n" +
+                "source.refresh = ${source.refresh},\nsource.prepend = ${source.prepend},\nsource.append = ${source.append};\n" +
+                "mediator.refresh = ${mediator?.refresh},\nmediator.prepend = ${mediator?.prepend},\nmediator.append = ${mediator?.append}."
 
     fun ImageView.load(
         url: String,

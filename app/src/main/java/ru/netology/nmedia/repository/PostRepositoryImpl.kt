@@ -74,6 +74,8 @@ class PostRepositoryImpl @Inject constructor(
                 }
         }
 
+    override fun getLatestId(): Long = postRemoteKeyDao.after() ?: 0
+
     override suspend fun getLatest(count: Int) {
         val response = postApiService.getLatest(count)
         if (response.isSuccessful) {
