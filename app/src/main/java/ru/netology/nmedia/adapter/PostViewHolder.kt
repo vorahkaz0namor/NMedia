@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
+import ru.netology.nmedia.dto.CountDisplay.daySeparator
 import ru.netology.nmedia.util.CompanionNotMedia.actualTime
 import ru.netology.nmedia.util.CompanionNotMedia.load
 
@@ -14,26 +15,38 @@ class PostViewHolder(
     private val onInteractionListener: OnInteractionListener
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(post: Post) {
-        fillingCardPost(post)
-        setupListeners(post)
+    fun bind(previousPost: Post?, currentPost: Post) {
+        fillingCardPost(previousPost = previousPost, currentPost = currentPost)
+        setupListeners(currentPost)
     }
 
-    private fun fillingCardPost(post: Post) {
+    private fun fillingCardPost(previousPost: Post?, currentPost: Post) {
         binding.apply {
-            author.text = post.author
-            published.text = actualTime(post.published)
-            content.text = post.content
+            daySeparator.apply {
+                when (val sep = daySeparator(
+                                    previousPost = previousPost,
+                                    currentPost = currentPost
+                                )) {
+                    null -> isVisible = false
+                    else -> {
+                        isVisible = true
+                        text = sep
+                    }
+                }
+            }
+            author.text = currentPost.author
+            published.text = actualTime(currentPost.published)
+            content.text = currentPost.content
             avatar.apply {
-                if (post.authorAvatar == "localuser.jpg" ||
-                    post.authorAvatar == "")
+                if (currentPost.authorAvatar == "localuser.jpg" ||
+                    currentPost.authorAvatar == "")
                     setImageResource(R.drawable.ic_local_user_24)
                 else
-                    load(onInteractionListener.avatarUrl(post.authorAvatar))
+                    load(onInteractionListener.avatarUrl(currentPost.authorAvatar))
             }
-            menu.isVisible = post.ownedByMe
+            menu.isVisible = currentPost.ownedByMe
             deprecatedActions.apply {
-                if (post.isOnServer) {
+                if (currentPost.isOnServer) {
                     isVisible = true
                     repeatSavePost.isVisible = false
                 } else {
@@ -42,34 +55,34 @@ class PostViewHolder(
                 }
             }
             postAttachment.apply {
-                if (post.attachment != null && post.isOnServer) {
+                if (currentPost.attachment != null && currentPost.isOnServer) {
                     isVisible = true
-                    contentDescription = post.attachment.description
+                    contentDescription = currentPost.attachment.description
                     load(
-                        onInteractionListener.attachmentUrl(post.attachment.url),
-                        post.attachment.type.name
+                        onInteractionListener.attachmentUrl(currentPost.attachment.url),
+                        currentPost.attachment.type.name
                     )
                 } else
                     isVisible = false
             }
-            likes.isChecked = post.likedByMe
-            likes.text = CountDisplay.show(post.likes)
-            share.text = CountDisplay.show(post.shares)
-            views.text = CountDisplay.show(post.views)
+            likes.isChecked = currentPost.likedByMe
+            likes.text = CountDisplay.show(currentPost.likes)
+            share.text = CountDisplay.show(currentPost.shares)
+            views.text = CountDisplay.show(currentPost.views)
         }
     }
 
-    private fun setupListeners(post: Post) {
+    private fun setupListeners(currentPost: Post) {
         binding.apply {
             root.setOnClickListener {
                 onInteractionListener.checkAuth()
                 if (onInteractionListener.authorized)
-                    onInteractionListener.toSinglePost(post)
+                    onInteractionListener.toSinglePost(currentPost)
             }
             likes.setOnClickListener {
                 onInteractionListener.checkAuth()
                 if (onInteractionListener.authorized)
-                    onInteractionListener.onLike(post)
+                    onInteractionListener.onLike(currentPost)
                 else
                     likes.isChecked = false
             }
@@ -77,15 +90,15 @@ class PostViewHolder(
             share.setOnClickListener {
                 onInteractionListener.checkAuth()
                 if (onInteractionListener.authorized)
-                    onInteractionListener.onShare(post)
+                    onInteractionListener.onShare(currentPost)
             }
             postAttachment.setOnClickListener {
                 onInteractionListener.checkAuth()
                 if (onInteractionListener.authorized)
-                    onInteractionListener.onAttachments(post)
+                    onInteractionListener.onAttachments(currentPost)
             }
             repeatSavePost.setOnClickListener {
-                onInteractionListener.repeatSave(post)
+                onInteractionListener.repeatSave(currentPost)
             }
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {
@@ -94,12 +107,12 @@ class PostViewHolder(
                         when (item.itemId) {
                             // Click Remove
                             R.id.remove -> {
-                                onInteractionListener.onRemove(post)
+                                onInteractionListener.onRemove(currentPost)
                                 true
                             }
                             // Click Edit
                             R.id.edit -> {
-                                onInteractionListener.onEdit(post)
+                                onInteractionListener.onEdit(currentPost)
                                 true
                             }
                             else -> false

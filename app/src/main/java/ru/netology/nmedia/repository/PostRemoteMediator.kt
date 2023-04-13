@@ -1,11 +1,8 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
-import androidx.paging.ExperimentalPagingApi
-import androidx.paging.LoadType
+import androidx.paging.*
 import androidx.paging.LoadType.*
-import androidx.paging.PagingState
-import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import retrofit2.HttpException
 import ru.netology.nmedia.api.PostApiService
@@ -32,8 +29,8 @@ class PostRemoteMediator(
             val response = when (loadType) {
                 REFRESH -> {
                     Log.d("REFRESH FROM MEDIATOR",
-                          "latest = $latestIdOnCurrentPage\n" +
-                                  "earliest = $earliestIdOnCurrentPage\n" +
+//                          "latest = $latestIdOnCurrentPage\n" +
+//                                  "earliest = $earliestIdOnCurrentPage\n" +
                                   "prefetch = ${state.config.prefetchDistance}")
                     postApiService.getLatest(state.config.pageSize)
                 }
@@ -47,7 +44,10 @@ class PostRemoteMediator(
                     // в одном из примеров рекоментуется указывать значение true.
                     latestIdOnCurrentPage ?: return MediatorResult.Success(false)
                     Log.d("PREPEND FROM MEDIATOR",
-                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
+//                          "latest = $latestIdOnCurrentPage\n" +
+//                                  "earliest = $earliestIdOnCurrentPage" +
+                                  ""
+                    )
                     postApiService.getAfter(
                         latestIdOnCurrentPage,
                         state.config.pageSize
@@ -57,7 +57,10 @@ class PostRemoteMediator(
                 APPEND -> {
                     earliestIdOnCurrentPage ?: return MediatorResult.Success(false)
                     Log.d("APPEND FROM MEDIATOR",
-                          "latest = $latestIdOnCurrentPage\nearliest = $earliestIdOnCurrentPage")
+//                          "latest = $latestIdOnCurrentPage\n" +
+//                                  "earliest = $earliestIdOnCurrentPage" +
+                                  ""
+                    )
                     postApiService.getBefore(
                         earliestIdOnCurrentPage,
                         state.config.pageSize
@@ -72,7 +75,7 @@ class PostRemoteMediator(
                     appDb.withTransaction {
                         val first = body.first().id
                         val last = body.last().id
-                        Log.d("IDs FROM BODY", "first = $first\nlast = $last")
+//                        Log.d("IDs FROM BODY", "first = $first\nlast = $last")
                         when (loadType) {
                             REFRESH -> {
                                 postRemoteKeyDao.saveRemoteKey(
@@ -137,13 +140,13 @@ class PostRemoteMediator(
                     singlePost.copy(id = 0L, idFromServer = singlePost.id)
                 ).copy(hidden = hidden))
         }
-        Log.d(
-            "CTRL SYNC FROM MEDIATOR",
-            "GET FROM SERVER => ${posts.size}\n" +
-                    "GET FROM DB => ${allExistingPosts.size}\n" +
-                    "max = ${postRemoteKeyDao.max()}\n" +
-                    "min = ${postRemoteKeyDao.min()}"
-        )
+//        Log.d(
+//            "CTRL SYNC FROM MEDIATOR",
+//            "GET FROM SERVER => ${posts.size}\n" +
+//                    "GET FROM DB => ${allExistingPosts.size}\n" +
+//                    "max = ${postRemoteKeyDao.max()}\n" +
+//                    "min = ${postRemoteKeyDao.min()}"
+//        )
         postDao.updatePostsByIdFromServer(loadedPosts)
     }
 }

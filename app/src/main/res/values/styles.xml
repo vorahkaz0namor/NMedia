@@ -34,6 +34,12 @@
         <item name="android:strokeColor">@color/ripple_button</item>
     </style>
 
+    <style name="Widget.AppTheme.DaySeparator" parent="Widget.AppTheme.FAB">
+        <item name="android:textAlignment">center</item>
+        <item name="layout_constraintHeight">@dimen/static_text</item>
+        <item name="android:padding">@dimen/zero_dp</item>
+    </style>
+
     <style name="Widget.AppTheme.NMediaOutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="android:textColor">?attr/colorControlNormal</item>
         <item name="strokeColor">?attr/colorControlNormal</item>

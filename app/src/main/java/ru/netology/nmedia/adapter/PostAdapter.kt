@@ -49,8 +49,30 @@ class PostAdapter(
         // позиции.
         when (val item = getItem(position)) {
             is Ad -> (holder as? AdViewHolder)?.bind(item)
-            is Post -> (holder as? PostViewHolder)?.bind(item)
+            is Post -> {
+                val previousPost = getPreviousPost(position)
+                (holder as? PostViewHolder)?.bind(
+                    previousPost = previousPost,
+                    currentPost = item)
+            }
             null -> error("Unknown item type")
         }
+    }
+
+    private fun getPreviousPost(position: Int): Post? {
+        val previousItemPosition = position - 1
+        val previousItem = if (previousItemPosition >= 0)
+            getItem(previousItemPosition)
+        else
+            null
+
+            return if (previousItem is Ad) {
+                val previousPostPosition = position - 2
+                if (previousPostPosition >= 0)
+                    getItem(previousPostPosition) as? Post
+                else
+                    null
+            } else
+                previousItem as? Post
     }
 }

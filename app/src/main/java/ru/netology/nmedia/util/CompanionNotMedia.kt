@@ -28,8 +28,17 @@ object CompanionNotMedia {
     var Bundle.POST_CONTENT by StringArg
     var Bundle.ATTACHMENT_PREVIEW by StringArg
     var Bundle.ATTACHMENT_URI by StringArg
+    // Коэффициент перевода значения вермени в зависимости от того,
+    // в каком виде оно представлено - в секундах или в милисекундах
+    val epochMultiplier = { time: Long ->
+        if (System.currentTimeMillis() / time in 1_000 until 10_000)
+            1_000L
+        else
+            1L
+    }
     val actualTime = { now: Long ->
-        SimpleDateFormat("dd MMMM, H:mm:ss", Locale.US).format(Date(now))
+        SimpleDateFormat("dd MMMM, H:mm:ss", Locale.US)
+            .format(Date(now * epochMultiplier(now)))
     }
     val overview = { code: Int ->
         when (code) {

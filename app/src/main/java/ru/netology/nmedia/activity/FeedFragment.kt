@@ -78,6 +78,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         }
         navController = findNavController()
     }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribe(binding: FragmentFeedBinding) {
         viewModel.apply {
@@ -160,10 +161,10 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                                 it is LoadState.Loading || it is LoadState.Error
                             }.also { footerStateName = "mediator.append" }
                             ?: loadState.source.append.also { footerStateName = "source.append" }
-                    Log.d("HEADER & FOOTER",
-                        "INCOMING STATE =\n${loadState.allStatesToString()}\n" +
-                                "HEADER STATE =\n$headerStateName = ${loadStateHeader.loadState}\n" +
-                                "FOOTER STATE =\n$footerStateName = ${loadStateFooter.loadState}")
+//                    Log.d("HEADER & FOOTER",
+//                        "INCOMING STATE =\n${loadState.allStatesToString()}\n" +
+//                                "HEADER STATE =\n$headerStateName = ${loadStateHeader.loadState}\n" +
+//                                "FOOTER STATE =\n$footerStateName = ${loadStateFooter.loadState}")
                     val errorState = loadState.refresh as? LoadState.Error
                         ?: loadState.prepend as? LoadState.Error
                         ?: loadState.append as? LoadState.Error
