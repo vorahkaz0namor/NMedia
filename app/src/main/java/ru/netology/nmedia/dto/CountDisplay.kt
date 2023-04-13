@@ -1,9 +1,11 @@
 package ru.netology.nmedia.dto
 
+import android.annotation.SuppressLint
 import android.util.Log
 import ru.netology.nmedia.util.CompanionNotMedia.actualTime
 import ru.netology.nmedia.util.CompanionNotMedia.epochMultiplier
 import java.math.BigDecimal
+import java.time.OffsetDateTime
 
 object CountDisplay {
     fun show(count: Int): String {
@@ -29,6 +31,7 @@ object CountDisplay {
         )}${digitsMap.getValue(divisor)}"
     }
 
+    @SuppressLint("NewApi")
     fun daySeparator(previousPost: Post?, currentPost: Post): String? {
         val coefficient = epochMultiplier(currentPost.published)
         val oneDayLength = 86_400_000L / coefficient
@@ -36,11 +39,12 @@ object CountDisplay {
         val twoWeekLength = 2 * oneWeekLength
         val localeShift = 25_200_000L / coefficient
         val currentTime = System.currentTimeMillis() / coefficient
-        // День недели задан вручную, поскольку метод java.util.Date().day,
-        // который определяет день недели, является deprecated и похоже уже не работает,
-        // а метод OffsetDateTime.now().dayOfWeek требует либо понять версию API,
-        // либо использовать другие обходные пути
-        val dayOfTheCurrentWeek = 4
+        // Поскольку метод java.util.Date().day, который определяет день недели,
+        // является deprecated и похоже уже не работает, а метод
+        // OffsetDateTime.now().dayOfWeek требует либо понять версию API,
+        // либо использовать другие обходные пути, то я выбрал один из таких
+        // путей - подавить данное предупреждение
+        val dayOfTheCurrentWeek = OffsetDateTime.now().dayOfWeek.value
         val floorCurrentTimeToDay = currentTime / oneDayLength
         val currentDayStart = oneDayLength * floorCurrentTimeToDay - localeShift
         val currentWeekStart = currentDayStart - (dayOfTheCurrentWeek - 1) * oneDayLength
