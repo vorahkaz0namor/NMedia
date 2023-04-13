@@ -31,23 +31,24 @@ object CountDisplay {
         )}${digitsMap.getValue(divisor)}"
     }
 
-    @SuppressLint("NewApi")
     fun daySeparator(previousPost: Post?, currentPost: Post): String? {
         val coefficient = epochMultiplier(currentPost.published)
         val oneDayLength = 86_400_000L / coefficient
         val oneWeekLength = 7 * oneDayLength
         val twoWeekLength = 2 * oneWeekLength
-        val localeShift = 25_200_000L / coefficient
-        val currentTime = System.currentTimeMillis() / coefficient
         // Поскольку метод java.util.Date().day, который определяет день недели,
         // является deprecated и похоже уже не работает, а метод
         // OffsetDateTime.now().dayOfWeek требует либо понять версию API,
-        // либо использовать другие обходные пути, то я выбрал один из таких
-        // путей - подавить данное предупреждение
-        val dayOfTheCurrentWeek = OffsetDateTime.now().dayOfWeek.value
-        val floorCurrentTimeToDay = currentTime / oneDayLength
+        // либо использовать другие обходные пути, то я выбрал не совсем "хороший"
+        // вариант решения данной проблемы - определение и задание "вручную" самого
+        // первого понедельника в Unix Time
+        val firstMondayUnixTime = 4 * oneDayLength
+        val localeShift = 25_200_000L / coefficient
+        val currentTime = System.currentTimeMillis() / coefficient
+        val floorCurrentTimeToDay = (currentTime + localeShift) / oneDayLength
+        val floorCurrentTimeToWeek = (currentTime - firstMondayUnixTime) / oneWeekLength
         val currentDayStart = oneDayLength * floorCurrentTimeToDay - localeShift
-        val currentWeekStart = currentDayStart - (dayOfTheCurrentWeek - 1) * oneDayLength
+        val currentWeekStart = oneWeekLength * floorCurrentTimeToWeek + firstMondayUnixTime - localeShift
         val dayOfPost = { post: Post ->
             when (post.published) {
                 in currentDayStart..currentTime ->
@@ -71,6 +72,7 @@ object CountDisplay {
 //        val result = dayOfCurrentPost.takeIf { it != dayOfPreviousPost }
 //        Log.d("DAY OF THE POST", "currentTime = ${actualTime(currentTime)}\n" +
 //                "floorTime = $floorCurrentTimeToDay\n" +
+//                "floorWeek = $floorCurrentTimeToWeek\n" +
 //                "dayStart = ${actualTime(currentDayStart)}\n" +
 //                "weekStart = ${actualTime(currentWeekStart)}\n" +
 //                "previous = ${actualTime(previousPost?.published ?: 1)}, $dayOfPreviousPost\n" +
