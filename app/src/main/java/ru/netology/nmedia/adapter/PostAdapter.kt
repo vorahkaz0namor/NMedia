@@ -61,18 +61,29 @@ class PostAdapter(
 
     private fun getPreviousPost(position: Int): Post? {
         val previousItemPosition = position - 1
-        val previousItem = if (previousItemPosition >= 0)
-            getItem(previousItemPosition)
-        else
+        val previousItem =
+            if (previousItemPosition >= 0) {
+                getItem(previousItemPosition)
+            }
+            else {
+                null
+            }
+        val result =
+            if (previousItem != null) {
+                if (previousItem is Ad) {
+                    val previousPostPosition = position - 2
+                    if (previousPostPosition >= 0) {
+                        getItem(previousPostPosition) as? Post
+                    } else {
+                        null
+                    }
+                }
+                else {
+                    previousItem as? Post
+                }
+        } else {
             null
-
-            return if (previousItem is Ad) {
-                val previousPostPosition = position - 2
-                if (previousPostPosition >= 0)
-                    getItem(previousPostPosition) as? Post
-                else
-                    null
-            } else
-                previousItem as? Post
+        }
+        return result
     }
 }
