@@ -3,9 +3,7 @@ package ru.netology.nmedia.auth
 import android.content.Context
 import android.util.Log
 import androidx.core.content.edit
-import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.ktx.messaging
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -80,6 +78,7 @@ class AppAuth @Inject constructor(
     @EntryPoint
     interface AppAuthEntryPoint {
         fun getPostApiService(): PostApiService
+        fun getFirebaseMessaging(): FirebaseMessaging
     }
 
     fun sendPushToken(token: String? = null) {
@@ -92,7 +91,7 @@ class AppAuth @Inject constructor(
             )
             try {
                 val pushToken = PushToken(
-                    token ?: Firebase.messaging.token.await()
+                    token ?: entryPoint.getFirebaseMessaging().token.await()
                 )
                 entryPoint.getPostApiService().sendPushToken(pushToken)
             } catch (e: Exception) {

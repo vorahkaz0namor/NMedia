@@ -1,23 +1,20 @@
 package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.*
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
-import ru.netology.nmedia.auth.AppAuth
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.model.FeedModel
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.repository.*
+import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
-import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.util.SingleLiveEvent
 import java.io.File
 import javax.inject.Inject
@@ -32,27 +29,28 @@ private val empty = Post(
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
-    private val appAuth: AppAuth
 ) : ViewModel() {
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val data: LiveData<FeedModel> =
-        appAuth.data
-            .flatMapLatest { authModel -> // it: AuthModel?
-                postRepository.data // Flow<List<Post>>
-                    .map { posts -> // it: List<Post>
-                        FeedModel(posts = posts.map {
-                            it.copy(ownedByMe = authModel?.id == it.authorId)
-                        })
-                    }
-            }
-            .asLiveData(Dispatchers.Default)
+    private val defaultDispatcher = Dispatchers.Default
+    private var _dataFlow: Flow<PagingData<Post>>? = null
+    val dataFlow: Flow<PagingData<Post>>
+        get() = cachedPagingDataFromRepo
+    private val cachedPagingDataFromRepo =
+        postRepository.data // Flow<PagingData<Post>>
+            .flowOn(defaultDispatcher)
             .distinctUntilChanged()
-    val newerCount: LiveData<Int> =
-        data.switchMap {
-            postRepository.getNewerCount(
-                it.posts.maxOfOrNull { it.idFromServer } ?: 0L
-            ).asLiveData()
-    }
+            .cachedIn(viewModelScope)
+    // Try to get newer posts, but this way don't work,
+    // even don't compile
+//    val newerCount: Flow<Int> =
+//        data.switchMap { posts ->
+//            postRepository.getNewerCount(
+//                posts.map {
+//                    it.idFromServer
+//                }.filter {
+//                    maxOf(it)
+//                } ?: 0L
+//            )
+//    }
     private val _dataState = MutableLiveData(FeedModelState())
     val dataState: LiveData<FeedModelState>
         get() = _dataState
@@ -64,6 +62,28 @@ class PostViewModel @Inject constructor(
     private val _postEvent = SingleLiveEvent(HTTP_CONTINUE)
     val postEvent: LiveData<Int>
         get() = _postEvent
+//    @OptIn(ExperimentalCoroutinesApi::class)
+//    val data: Flow<PagingData<Post>> =
+//        appAuth.data // StateFlow<AuthModel?>
+//            .flatMapLatest { authModel -> // it: AuthModel?
+//                _dataState.value = _dataState.value?.loading()
+//                postRepository.data // Flow<PagingData<Post>>
+//                    .map { posts -> // it: PagingData<Post>
+//                        posts.map { post -> // it: Post
+//                            post.copy(ownedByMe = authModel?.id == post.authorId)
+//                        }
+//                    }
+//                    .also { _dataState.value = _dataState.value?.showing() }
+//            }
+//            .catch {
+//                _dataState.value = _dataState.value?.error()
+//                _postEvent.value = exceptionCheck(Exception(it))
+//                Log.d("THROW FROM MEDIATOR", "${Exception(it)}")
+//            }
+//            .apply {
+//                flowOn(defaultDispatcher)
+//                distinctUntilChanged()
+//            }
     private val _draftCopy = MutableLiveData<String?>(null)
     val draftCopy: LiveData<String?>
         get() = _draftCopy
@@ -76,9 +96,10 @@ class PostViewModel @Inject constructor(
     // Variable to hold single post to view
     val singlePostToView = MutableLiveData(empty)
 
-    init {
-        loadPosts()
-    }
+//    init {
+////        loadPosts()
+//        flowPosts(true)
+//    }
 
     fun loadPosts() =
         // Для запуска корутин внутри ViewModel существует специальная
@@ -95,6 +116,24 @@ class PostViewModel @Inject constructor(
             }
         }
 
+    fun flowPosts(initialState: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                _dataState.value =
+                    if (initialState)
+                        _dataState.value?.loading()
+                    else
+                        _dataState.value?.refreshing()
+                _dataFlow = cachedPagingDataFromRepo.map { it }
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
+                _dataFlow = null
+            }
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             try {
@@ -106,6 +145,33 @@ class PostViewModel @Inject constructor(
                 _postEvent.value = exceptionCheck(e)
             }
         }
+    }
+
+    fun refreshPagingData(initialState: Boolean = false) {
+        viewModelScope.launch {
+                try {
+                    _dataState.value =
+                        if (initialState)
+                            _dataState.value?.loading()
+                        else
+                            _dataState.value?.refreshing()
+                    dataFlow.collect()
+                    _dataState.value = _dataState.value?.showing()
+                } catch (e: Exception) {
+                    _dataState.value = _dataState.value?.error()
+                    _postEvent.value = exceptionCheck(e)
+                }
+        }
+    }
+
+    fun getPostById(id: Long): Post? {
+        var result: Post? = null
+        viewModelScope.launch {
+            _dataState.value = _dataState.value?.loading()
+            result = postRepository.getPostById(id)
+            _dataState.value = _dataState.value?.showing()
+        }
+        return result
     }
 
     fun showUnreadPosts() {
@@ -166,10 +232,7 @@ class PostViewModel @Inject constructor(
                     try {
                         postRepository.saveDraftCopy(content)
                     } catch (e: Exception) {
-                        Log.d(
-                            "SAVING DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
-                                    "DESCRIPTION => ${overview(exceptionCheck(e))}"
-                        )
+                        customLog("SAVING DRAFT COPY", e)
                     }
             }
     }
@@ -179,8 +242,7 @@ class PostViewModel @Inject constructor(
             try {
                 _draftCopy.value = postRepository.getDraftCopy()
             } catch (e: Exception) {
-                Log.d("GET DRAFT COPY", "CAUGHT EXCEPTION => $e\n" +
-                        "DESCRIPTION => ${overview(exceptionCheck(e))}")
+                customLog("GET DRAFT COPY", e)
             }
         }
     }
@@ -272,8 +334,11 @@ class PostViewModel @Inject constructor(
     fun singlePost(post: Post) {
         singlePostToView.apply {
             value = post
-            value = empty
         }
+    }
+
+    fun clearSinglePostToView() {
+        singlePostToView.value = empty
     }
 
     fun getAvatarUrl(authorAvatar: String) = postRepository.avatarUrl(authorAvatar)

@@ -22,7 +22,11 @@ data class PostEntity(
     val views: Int = 0,
     val hidden: Boolean = false,
     @Embedded
-    val attachment: Attachment?
+    val attachment: Attachment?,
+    // Поскольку с сервера приходят посты с таким полем,
+    // то можно его оттуда и сохранять в БД, а не маппить
+    // списки постов во ViewModel'и
+    val ownedByMe: Boolean
 ) {
     fun toDto() =
         Post(
@@ -37,7 +41,8 @@ data class PostEntity(
             likedByMe = likedByMe,
             shares = shares,
             views = views,
-            attachment = attachment
+            attachment = attachment,
+            ownedByMe = ownedByMe
         )
 
     companion object {
@@ -54,7 +59,8 @@ data class PostEntity(
                 likedByMe = dtoPost.likedByMe,
                 shares = dtoPost.shares,
                 views = dtoPost.views,
-                attachment = dtoPost.attachment
+                attachment = dtoPost.attachment,
+                ownedByMe = dtoPost.ownedByMe
             )
     }
 }

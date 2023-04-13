@@ -1,10 +1,11 @@
 package ru.netology.nmedia.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
+import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
@@ -12,11 +13,16 @@ import java.util.*
 @Dao
 interface PostDao {
     // То, что возвращает "подписку" (LiveData) можно не оборачивать
-    // в suspend, ибо это не такое уж "тяжелое" действие
-    @Query("SELECT * FROM PostEntity WHERE hidden = 0 ORDER BY id DESC")
-    fun getAllReaded(): Flow<List<PostEntity>>
+    // в suspend, ибо это не такое уж "тяжелое" действие.
+    // В проекте https://github.com/android/architecture-components-samples/tree/main/PagingSample
+    // аналогичная функция также не является suspend
+    @Query("SELECT * FROM PostEntity WHERE hidden = 0 AND idFromServer BETWEEN :lastId AND :firstId ORDER BY idFromServer DESC")
+    fun getAllRead(lastId: Long, firstId: Long): PagingSource<Int, PostEntity>
 
-    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    @Query("SELECT * FROM PostEntity WHERE id = :id")
+    suspend fun getPostById(id: Long): PostEntity
+
+    @Query("SELECT * FROM PostEntity ORDER BY idFromServer DESC")
     suspend fun getAll(): List<PostEntity>
 
     @Query("SELECT id FROM PostEntity WHERE hidden = 1")
@@ -46,7 +52,8 @@ interface PostDao {
             getInsertedPostId()
         }
         else {
-            updateContentById(post.id, post.idFromServer, post.content, post.published)
+//            updateContentById(post.id, post.idFromServer, post.content, post.published)
+            updatePostsByIdFromServer(listOf(post))
             post.id
         }
 
@@ -72,14 +79,17 @@ interface PostDao {
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
 
+    @Query("DELETE FROM PostEntity")
+    suspend fun removeAllPosts()
+
     // Block to work with DraftCopy
 
     @Query("SELECT content FROM DraftCopyEntity")
-    suspend fun newGetDraftCopy(): String
+    suspend fun getDraftCopy(): String
 
     @Query("DELETE FROM DraftCopyEntity")
     suspend fun clearDraftCopy()
 
     @Insert(onConflict = REPLACE)
-    suspend fun newSaveDraftCopy(draftCopy: DraftCopyEntity)
+    suspend fun saveDraftCopy(draftCopy: DraftCopyEntity)
 }

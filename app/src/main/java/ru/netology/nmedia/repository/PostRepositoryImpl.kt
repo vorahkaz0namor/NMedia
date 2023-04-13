@@ -1,9 +1,8 @@
 package ru.netology.nmedia.repository
 
 import android.util.Log
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import androidx.paging.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -11,6 +10,7 @@ import retrofit2.HttpException
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dao.PostDao
+import ru.netology.nmedia.dao.PostRemoteKeyDao
 import ru.netology.nmedia.dto.Attachment
 import ru.netology.nmedia.dto.Media
 import ru.netology.nmedia.dto.Post
@@ -18,28 +18,59 @@ import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
-import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
-import ru.netology.nmedia.util.CompanionNotMedia.overview
+import ru.netology.nmedia.util.CompanionNotMedia.customLog
+import ru.netology.nmedia.util.CompanionNotMedia.listToString
 import javax.inject.Inject
 
 // В данном случае аннотация @Inject указывает на то, что
 // реализация интерфейса PostRepository должна осуществляться
 // на базе класса PostRepositoryImpl
+@OptIn(ExperimentalPagingApi::class)
 class PostRepositoryImpl @Inject constructor(
-    private val dao: PostDao,
-    private val postApiService: PostApiService
+    private val postDao: PostDao,
+    private val postRemoteKeyDao: PostRemoteKeyDao,
+    private val postApiService: PostApiService,
+    private val postRemoteMediator: PostRemoteMediator
 ): PostRepository {
     companion object {
         private const val AVATAR_PATH = "/avatars/"
         private const val IMAGE_PATH = "/media/"
     }
 
-    override val data = dao.getAllReaded().map {
+    // Для аргумента PagingConfig указываются следующие аргументы:
+    // - количество постов на странице (pageSize);
+    // - показ временного изображения, которое отображается,
+    //   пока не загрузится содержимое страницы (enablePlaceHolders).
+    // PagingSourceFactory - лямбда-выражение, которое возвращает
+    // объект PagingSource.
+    // Функция flow() вернет поток типа PagingData.
+    // ===> МОЖНО ПОПРОБОВАТЬ ПЕРЕДАТЬ СЮДА Pager ЧЕРЕЗ DI <===
+    // Пока что через DI передается RemoteMediator
+    override val data = Pager(
+        config = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false
+        ),
+        pagingSourceFactory = {
+                postDao.getAllRead(
+                    lastId = postRemoteKeyDao.before() ?: 0,
+                    firstId = postRemoteKeyDao.after() ?: 0
+                )
+        },
+        remoteMediator = postRemoteMediator
+    ).flow
+        .map {
             it.map(PostEntity::toDto)
         }
-    // Операции, которые требуют максимальных ресурсов, рекомендуется выполнять
-    // на Dispatchers.Default, чтобы обеспечить максимальную производительность
-        .flowOn(Dispatchers.Default)
+
+    override suspend fun getLatest(count: Int) {
+        val response = postApiService.getLatest(count)
+        if (response.isSuccessful) {
+            val postsFromResponse = response.body().orEmpty().sortedBy { it.id }
+            updatePostsByIdFromServer(postsFromResponse, false)
+        } else
+            throw HttpException(response)
+    }
 
     override fun getNewerCount(latestId: Long): Flow<Int> =
         flow {
@@ -51,7 +82,7 @@ class PostRepositoryImpl @Inject constructor(
                     if (postsResponse.isSuccessful) {
                         val newPosts = postsResponse.body().orEmpty().sortedBy { it.id }
                         updatePostsByIdFromServer(newPosts, true)
-                        val unread = dao.getUnread().size
+                        val unread = postDao.getUnread().size
                         emit(unread)
                     } else
                         throw HttpException(postsResponse)
@@ -61,12 +92,13 @@ class PostRepositoryImpl @Inject constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    println("CAUGHT EXCEPTION WHEN GET NEWER => $e\n" +
-                            "DESCRIPTION => ${overview(exceptionCheck(e))}\n")
+                    customLog("GET NEWER", e)
                 }
             }
         }
             .flowOn(Dispatchers.Default)
+
+    override suspend fun getPostById(id: Long): Post = postDao.getPostById(id).toDto()
 
     override suspend fun getAll() {
         // Асинхронно вызываем сетевой запрос с помощью функции getAll()
@@ -75,16 +107,17 @@ class PostRepositoryImpl @Inject constructor(
             val postsFromResponse = postsResponse.body().orEmpty().sortedBy { it.id }
             // { PostEntity.fromDto(it) } => Convert lambda to reference =>
             // => (PostEntity::fromDto)
-            updatePostsByIdFromServer(postsFromResponse, false).map {
-                dao.removeById(it.id)
-            }
+            updatePostsByIdFromServer(postsFromResponse, false)
+                // Удаление из БД несуществующих на сервере постов в случае
+                // перезапуска сервера "с нуля"
+                .map { postDao.removeById(it.id) }
         } else
             throw HttpException(postsResponse)
     }
 
     override suspend fun showUnreadPosts() {
-        dao.getUnread().map {
-            dao.updateHiddenToFalse(it)
+        postDao.getUnread().map {
+            postDao.updateHiddenToFalse(it)
         }
     }
 
@@ -101,7 +134,7 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun saveWithAttachment(post: Post, media: MediaModel) {
         try {
-            val localSavedPostId = dao.save(PostEntity.fromDto(post))
+            val localSavedPostId = postDao.save(PostEntity.fromDto(post))
             val uploaded = upload(media)
             val postResponse = postApiService.savePost(
                 post.copy(
@@ -114,24 +147,23 @@ class PostRepositoryImpl @Inject constructor(
             )
             if (postResponse.isSuccessful) {
                 val savedPost = postResponse.body() ?: throw HttpException(postResponse)
-                dao.save(PostEntity.fromDto(
+                postDao.save(PostEntity.fromDto(
                     savedPost.copy(id = localSavedPostId, idFromServer = savedPost.id)
                 ))
             }
             else
                 throw HttpException(postResponse)
         } catch (e: Exception) {
-            Log.d("SAVING WITH ATTACHMENT", "CAUGHT EXCEPTION => $e\n" +
-                    "DESCRIPTION => ${overview(exceptionCheck(e))}")
+            customLog("SAVING WITH ATTACHMENT", e)
         }
     }
 
     override suspend fun save(post: Post) {
-        val localSavedPostId = dao.save(PostEntity.fromDto(post))
+        val localSavedPostId = postDao.save(PostEntity.fromDto(post))
         val postResponse = postApiService.savePost(post.copy(id = post.idFromServer))
         if (postResponse.isSuccessful) {
             val savedPost = postResponse.body() ?: throw HttpException(postResponse)
-            dao.save(PostEntity.fromDto(
+            postDao.save(PostEntity.fromDto(
                 savedPost.copy(id = localSavedPostId, idFromServer = savedPost.id)
             ))
         }
@@ -144,7 +176,7 @@ class PostRepositoryImpl @Inject constructor(
         hidden: Boolean
     ): List<PostEntity> {
         var loadedPosts: List<PostEntity> = emptyList()
-        val allExistingPosts = dao.getAll()
+        val allExistingPosts = postDao.getAll()
         var postsToDelete = allExistingPosts
         posts.map { singlePost ->
             val findExistingPost =
@@ -164,7 +196,15 @@ class PostRepositoryImpl @Inject constructor(
                 it.idFromServer != 0L && it.idFromServer != singlePost.id
             }
         }
-        dao.updatePostsByIdFromServer(loadedPosts)
+        // Контроль синхронизации постов, пришедших с сервера и постов,
+        // находящихся в базе
+        Log.d(
+            "CTRL SYNC / uREPO",
+            "form server => ${listToString(posts)}\n" +
+                    "from DB => ${listToString(allExistingPosts)}\n" +
+                    "to update => ${listToString(loadedPosts)}"
+        )
+        postDao.updatePostsByIdFromServer(loadedPosts)
         return postsToDelete
     }
 
@@ -173,7 +213,7 @@ class PostRepositoryImpl @Inject constructor(
         idFromServer: Long,
         likedByMe: Boolean
     ) {
-        dao.likeById(id)
+        postDao.likeById(id)
         val postResponse = postApiService.let {
             if (likedByMe)
                 it.unlikeById(idFromServer)
@@ -182,7 +222,7 @@ class PostRepositoryImpl @Inject constructor(
         }
         if (postResponse.isSuccessful) {
             val loadedPost = postResponse.body() ?: throw HttpException(postResponse)
-            dao.updatePostsByIdFromServer( listOf( PostEntity.fromDto(
+            postDao.updatePostsByIdFromServer( listOf( PostEntity.fromDto(
                 loadedPost.copy(
                     id = id,
                     idFromServer = idFromServer
@@ -195,7 +235,7 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeById(id: Long, idFromServer: Long) {
-        dao.removeById(id)
+        postDao.removeById(id)
         if (idFromServer != 0L) {
             val response = postApiService.removeById(idFromServer)
             if (response.isSuccessful)
@@ -205,18 +245,13 @@ class PostRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun viewById(id: Long) = dao.viewById(id)
+    override suspend fun viewById(id: Long) = postDao.viewById(id)
 
-    override suspend fun getDraftCopy(): String {
-            val draftCopy = dao.newGetDraftCopy()
-            Log.d("GET D.C.in REPO.", draftCopy)
-            return draftCopy
-    }
-
+    override suspend fun getDraftCopy(): String = postDao.getDraftCopy()
 
     override suspend fun saveDraftCopy(content: String?) {
-        dao.clearDraftCopy()
-        dao.newSaveDraftCopy(DraftCopyEntity.fromDto(content))
+        postDao.clearDraftCopy()
+        postDao.saveDraftCopy(DraftCopyEntity.fromDto(content))
     }
 
     override fun avatarUrl(authorAvatar: String) = "${BuildConfig.BASE_URL}$AVATAR_PATH$authorAvatar"

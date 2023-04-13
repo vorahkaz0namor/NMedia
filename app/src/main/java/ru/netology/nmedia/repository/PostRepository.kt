@@ -1,13 +1,15 @@
 package ru.netology.nmedia.repository
 
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.model.MediaModel
 
 interface PostRepository {
-    val data: Flow<List<Post>>
+    val data: Flow<PagingData<Post>>
     fun getNewerCount(latestId: Long): Flow<Int>
+    suspend fun getLatest(count: Int)
+    suspend fun getPostById(id: Long): Post
     suspend fun getAll()
     suspend fun showUnreadPosts()
     suspend fun saveWithAttachment(post: Post, media: MediaModel)

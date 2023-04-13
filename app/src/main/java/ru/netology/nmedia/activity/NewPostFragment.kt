@@ -76,9 +76,9 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
                 // или загрузка черновика, если он был сохранен
                 setText(
                     arguments?.POST_CONTENT.let {
-                        if (it.isNullOrBlank()) {
+                        if (it.isNullOrBlank())
                             draftCopy ?: ""
-                        } else
+                        else
                             it
                     })
                 requestFocus()
@@ -210,7 +210,6 @@ class NewPostFragment : Fragment(R.layout.fragment_new_post) {
             saveDraftCopy(draftCopy)
             clearEditedValue()
             clearPhoto()
-            loadPosts()
         }
         findNavController().navigateUp()
     }

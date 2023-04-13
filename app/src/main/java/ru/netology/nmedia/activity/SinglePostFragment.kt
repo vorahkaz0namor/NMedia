@@ -2,13 +2,17 @@ package ru.netology.nmedia.activity
 
 import android.os.Bundle
 import android.text.util.Linkify
+import android.util.Log
 import android.view.View
 import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.map
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
 import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
@@ -38,7 +42,6 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().onBackPressedDispatcher.addCallback(this) {
-            viewModel.loadPosts()
             findNavController().navigateUp()
         }
     }
@@ -55,6 +58,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             viewModel.viewById(arguments?.POST_ID!!)
             arguments?.ATTACHMENT_PREVIEW = ""
         }
+        viewModel.clearSinglePostToView()
         binding.singlePost.content.autoLinkMask = Linkify.WEB_URLS
     }
 
@@ -68,12 +72,14 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     refreshPost.isRefreshing = state.refreshing
                 }
             }
-            data.observe(viewLifecycleOwner) { data ->
-                val post = data.posts.find { it.id == arguments?.POST_ID }
-                if (post != null)
-                    postBind(post)
-                else
-                    findNavController().navigateUp()
+            lifecycleScope.launchWhenCreated {
+                dataFlow.collectLatest {
+                    val post: Post? = viewModel.getPostById(arguments?.POST_ID!!)
+                    if (post != null)
+                        postBind(post)
+                    else
+                        findNavController().navigateUp()
+                }
             }
             postEvent.observe(viewLifecycleOwner) { code ->
                 if (code != HTTP_OK)
@@ -82,8 +88,8 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                         overview(code),
                         Snackbar.LENGTH_INDEFINITE
                     )
-                        .setAction(R.string.retry_loading) {
-                            loadPosts()
+                        .setAction(android.R.string.ok) {
+                            findNavController().navigateUp()
                         }
                         .show()
             }
@@ -114,7 +120,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
     private fun setupListeners() {
         binding.apply {
             refreshPost.setOnRefreshListener {
-                viewModel.refresh()
+                viewModel.flowPosts()
             }
         }
     }
