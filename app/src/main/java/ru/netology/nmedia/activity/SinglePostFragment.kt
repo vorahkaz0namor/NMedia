@@ -8,10 +8,11 @@ import androidx.activity.addCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
-import androidx.paging.map
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import okhttp3.internal.http.HTTP_OK
 import ru.netology.nmedia.R
@@ -23,6 +24,7 @@ import ru.netology.nmedia.adapter.PostViewHolder
 import ru.netology.nmedia.util.viewBinding
 import ru.netology.nmedia.databinding.SingleCardPostBinding
 import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.util.AndroidUtils.viewScope
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
@@ -59,6 +61,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             arguments?.ATTACHMENT_PREVIEW = ""
         }
         viewModel.clearSinglePostToView()
+        viewModel.getPostById(arguments?.POST_ID!!)
         binding.singlePost.content.autoLinkMask = Linkify.WEB_URLS
     }
 
@@ -72,13 +75,15 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
                     refreshPost.isRefreshing = state.refreshing
                 }
             }
-            lifecycleScope.launchWhenCreated {
-                dataFlow.collectLatest {
-                    val post: Post? = viewModel.getPostById(arguments?.POST_ID!!)
-                    if (post != null)
-                        postBind(post)
-                    else
-                        findNavController().navigateUp()
+            viewScope.launch {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    singlePost.collectLatest {
+                        val post: Post? = it
+                        if (post != null)
+                            postBind(post)
+                        else
+                            findNavController().navigateUp()
+                    }
                 }
             }
             postEvent.observe(viewLifecycleOwner) { code ->
