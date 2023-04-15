@@ -55,14 +55,15 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
     }
 
     private fun showImage(i: Int) {
-        if (index == urls.size)
-            index = 0
         val url = "$BASE_URL$PATH${urls[i]}"
-        index++
         // С использованием класса WorkerThread
 //            worker.download(url)
         // С использованием библиотеки Glide
         binding.image.load(url)
+        if (index == urls.size - 1)
+            index = 0
+        else
+            index++
     }
 
     private fun imageToShow() {
