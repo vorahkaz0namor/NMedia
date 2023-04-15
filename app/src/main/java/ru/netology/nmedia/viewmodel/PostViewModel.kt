@@ -116,7 +116,7 @@ class PostViewModel @Inject constructor(
         cachedPagingDataFromRepo = postRepository.data // Flow<PagingData<FeedItem>>
             .mapLatest {
                 val maxId = postRepository.getLatestId()
-                Log.d("WRITE STATE.ID", "$maxId")
+//                Log.d("WRITE STATE.ID", "$maxId")
                 stateChanger(UiAction.Get(id = maxId))
                 it
             }
@@ -131,7 +131,7 @@ class PostViewModel @Inject constructor(
                     id = get.id,
                     lastIdScrolled = scroll.currentId
                 )
-                Log.d("UPDATE TOTALSTATE", "$uiState")
+//                Log.d("UPDATE TOTALSTATE", "$uiState")
                 uiState
             }
             .stateIn(

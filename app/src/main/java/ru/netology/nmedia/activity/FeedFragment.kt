@@ -128,11 +128,11 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     // Скролл к верхнему элементу списка, если произошел не пустой
                     // refresh
                     shouldScrollToTop.collectLatest {
-                        Log.d("SHOULD SCROLL TO TOP?", "$it")
+//                        Log.d("SHOULD SCROLL TO TOP?", "$it")
                         if (it) {
                             binding.recyclerView.posts.smoothScrollToPosition(0)
                             val currentId = totalState.value.id
-                            Log.d("WRITE STATE.SCROLL", "$currentId")
+//                            Log.d("WRITE STATE.SCROLL", "$currentId")
                             stateChanger(UiAction.Scroll(currentId = currentId))
                         }
                     }

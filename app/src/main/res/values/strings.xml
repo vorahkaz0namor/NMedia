@@ -34,7 +34,7 @@
     <string name="empty_posts">The posts list is empty.\nIf you create a new post, it will appear here</string>
     <string name="load_sample_image">Load Sample Image</string>
     <string name="sample_image">The sample image would be show in here</string>
-    <string name="to_load_sample_image_fragment">Go to load sample image screen</string>
+    <string name="to_load_sample_image_fragment">Impudent experiments with UI</string>
     <string name="repeat_save_on_server">Save post to the server</string>
     <string name="attachment_in_post_content">Nested image</string>
     <string name="new_posts_notify">New posts</string>

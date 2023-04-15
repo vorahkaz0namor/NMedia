@@ -35,7 +35,7 @@
     <string name="empty_posts">Список постов пуст. Если Вы создадите новый пост, то он появится здесь</string>
     <string name="load_sample_image">Загрузить Пробное Изображение</string>
     <string name="sample_image">Пробное изображение будет показано здесь</string>
-    <string name="to_load_sample_image_fragment">Перейти на экран загрузки пробного изображения</string>
+    <string name="to_load_sample_image_fragment">Дерзкие эксперименты с UI</string>
     <string name="repeat_save_on_server">Сохранить пост на сервере</string>
     <string name="attachment_in_post_content">Вложенное изображение</string>
     <string name="new_posts_notify">Новые посты</string>
