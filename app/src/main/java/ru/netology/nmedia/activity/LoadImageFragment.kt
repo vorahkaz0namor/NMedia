@@ -40,10 +40,10 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
 
     private fun initViews() {
         binding.radialFiller.data = listOf(
-            0.25F,
-            0.25F,
-            0.25F,
-            0.25F
+            500F,
+            500F,
+            500F,
+            500F
         )
         showImage((Math.random() * urls.size).toInt())
     }

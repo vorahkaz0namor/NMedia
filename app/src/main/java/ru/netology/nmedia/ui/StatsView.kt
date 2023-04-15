@@ -32,12 +32,11 @@ class StatsView @JvmOverloads constructor(
     // Центр окружности (индикатора)
     private var center = PointF()
     private var oval = RectF()
-    // Ширина строки
+    // Ширина линии
     private var lineWidth = AndroidUtils.dp(context = context, dp = 12)
     private var textSize = AndroidUtils.dp(context = context, dp = 20)
     private val randomColor = { Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt()) }
     private var colors = emptyList<Int>()
-    // Создание кисти
     private var arcPaint: Paint
     private val textPaint: Paint
     var data: List<Float> = emptyList()
@@ -60,12 +59,7 @@ class StatsView @JvmOverloads constructor(
                 getColor(R.styleable.StatsView_fourthColor, randomColor())
             )
         }
-        textPaint = Paint(Paint.ANTI_ALIAS_FLAG /*Флаг сглаживания*/)
-            .apply {
-                textSize = this@StatsView.textSize
-                style = Paint.Style.FILL
-                textAlign = Paint.Align.CENTER
-            }
+        // Создание кисти
         arcPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             .apply {
                 // Толщина кисти
@@ -77,12 +71,18 @@ class StatsView @JvmOverloads constructor(
                 strokeJoin = Paint.Join.ROUND
                 strokeCap = Paint.Cap.ROUND
             }
+        textPaint = Paint(Paint.ANTI_ALIAS_FLAG /*Флаг сглаживания*/)
+            .apply {
+                textSize = this@StatsView.textSize
+                style = Paint.Style.FILL
+                textAlign = Paint.Align.CENTER
+            }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         // Добавим отступ от краев окружности, чтобы она смогла уместиться
         // во время отрисовки
-        radius = min(w, h) / 2F - lineWidth
+        radius = (min(w, h) - lineWidth) / 2F
         center = PointF(w / 2F, h / 2F)
         // Чтобы использовать область отрисовки, необходимо создать
         // прямоугольник типа RectF
@@ -96,11 +96,13 @@ class StatsView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         if (data.isNotEmpty()) {
-            // Стартовый угол поворота
+            // Стартовый угол положения кисти
             var startAngle = -90F
+            // Сектор, выделяемый для одного элемента
+            val sector = 360F / data.size
             data.forEachIndexed { index, datum ->
-                // Угол поворота
-                val angle = datum * 360F
+                // Угол поворота (начертания дуги)
+                val angle = sector * datum / data.max()
                 // Для каждого элемента задается свой цвет.
                 // При этом, если элемент в списке data отсутствует,
                 // то цвет сгенерируется по указанной функции
@@ -111,11 +113,12 @@ class StatsView @JvmOverloads constructor(
                     /* sweepAngle = */ angle,
                     /* useCenter = */ false,
                     /* paint = */ arcPaint)
-                // Добавим отступ к стартовому углу поворота
-                startAngle += angle
+                // Добавим отступ к стартовому углу
+                startAngle += sector
             }
+            val sum = data.map { (it / data.max()) * 100 / data.size }.sum()
             canvas.drawText(
-                /* text = */ "%.2f%%".format(data.sum() * 100),
+                /* text = */ "%.2f%%".format(sum),
                 /* x = */ center.x,
                 // Для положения текста по оси y придется ввести поправочный коэффициент
                 /* y = */ center.y + textPaint.textSize / 4,
