@@ -7,7 +7,7 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.dto.CountDisplay.daySeparator
-import ru.netology.nmedia.util.CompanionNotMedia.actualTime
+import ru.netology.nmedia.util.CompanionNotMedia.timeInHumanRepresentation
 import ru.netology.nmedia.util.CompanionNotMedia.load
 
 class PostViewHolder(
@@ -35,7 +35,7 @@ class PostViewHolder(
                 }
             }
             author.text = currentPost.author
-            published.text = actualTime(currentPost.published)
+            published.text = timeInHumanRepresentation(currentPost.published)
             content.text = currentPost.content
             avatar.apply {
                 if (currentPost.authorAvatar == "localuser.jpg" ||

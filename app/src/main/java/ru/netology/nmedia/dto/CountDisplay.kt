@@ -1,9 +1,7 @@
 package ru.netology.nmedia.dto
 
-import android.annotation.SuppressLint
 import android.util.Log
-import ru.netology.nmedia.util.CompanionNotMedia.actualTime
-import ru.netology.nmedia.util.CompanionNotMedia.epochMultiplier
+import ru.netology.nmedia.util.CompanionNotMedia.timeInHumanRepresentation
 import java.math.BigDecimal
 import java.time.OffsetDateTime
 
@@ -32,23 +30,15 @@ object CountDisplay {
     }
 
     fun daySeparator(previousPost: Post?, currentPost: Post): String? {
-        val coefficient = epochMultiplier(currentPost.published)
-        val oneDayLength = 86_400_000L / coefficient
+        val oneDayLength = 86_400L
         val oneWeekLength = 7 * oneDayLength
         val twoWeekLength = 2 * oneWeekLength
-        // Поскольку метод java.util.Date().day, который определяет день недели,
-        // является deprecated и похоже уже не работает, а метод
-        // OffsetDateTime.now().dayOfWeek требует либо понять версию API,
-        // либо использовать другие обходные пути, то я выбрал не совсем "хороший"
-        // вариант решения данной проблемы - определение и задание "вручную" самого
-        // первого понедельника в Unix Time
-        val firstMondayUnixTime = 4 * oneDayLength
-        val localeShift = 25_200_000L / coefficient
-        val currentTime = System.currentTimeMillis() / coefficient
-        val floorCurrentTimeToDay = (currentTime + localeShift) / oneDayLength
-        val floorCurrentTimeToWeek = (currentTime - firstMondayUnixTime) / oneWeekLength
-        val currentDayStart = oneDayLength * floorCurrentTimeToDay - localeShift
-        val currentWeekStart = oneWeekLength * floorCurrentTimeToWeek + firstMondayUnixTime - localeShift
+        val offset = OffsetDateTime.now().offset.totalSeconds
+        val currentDayOfWeek = OffsetDateTime.now().dayOfWeek.value
+        val currentTime = OffsetDateTime.now().toEpochSecond()
+        val floorCurrentTimeToDay = currentTime / oneDayLength
+        val currentDayStart = oneDayLength * floorCurrentTimeToDay - offset
+        val currentWeekStart = currentDayStart - (currentDayOfWeek - 1) * oneDayLength
         val dayOfPost = { post: Post ->
             when (post.published) {
                 in currentDayStart..currentTime ->
@@ -70,13 +60,14 @@ object CountDisplay {
         val dayOfPreviousPost = previousPost?.let { dayOfPost(it) }
         val dayOfCurrentPost = dayOfPost(currentPost)
 //        val result = dayOfCurrentPost.takeIf { it != dayOfPreviousPost }
-//        Log.d("DAY OF THE POST", "currentTime = ${actualTime(currentTime)}\n" +
+//        Log.d("DAY OF THE POST", "currentTime = ${timeInHumanRepresentation(currentTime)}\n" +
+//                "offset = $offset\n" +
+//                "currentDayOfWeek = $currentDayOfWeek\n" +
 //                "floorTime = $floorCurrentTimeToDay\n" +
-//                "floorWeek = $floorCurrentTimeToWeek\n" +
-//                "dayStart = ${actualTime(currentDayStart)}\n" +
-//                "weekStart = ${actualTime(currentWeekStart)}\n" +
-//                "previous = ${actualTime(previousPost?.published ?: 1)}, $dayOfPreviousPost\n" +
-//                "current = ${actualTime(currentPost.published)}, $dayOfCurrentPost\n" +
+//                "dayStart = ${timeInHumanRepresentation(currentDayStart)}\n" +
+//                "weekStart = ${timeInHumanRepresentation(currentWeekStart)}\n" +
+//                "previous = ${previousPost?.let { timeInHumanRepresentation(it.published)}}, $dayOfPreviousPost\n" +
+//                "current = ${timeInHumanRepresentation(currentPost.published)}, $dayOfCurrentPost\n" +
 //                "separator = $result")
         return dayOfCurrentPost.takeIf { it != dayOfPreviousPost }
     }

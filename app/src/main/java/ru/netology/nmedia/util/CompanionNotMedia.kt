@@ -1,7 +1,6 @@
 package ru.netology.nmedia.util
 
 import android.content.Context
-import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
@@ -17,7 +16,10 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
-import java.util.*
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 object CompanionNotMedia {
     /** `520 Unknown Error` (non-standard HTTP code CloudFlare)  */
@@ -30,15 +32,11 @@ object CompanionNotMedia {
     var Bundle.ATTACHMENT_URI by StringArg
     // Коэффициент перевода значения вермени в зависимости от того,
     // в каком виде оно представлено - в секундах или в милисекундах
-    val epochMultiplier = { time: Long ->
-        if (System.currentTimeMillis() / time in 1_000 until 10_000)
-            1_000L
-        else
-            1L
-    }
-    val actualTime = { now: Long ->
-        SimpleDateFormat("dd MMMM, H:mm:ss", Locale.US)
-            .format(Date(now * epochMultiplier(now)))
+    val timeInHumanRepresentation = { now: Long ->
+        OffsetDateTime.ofInstant(
+            Instant.ofEpochSecond(now),
+            ZoneId.systemDefault()
+        ).format(DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm:ss"))
     }
     val overview = { code: Int ->
         when (code) {
