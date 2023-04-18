@@ -11,9 +11,7 @@ import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.api.PostApiService
 import ru.netology.nmedia.dao.PostDao
 import ru.netology.nmedia.dao.PostRemoteKeyDao
-import ru.netology.nmedia.dto.Attachment
-import ru.netology.nmedia.dto.Media
-import ru.netology.nmedia.dto.Post
+import ru.netology.nmedia.dto.*
 import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
@@ -21,6 +19,7 @@ import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.listToString
 import javax.inject.Inject
+import kotlin.random.Random
 
 // В данном случае аннотация @Inject указывает на то, что
 // реализация интерфейса PostRepository должна осуществляться
@@ -46,7 +45,7 @@ class PostRepositoryImpl @Inject constructor(
     // Функция flow() вернет поток типа PagingData.
     // ===> МОЖНО ПОПРОБОВАТЬ ПЕРЕДАТЬ СЮДА Pager ЧЕРЕЗ DI <===
     // Пока что через DI передается RemoteMediator
-    override val data = Pager(
+    override val data: Flow<PagingData<FeedItem>> = Pager(
         config = PagingConfig(
             pageSize = 10,
             enablePlaceholders = false
@@ -61,7 +60,21 @@ class PostRepositoryImpl @Inject constructor(
     ).flow
         .map {
             it.map(PostEntity::toDto)
+            // Реализация вставки элементов с рекламой
+                .insertSeparators { prev, _ ->
+                    // Если это начало списка, то prev = null, а если конец, то next = null
+                    // Функция rem(other: Int) возвращает остаток от деления на other
+                    if (prev?.id?.rem(4) == 0L)
+                        Ad(
+                            id = Random.nextLong(),
+                            image = "figma.jpg"
+                        )
+                    else
+                        null
+                }
         }
+
+    override fun getLatestId(): Long = postRemoteKeyDao.after() ?: 0
 
     override suspend fun getLatest(count: Int) {
         val response = postApiService.getLatest(count)

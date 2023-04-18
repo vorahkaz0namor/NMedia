@@ -7,7 +7,7 @@ import ru.netology.nmedia.viewmodel.PostViewModel
 class OnInteractionListenerImpl(
     private val viewModel: PostViewModel,
     private val authModel: AuthViewModel
-) : OnInteractionListener {
+) : OnInteractionListener, PathPointerImpl(viewModel) {
     override val authorized: Boolean
         get() = authModel.authorized
 
@@ -45,7 +45,4 @@ class OnInteractionListenerImpl(
 
     override fun avatarUrl(authorAvatar: String) =
         viewModel.getAvatarUrl(authorAvatar)
-
-    override fun attachmentUrl(url: String): String =
-        viewModel.getAttachmentUrl(url)
 }

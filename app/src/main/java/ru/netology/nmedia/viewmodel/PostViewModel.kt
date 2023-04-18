@@ -1,7 +1,9 @@
 package ru.netology.nmedia.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,9 +11,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import okhttp3.internal.http.*
+import ru.netology.nmedia.dto.FeedItem
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.FeedModelState
 import ru.netology.nmedia.model.MediaModel
+import ru.netology.nmedia.model.UiAction
+import ru.netology.nmedia.model.UiState
 import ru.netology.nmedia.repository.*
 import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
@@ -26,19 +31,18 @@ private val empty = Post(
     content = ""
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
 ) : ViewModel() {
     private val defaultDispatcher = Dispatchers.Default
-    private var _dataFlow: Flow<PagingData<Post>>? = null
-    val dataFlow: Flow<PagingData<Post>>
+    private var _dataFlow: Flow<PagingData<FeedItem>>? = null
+    val dataFlow: Flow<PagingData<FeedItem>>
         get() = cachedPagingDataFromRepo
-    private val cachedPagingDataFromRepo =
-        postRepository.data // Flow<PagingData<Post>>
-            .flowOn(defaultDispatcher)
-            .distinctUntilChanged()
-            .cachedIn(viewModelScope)
+    private val cachedPagingDataFromRepo: Flow<PagingData<FeedItem>>
+    val totalState: StateFlow<UiState>
+    val stateChanger: (UiAction) -> Unit
     // Try to get newer posts, but this way don't work,
     // even don't compile
 //    val newerCount: Flow<Int> =
@@ -66,24 +70,15 @@ class PostViewModel @Inject constructor(
 //    val data: Flow<PagingData<Post>> =
 //        appAuth.data // StateFlow<AuthModel?>
 //            .flatMapLatest { authModel -> // it: AuthModel?
-//                _dataState.value = _dataState.value?.loading()
 //                postRepository.data // Flow<PagingData<Post>>
 //                    .map { posts -> // it: PagingData<Post>
 //                        posts.map { post -> // it: Post
 //                            post.copy(ownedByMe = authModel?.id == post.authorId)
 //                        }
 //                    }
-//                    .also { _dataState.value = _dataState.value?.showing() }
 //            }
-//            .catch {
-//                _dataState.value = _dataState.value?.error()
-//                _postEvent.value = exceptionCheck(Exception(it))
-//                Log.d("THROW FROM MEDIATOR", "${Exception(it)}")
-//            }
-//            .apply {
-//                flowOn(defaultDispatcher)
-//                distinctUntilChanged()
-//            }
+//                .flowOn(defaultDispatcher)
+//                .distinctUntilChanged()
     private val _draftCopy = MutableLiveData<String?>(null)
     val draftCopy: LiveData<String?>
         get() = _draftCopy
@@ -96,10 +91,58 @@ class PostViewModel @Inject constructor(
     // Variable to hold single post to view
     val singlePostToView = MutableLiveData(empty)
 
-//    init {
-////        loadPosts()
-//        flowPosts(true)
-//    }
+    init {
+        val initialId: Long = 0
+        val actionStateFlow = MutableSharedFlow<UiAction>()
+        stateChanger = {
+            viewModelScope.launch {
+                actionStateFlow.emit(it)
+            }
+        }
+        val gettings = actionStateFlow
+            .filterIsInstance<UiAction.Get>()
+            .distinctUntilChanged()
+            .onStart {
+                emit(UiAction.Get(id = initialId))
+            }
+        val idsScrolled = actionStateFlow
+            .filterIsInstance<UiAction.Scroll>()
+            .distinctUntilChanged()
+            .shareIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 7_000),
+                replay = 1
+            )
+            .onStart {
+                emit(UiAction.Scroll(currentId = initialId))
+            }
+        cachedPagingDataFromRepo = postRepository.data // Flow<PagingData<FeedItem>>
+            .mapLatest {
+                val maxId = postRepository.getLatestId()
+                Log.d("WRITE STATE.ID", "$maxId")
+                stateChanger(UiAction.Get(id = maxId))
+                it
+            }
+            .flowOn(defaultDispatcher)
+            .distinctUntilChanged()
+            .cachedIn(viewModelScope)
+        totalState = combine(gettings, idsScrolled) { flowOne, flowTwo ->
+            Pair(flowOne, flowTwo)
+        }
+            .map { (get, scroll) ->
+                val uiState = UiState(
+                    id = get.id,
+                    lastIdScrolled = scroll.currentId
+                )
+                Log.d("UPDATE TOTALSTATE", "$uiState")
+                uiState
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 7_000),
+                initialValue = UiState()
+            )
+    }
 
     fun loadPosts() =
         // Для запуска корутин внутри ViewModel существует специальная

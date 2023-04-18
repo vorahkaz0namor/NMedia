@@ -1,12 +1,12 @@
 package ru.netology.nmedia.util
 
 import android.content.Context
-import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.DrawableRes
+import androidx.paging.CombinedLoadStates
 import com.bumptech.glide.Glide
 import okhttp3.internal.http.HTTP_FORBIDDEN
 import okhttp3.internal.http.HTTP_NOT_FOUND
@@ -16,7 +16,9 @@ import ru.netology.nmedia.R
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
-import java.util.*
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 object CompanionNotMedia {
     /** `520 Unknown Error` (non-standard HTTP code CloudFlare)  */
@@ -27,8 +29,14 @@ object CompanionNotMedia {
     var Bundle.POST_CONTENT by StringArg
     var Bundle.ATTACHMENT_PREVIEW by StringArg
     var Bundle.ATTACHMENT_URI by StringArg
-    val actualTime = { now: Long ->
-        SimpleDateFormat("dd MMMM, H:mm:ss", Locale.US).format(Date(now))
+    val formatNMedia = { time: OffsetDateTime ->
+        time.format(DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm:ss"))
+    }
+    val timeInHumanRepresentation = { now: Long ->
+        formatNMedia(
+            Instant
+                .ofEpochSecond(now)
+                .atOffset(OffsetDateTime.now().offset))
     }
     val overview = { code: Int ->
         when (code) {
@@ -96,6 +104,11 @@ object CompanionNotMedia {
                 else -> return "Can't cast to known class"
             }
         }}"
+
+    fun CombinedLoadStates.allStatesToString(): String =
+        "CombinedLoadStates:\nrefresh = $refresh,\nprepend = $prepend,\nappend = $append;\n" +
+                "source.refresh = ${source.refresh},\nsource.prepend = ${source.prepend},\nsource.append = ${source.append};\n" +
+                "mediator.refresh = ${mediator?.refresh},\nmediator.prepend = ${mediator?.prepend},\nmediator.append = ${mediator?.append}."
 
     fun ImageView.load(
         url: String,

@@ -11,6 +11,7 @@
     <dimen name="max_preview">320dp</dimen>
     <dimen name="stroke_width">2dp</dimen>
     <dimen name="sample_image_size">192dp</dimen>
+    <dimen name="ad_height">200dp</dimen>
     <dimen name="auth_indent">14dp</dimen>
     <dimen name="auth_input_line">216dp</dimen>
     <dimen name="static_text">20sp</dimen>

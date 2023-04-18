@@ -36,7 +36,7 @@ class SinglePostFragment : Fragment(R.layout.single_card_post) {
             binding.singlePost,
             OnInteractionListenerImpl( viewModel, authViewModel )
         )
-            .bind(post)
+            .bind(previousPost = post, currentPost = post)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

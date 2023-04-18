@@ -5,7 +5,7 @@ import kotlinx.parcelize.Parcelize
 
 //@Parcelize
 data class Post(
-    val id: Long,
+    override val id: Long,
     val idFromServer: Long = 0L,
     val authorId: Long = 0L,
     val author: String,
@@ -19,4 +19,4 @@ data class Post(
     val attachment: Attachment? = null,
     val isOnServer: Boolean = idFromServer != 0L,
     val ownedByMe: Boolean = false
-)/*: Parcelable*/
+): FeedItem/*, Parcelable*/

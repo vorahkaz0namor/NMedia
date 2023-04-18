@@ -1,6 +1,7 @@
 package ru.netology.nmedia.activity
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import androidx.core.view.isVisible
@@ -11,10 +12,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.paging.*
-import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import okhttp3.internal.http.HTTP_BAD_REQUEST
 import okhttp3.internal.http.HTTP_NOT_FOUND
 import okhttp3.internal.http.HTTP_OK
@@ -23,15 +24,24 @@ import ru.netology.nmedia.util.CompanionNotMedia.ATTACHMENT_PREVIEW
 import ru.netology.nmedia.util.CompanionNotMedia.POST_CONTENT
 import ru.netology.nmedia.util.CompanionNotMedia.POST_ID
 import ru.netology.nmedia.adapter.OnInteractionListenerImpl
+import ru.netology.nmedia.adapter.PathPointerImpl
 import ru.netology.nmedia.adapter.PostAdapter
+import ru.netology.nmedia.adapter.PostLoadingStateAdapter
 import ru.netology.nmedia.databinding.FragmentFeedBinding
+import ru.netology.nmedia.model.RemotePresentationState.*
+import ru.netology.nmedia.model.UiAction
+import ru.netology.nmedia.model.asRemotePresentationState
+import ru.netology.nmedia.util.CompanionNotMedia.allStatesToString
+import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
 import ru.netology.nmedia.viewmodel.PostViewModel
 
 class FeedFragment : Fragment(R.layout.fragment_feed) {
     private val viewModel: PostViewModel by activityViewModels()
     private val authViewModel: AuthViewModel by activityViewModels()
-    private lateinit var adapter: PostAdapter
+    private lateinit var postAdapter: PostAdapter
+    private lateinit var loadStateHeader: PostLoadingStateAdapter
+    private lateinit var loadStateFooter: PostLoadingStateAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
     private val Fragment.viewScope
@@ -51,11 +61,25 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     }
 
     private fun initViews(binding: FragmentFeedBinding) {
-        adapter = PostAdapter(OnInteractionListenerImpl(viewModel, authViewModel))
-        binding.recyclerView.posts.adapter = adapter
+        postAdapter = PostAdapter(
+            OnInteractionListenerImpl(viewModel, authViewModel),
+            PathPointerImpl(viewModel)
+        )
+        val decoration = DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
+        loadStateHeader = PostLoadingStateAdapter { postAdapter.retry() }
+        loadStateFooter = PostLoadingStateAdapter { postAdapter.retry() }
+        binding.recyclerView.posts.apply {
+            addItemDecoration(decoration)
+            adapter =
+                postAdapter.withLoadStateHeaderAndFooter(
+                    header = loadStateHeader,
+                    footer = loadStateFooter
+                )
+        }
         navController = findNavController()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribe(binding: FragmentFeedBinding) {
         viewModel.apply {
 //            dataState.observe(viewLifecycleOwner) { state ->
@@ -69,8 +93,9 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
             // Чтобы подписаться на PagingData<Post>, необходимо использовать
             // корутину Fragment'а
             viewScope.launchWhenCreated {
-                dataFlow?.collectLatest {
-                    adapter.submitData(it)
+                dataFlow.collectLatest {
+                    snackbarDismiss()
+                    postAdapter.submitData(it)
                 }
             }
             // А вот для отображения обновленного PostAdapter'а надо также
@@ -84,65 +109,92 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     // Объект loadStateFlow отвечает за отображение загруженных
                     // данных в адаптер
-                    adapter.loadStateFlow.collectLatest {
-                        // Индикатор обновления будет отображаться, когда
-                        // происходит refresh, либо когда запрашивается следующая
-                        // страница, либо когда запрашивается предыдущая страница
-                        snackbarDismiss()
-                        binding.apply {
-                            errorView.errorTitle.isVisible =
-                                it.refresh is LoadState.Error ||
-                                it.prepend is LoadState.Error ||
-                                it.append is LoadState.Error
-                            recyclerViewAndEmptyView.isVisible =
-                                it.refresh !is LoadState.Error &&
-                                it.prepend !is LoadState.Error &&
-                                it.append !is LoadState.Error
-                            recyclerView.refreshPosts.isRefreshing =
-                                it.refresh is LoadState.Loading ||
-                                it.prepend is LoadState.Loading ||
-                                it.append is LoadState.Loading
+                    val presented = postAdapter.loadStateFlow
+                        .asRemotePresentationState()
+                            .mapLatest { state ->
+                                snackbarDismiss()
+                                Log.d("ADAPTER LOAD STATE", state.name)
+                                state == PRESENTED
+                            }
+                    val hasNotScrolledForCurrentId =
+                        totalState // StateFlow<UiState>
+                            .map {
+                                it.hasNotScrolledForCurrentId
+                            } // Flow<Boolean>
+                            .distinctUntilChanged()
+                    val shouldScrollToTop =
+                        combine(presented, hasNotScrolledForCurrentId) { conditionOne, conditionTwo ->
+                            conditionOne.and(conditionTwo)
                         }
-                        when {
-                            it.refresh is LoadState.Error -> it.refresh as LoadState.Error
-                            it.prepend is LoadState.Error -> it.prepend as LoadState.Error
-                            it.append is LoadState.Error -> it.append as LoadState.Error
-                            else -> null
-                        }?.also { state ->
-                            state.error.message?.let { message ->
+                            .distinctUntilChanged()
+                    // Скролл к верхнему элементу списка, если произошел не пустой
+                    // refresh
+                    shouldScrollToTop.collectLatest {
+                        Log.d("SHOULD SCROLL TO TOP?", "$it")
+                        if (it) {
+                            binding.recyclerView.posts.smoothScrollToPosition(0)
+                            val currentId = totalState.value.id
+                            Log.d("WRITE STATE.SCROLL", "$currentId")
+                            stateChanger(UiAction.Scroll(currentId = currentId))
+                        }
+                    }
+                }
+            }
+            viewScope.launch {
+                postAdapter.loadStateFlow.collectLatest { loadState ->
+                    snackbarDismiss()
+                    var headerStateName: String
+                    var footerStateName: String
+                    loadStateHeader.loadState =
+                        loadState.mediator?.refresh
+                            .takeIf {
+                                it is LoadState.Loading || it is LoadState.Error
+                            }.also { headerStateName = "mediator.refresh" }
+                        ?: loadState.mediator?.prepend
+                            .takeIf {
+                                it is LoadState.Loading || it is LoadState.Error
+                            }.also { headerStateName = "mediator.prepend" }
+                        ?: loadState.source.refresh.also { headerStateName = "source.refresh" }
+                    loadStateFooter.loadState =
+                        loadState.mediator?.append
+                            .takeIf {
+                                it is LoadState.Loading || it is LoadState.Error
+                            }.also { footerStateName = "mediator.append" }
+                            ?: loadState.source.append.also { footerStateName = "source.append" }
+//                    Log.d("HEADER & FOOTER",
+//                        "INCOMING STATE =\n${loadState.allStatesToString()}\n" +
+//                                "HEADER STATE =\n$headerStateName = ${loadStateHeader.loadState}\n" +
+//                                "FOOTER STATE =\n$footerStateName = ${loadStateFooter.loadState}")
+                    val errorState = loadState.refresh as? LoadState.Error
+                        ?: loadState.prepend as? LoadState.Error
+                        ?: loadState.append as? LoadState.Error
+                    binding.apply {
+                        // Индикатор обновления будет отображаться только когда
+                        // происходит refresh
+                        recyclerView.refreshPosts.isRefreshing =
+                            loadState.mediator?.refresh is LoadState.Loading
+                        recyclerViewAndEmptyView.isVisible = errorState !is LoadState.Error
+                        if (errorState is LoadState.Error) {
+                            errorView.errorTitle.isVisible = true
+                            recyclerView.refreshPosts.isRefreshing = false
+                        } else
+                            errorView.errorTitle.isVisible = false
+                    }
+                    errorState?.let {
                                 snackbar = Snackbar.make(
                                     binding.root,
-                                    message,
+                                    it.error.message ?: overview(520),
                                     Snackbar.LENGTH_INDEFINITE
                                 )
                                     .setAnimationMode(Snackbar.ANIMATION_MODE_SLIDE)
                                     .setAction(R.string.retry_loading) {
                                         snackbarDismiss()
-                                        adapter.refresh()
+                                        postAdapter.refresh()
                                     }
                                 snackbar?.show()
-                            }
-                        }
                     }
                 }
             }
-            // Добавление плавного скролла при добавлении новых постов
-            adapter.registerAdapterDataObserver(
-                object : AdapterDataObserver() {
-                    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-                        viewScope.launch {
-                            // Если что-то добавилось наверх списка,
-                            adapter.loadStateFlow.collectLatest {
-                                if ((it.refresh is LoadState.Loading ||
-                                     it.prepend is LoadState.Loading) &&
-                                        positionStart == 0)
-                                    // тогда плавно заскроллиться до самого верха
-                                    binding.recyclerView.posts.smoothScrollToPosition(0)
-                            }
-                        }
-                    }
-                }
-            )
 //            newerCount.observe(viewLifecycleOwner) { count ->
 //                binding.recyclerView.newPosts.apply {
 //                    isVisible = (count != null && count != 0)
@@ -199,8 +251,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
         authViewModel.apply {
             data.observe(viewLifecycleOwner) {
                 snackbarDismiss()
-//                viewModel.flowPosts()
-                adapter.refresh()
+                postAdapter.refresh()
             }
             checkAuthorized.observe(viewLifecycleOwner) {
                 if (it) {
@@ -215,8 +266,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 if ( code != HTTP_OK &&
                     (code != HTTP_BAD_REQUEST || code != HTTP_NOT_FOUND) ) {
                     clearAuthError()
-//                    viewModel.flowPosts()
-                    adapter.refresh()
+                    postAdapter.refresh()
                 }
             }
         }
@@ -241,7 +291,7 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                 // Для реализации обновления данных необходимо
                 // вместо обновления списка постов через ViewModel
                 // запустить обновление PostAdapter'а
-                adapter.refresh()
+                postAdapter.refresh()
             }
             toLoadSampleImage.setOnClickListener {
                 navController.navigate(R.id.action_feedFragment_to_sampleFragment)

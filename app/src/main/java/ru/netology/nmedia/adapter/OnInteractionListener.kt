@@ -2,7 +2,7 @@ package ru.netology.nmedia.adapter
 
 import ru.netology.nmedia.dto.Post
 
-interface OnInteractionListener {
+interface OnInteractionListener : PathPointer {
     val authorized: Boolean
     fun checkAuth()
     fun onLike(post: Post)
@@ -13,5 +13,4 @@ interface OnInteractionListener {
     fun onRemove(post: Post)
     fun toSinglePost(post: Post)
     fun avatarUrl(authorAvatar: String): String
-    fun attachmentUrl(url: String): String
 }

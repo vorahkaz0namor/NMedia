@@ -2,11 +2,13 @@ package ru.netology.nmedia.repository
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
+import ru.netology.nmedia.dto.FeedItem
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.model.MediaModel
 
 interface PostRepository {
-    val data: Flow<PagingData<Post>>
+    val data: Flow<PagingData<FeedItem>>
+    fun getLatestId(): Long
     fun getNewerCount(latestId: Long): Flow<Int>
     suspend fun getLatest(count: Int)
     suspend fun getPostById(id: Long): Post
