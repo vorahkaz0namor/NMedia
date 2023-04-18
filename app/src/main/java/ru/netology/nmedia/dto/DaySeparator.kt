@@ -1,11 +1,12 @@
 package ru.netology.nmedia.dto
 
-enum class DaySeparator(val dayName: String) {
-    TODAY("Сегодня"),
-    YESTERDAY("Вчера"),
-    THIS_WEEK("На этой неделе"),
-    LAST_WEEK("На прошлой неделе"),
-    TWO_WEEKS_AGO("Две недели назад"),
-    LONG_TIME_AGO("Совсем давно"),
-    TOMORROW("Завтра")
+import androidx.annotation.StringRes
+import ru.netology.nmedia.R
+
+enum class DaySeparator(@StringRes val dayName: Int) {
+    TODAY(R.string.today),
+    YESTERDAY(R.string.yesterday),
+    THIS_WEEK(R.string.this_week),
+    LAST_WEEK(R.string.last_week),
+    LONG_TIME_AGO(R.string.long_time_ago)
 }

@@ -68,4 +68,9 @@
     <string name="successful_regin">Вы успешно зарегистрированы</string>
     <string name="ok_auth_push">Поздравляем! 🎉 Ваша аутентификация в норме. 👌 Спасибо, что пользуетесь нашим приложением. 🙂</string>
     <string name="ads_push">Это реклама. 👽</string>
+    <string name="today">Сегодня</string>
+    <string name="yesterday">Вчера</string>
+    <string name="this_week">На этой неделе</string>
+    <string name="last_week">На прошлой неделе</string>
+    <string name="long_time_ago">Совсем давно</string>
 </resources>

@@ -30,7 +30,7 @@ class PostViewHolder(
                     null -> isVisible = false
                     else -> {
                         isVisible = true
-                        text = sep
+                        text = context.getString(sep)
                     }
                 }
             }

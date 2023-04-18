@@ -67,4 +67,9 @@
     <string name="successful_regin">You are registered successfully</string>
     <string name="ok_auth_push">Congratulations! 🎉 Your authentication is OK. 👌 Thanks for using our app. 🙂</string>
     <string name="ads_push">It\'s an ads. 👽️</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="this_week">This week</string>
+    <string name="last_week">Last week</string>
+    <string name="long_time_ago">Long time ago</string>
 </resources>

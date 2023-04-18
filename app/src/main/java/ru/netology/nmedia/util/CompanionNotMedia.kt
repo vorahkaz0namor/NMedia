@@ -18,7 +18,6 @@ import ru.netology.nmedia.entity.PostEntity
 import java.net.ConnectException
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 object CompanionNotMedia {
@@ -30,13 +29,14 @@ object CompanionNotMedia {
     var Bundle.POST_CONTENT by StringArg
     var Bundle.ATTACHMENT_PREVIEW by StringArg
     var Bundle.ATTACHMENT_URI by StringArg
-    // Коэффициент перевода значения вермени в зависимости от того,
-    // в каком виде оно представлено - в секундах или в милисекундах
+    val formatNMedia = { time: OffsetDateTime ->
+        time.format(DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm:ss"))
+    }
     val timeInHumanRepresentation = { now: Long ->
-        OffsetDateTime.ofInstant(
-            Instant.ofEpochSecond(now),
-            ZoneId.systemDefault()
-        ).format(DateTimeFormatter.ofPattern("dd MMMM yyyy, HH:mm:ss"))
+        formatNMedia(
+            Instant
+                .ofEpochSecond(now)
+                .atOffset(OffsetDateTime.now().offset))
     }
     val overview = { code: Int ->
         when (code) {

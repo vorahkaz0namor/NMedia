@@ -1,8 +1,11 @@
 package ru.netology.nmedia.dto
 
 import android.util.Log
+import ru.netology.nmedia.util.CompanionNotMedia.formatNMedia
 import ru.netology.nmedia.util.CompanionNotMedia.timeInHumanRepresentation
 import java.math.BigDecimal
+import java.time.DayOfWeek
+import java.time.Instant
 import java.time.OffsetDateTime
 
 object CountDisplay {
@@ -29,46 +32,42 @@ object CountDisplay {
         )}${digitsMap.getValue(divisor)}"
     }
 
-    fun daySeparator(previousPost: Post?, currentPost: Post): String? {
-        val oneDayLength = 86_400L
-        val oneWeekLength = 7 * oneDayLength
-        val twoWeekLength = 2 * oneWeekLength
-        val offset = OffsetDateTime.now().offset.totalSeconds
-        val currentDayOfWeek = OffsetDateTime.now().dayOfWeek.value
-        val currentTime = OffsetDateTime.now().toEpochSecond()
-        val floorCurrentTimeToDay = currentTime / oneDayLength
-        val currentDayStart = oneDayLength * floorCurrentTimeToDay - offset
-        val currentWeekStart = currentDayStart - (currentDayOfWeek - 1) * oneDayLength
+    fun daySeparator(previousPost: Post?, currentPost: Post): Int? {
+        val today = OffsetDateTime.now()
+        val yesterday = today.minusDays(1)
+        var dayOfCurrentWeekStart = today
+        while (dayOfCurrentWeekStart.dayOfWeek != DayOfWeek.MONDAY)
+            dayOfCurrentWeekStart = dayOfCurrentWeekStart.minusDays(1)
+        val dayOfLastWeekStart = dayOfCurrentWeekStart.minusWeeks(1).dayOfYear
         val dayOfPost = { post: Post ->
-            when (post.published) {
-                in currentDayStart..currentTime ->
+            when (
+                Instant
+                    .ofEpochSecond(post.published)
+                    .atOffset(today.offset)
+                    .dayOfYear
+            ) {
+                today.dayOfYear ->
                     DaySeparator.TODAY.dayName
-                in currentDayStart - oneDayLength until currentDayStart ->
+                yesterday.dayOfYear ->
                     DaySeparator.YESTERDAY.dayName
-                in currentWeekStart until  currentDayStart - oneDayLength ->
+                in dayOfCurrentWeekStart.dayOfYear until yesterday.dayOfYear ->
                     DaySeparator.THIS_WEEK.dayName
-                in currentWeekStart - oneWeekLength until currentWeekStart ->
+                in dayOfLastWeekStart until dayOfCurrentWeekStart.dayOfYear ->
                     DaySeparator.LAST_WEEK.dayName
-                in currentWeekStart - twoWeekLength until currentWeekStart - oneWeekLength ->
-                    DaySeparator.TWO_WEEKS_AGO.dayName
-                in Long.MIN_VALUE until currentWeekStart - twoWeekLength ->
-                    DaySeparator.LONG_TIME_AGO.dayName
                 else ->
-                    DaySeparator.TOMORROW.dayName
+                    DaySeparator.LONG_TIME_AGO.dayName
             }
         }
         val dayOfPreviousPost = previousPost?.let { dayOfPost(it) }
         val dayOfCurrentPost = dayOfPost(currentPost)
 //        val result = dayOfCurrentPost.takeIf { it != dayOfPreviousPost }
-//        Log.d("DAY OF THE POST", "currentTime = ${timeInHumanRepresentation(currentTime)}\n" +
-//                "offset = $offset\n" +
-//                "currentDayOfWeek = $currentDayOfWeek\n" +
-//                "floorTime = $floorCurrentTimeToDay\n" +
-//                "dayStart = ${timeInHumanRepresentation(currentDayStart)}\n" +
-//                "weekStart = ${timeInHumanRepresentation(currentWeekStart)}\n" +
-//                "previous = ${previousPost?.let { timeInHumanRepresentation(it.published)}}, $dayOfPreviousPost\n" +
-//                "current = ${timeInHumanRepresentation(currentPost.published)}, $dayOfCurrentPost\n" +
-//                "separator = $result")
+//        Log.d("DAY OF THE POST", "today = ${formatNMedia(today)}\n" +
+//                "yesterday = ${formatNMedia(yesterday)}\n" +
+//                "dayOfCurrentWeekStart = ${formatNMedia(dayOfCurrentWeekStart)}\n" +
+//                "dayOfLastWeekStart.dayOfYear = $dayOfLastWeekStart\n" +
+//                "previousPost = ${previousPost?.let { timeInHumanRepresentation(it.published)}}, $dayOfPreviousPost\n" +
+//                "currentPost = ${timeInHumanRepresentation(currentPost.published)}, $dayOfCurrentPost\n" +
+//                "daySeparator = $result")
         return dayOfCurrentPost.takeIf { it != dayOfPreviousPost }
     }
 }
