@@ -1,10 +1,8 @@
 package ru.netology.nmedia.ui
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PointF
-import android.graphics.RectF
+import android.graphics.*
+import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.withStyledAttributes
@@ -37,6 +35,7 @@ class StatsView @JvmOverloads constructor(
     private var textSize = AndroidUtils.dp(context = context, dp = 20)
     private val randomColor = { Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt()) }
     private var colors = emptyList<Int>()
+    private var textColor = 0xFF000000.toInt()
     private var arcPaint: Paint
     private val textPaint: Paint
     var data: List<Float> = emptyList()
@@ -58,6 +57,7 @@ class StatsView @JvmOverloads constructor(
                 getColor(R.styleable.StatsView_thirdColor, randomColor()),
                 getColor(R.styleable.StatsView_fourthColor, randomColor())
             )
+            textColor = getColor(R.styleable.StatsView_textColor, textColor)
         }
         // Создание кисти
         arcPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -74,6 +74,7 @@ class StatsView @JvmOverloads constructor(
         textPaint = Paint(Paint.ANTI_ALIAS_FLAG /*Флаг сглаживания*/)
             .apply {
                 textSize = this@StatsView.textSize
+                color = this@StatsView.textColor
                 style = Paint.Style.FILL
                 textAlign = Paint.Align.CENTER
             }
@@ -100,13 +101,19 @@ class StatsView @JvmOverloads constructor(
             var startAngle = -90F
             // Сектор, выделяемый для одного элемента
             val sector = 360F / data.size
+            var firstColor = randomColor()
             data.forEachIndexed { index, datum ->
                 // Угол поворота (начертания дуги)
                 val angle = sector * datum / data.max()
                 // Для каждого элемента задается свой цвет.
                 // При этом, если элемент в списке data отсутствует,
                 // то цвет сгенерируется по указанной функции
-                arcPaint.color = colors.getOrElse(index) { randomColor() }
+                arcPaint.color = colors
+                    .getOrElse(index) { randomColor() }
+                    .also {
+                        if (index == data.withIndex().first().index)
+                            firstColor = it
+                    }
                 canvas.drawArc(
                     /* oval = */ oval,
                     /* startAngle = */ startAngle,
@@ -116,6 +123,13 @@ class StatsView @JvmOverloads constructor(
                 // Добавим отступ к стартовому углу
                 startAngle += sector
             }
+            canvas.drawPoint(
+                center.x,
+                oval.top,
+                arcPaint.apply {
+                    color = firstColor
+                }
+            )
             val sum = data.map { (it / data.max()) * 100 / data.size }.sum()
             canvas.drawText(
                 /* text = */ "%.2f%%".format(sum),

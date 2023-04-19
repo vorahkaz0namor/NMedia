@@ -36,6 +36,7 @@
         app:secondColor="@color/second_color_stats_view"
         app:thirdColor="@color/third_color_stats_view"
         app:fourthColor="@color/fourth_color_stats_view"
+        app:textColor="?attr/colorControlNormal"
         app:layout_constraintTop_toBottomOf="@id/image"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
