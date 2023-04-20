@@ -2,11 +2,11 @@ package ru.netology.nmedia.ui
 
 import android.content.Context
 import android.graphics.*
-import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import ru.netology.nmedia.R
+import ru.netology.nmedia.dto.Percent
 import ru.netology.nmedia.util.AndroidUtils
 import kotlin.math.min
 import kotlin.random.Random
@@ -36,11 +36,16 @@ class StatsView @JvmOverloads constructor(
     private val randomColor = { Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt()) }
     private var colors = emptyList<Int>()
     private var textColor = 0xFF000000.toInt()
+    private val emptyColor = 0xECECECEC.toInt()
     private var arcPaint: Paint
     private val textPaint: Paint
-    var data: List<Float> = emptyList()
+    var percent: Percent = Percent(0)
         set(value) {
-            field = value
+            field = when {
+                value.percent < 0 -> Percent(0)
+                value.percent > 100 -> Percent(100)
+                else -> value
+            }
             invalidate()
         }
 
@@ -96,7 +101,16 @@ class StatsView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (data.isNotEmpty()) {
+        canvas.drawCircle(
+            center.x,
+            center.y,
+            radius,
+            arcPaint.apply {
+                color = emptyColor
+            }
+        )
+        if (percent.percent != 0) {
+            val data = percent.data()
             // Стартовый угол положения кисти
             var startAngle = -90F
             // Сектор, выделяемый для одного элемента
@@ -106,8 +120,9 @@ class StatsView @JvmOverloads constructor(
                 // Угол поворота (начертания дуги)
                 val angle = sector * datum / data.max()
                 // Для каждого элемента задается свой цвет.
-                // При этом, если элемент в списке data отсутствует,
-                // то цвет сгенерируется по указанной функции
+                // При этом, если отсутствует цвет для элемента
+                // из списка data, то цвет сгенерируется
+                // по функции randomColor()
                 arcPaint.color = colors
                     .getOrElse(index) { randomColor() }
                     .also {
@@ -130,14 +145,13 @@ class StatsView @JvmOverloads constructor(
                     color = firstColor
                 }
             )
-            val sum = data.map { (it / data.max()) * 100 / data.size }.sum()
-            canvas.drawText(
-                /* text = */ "%.2f%%".format(sum),
-                /* x = */ center.x,
-                // Для положения текста по оси y придется ввести поправочный коэффициент
-                /* y = */ center.y + textPaint.textSize / 4,
-                /* paint = */ textPaint
-            )
         }
+        canvas.drawText(
+            /* text = */ "%.2f%%".format(percent.percent.toFloat()),
+            /* x = */ center.x,
+            // Для положения текста по оси y придется ввести поправочный коэффициент
+            /* y = */ center.y + textPaint.textSize / 4,
+            /* paint = */ textPaint
+        )
     }
 }

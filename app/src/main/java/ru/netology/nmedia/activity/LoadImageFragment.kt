@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentLoadImageBinding
+import ru.netology.nmedia.dto.Percent
 import ru.netology.nmedia.util.CompanionNotMedia.load
 import ru.netology.nmedia.util.WorkerThread
 import ru.netology.nmedia.util.viewBinding
@@ -39,12 +40,7 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
     }
 
     private fun initViews() {
-        binding.radialFiller.data = listOf(
-            500F,
-            500F,
-            500F,
-            500F
-        )
+        binding.radialFiller.percent = Percent(79)
         showImage((Math.random() * urls.size).toInt())
     }
 
