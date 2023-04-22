@@ -24,7 +24,7 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
         "avatar3235.jpg",
         "avatar38700C7e64.jpg",
         "Snegovichok.jpg",
-        "localuser.jpg"
+        "student.jpg"
     )
     private var index = 0
     companion object {
