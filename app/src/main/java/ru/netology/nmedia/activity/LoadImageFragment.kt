@@ -5,6 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.FragmentLoadImageBinding
+import ru.netology.nmedia.dto.Percent
 import ru.netology.nmedia.util.CompanionNotMedia.load
 import ru.netology.nmedia.util.WorkerThread
 import ru.netology.nmedia.util.viewBinding
@@ -18,11 +19,12 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
         "netology.jpg",
         "sber.jpg",
         "tcs.jpg",
-        "avatar1.jpg",
-        "avatar2.jpg",
-        "Sneg.jpg",
-        "localuser.jpg",
-        "404.jpg"
+        "got.jpg",
+        "5464.jpg",
+        "avatar3235.jpg",
+        "avatar38700C7e64.jpg",
+        "Snegovichok.jpg",
+        "student.jpg"
     )
     private var index = 0
     companion object {
@@ -32,23 +34,35 @@ class LoadImageFragment : Fragment(R.layout.fragment_load_image) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initViews()
 //        showLoadedImage()
         setupListeners()
     }
 
+    private fun initViews() {
+        binding.radialFiller.percent = Percent(79)
+        showImage((Math.random() * urls.size).toInt())
+    }
+
     private fun setupListeners() {
         binding.loadButton.setOnClickListener {
-            if (index == urls.size)
-                index = 0
-            val url = "$BASE_URL$PATH${urls[index++]}"
-            // С использованием класса WorkerThread
-//            worker.download(url)
-            // С использованием библиотеки Glide
-            binding.image.load(url)
+            showImage(index)
         }
     }
 
-    private fun showLoadedImage() {
+    private fun showImage(i: Int) {
+        val url = "$BASE_URL$PATH${urls[i]}"
+        // С использованием класса WorkerThread
+//            worker.download(url)
+        // С использованием библиотеки Glide
+        binding.image.load(url)
+        if (index == urls.size - 1)
+            index = 0
+        else
+            index++
+    }
+
+    private fun imageToShow() {
         // Сюда прилетает полученная картинка, и теперь ее можно отобразить
         worker.resultCallback = {
             binding.image.setImageBitmap(it)

@@ -16,6 +16,7 @@ import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import ru.netology.nmedia.enumeration.AttachmentType
 import ru.netology.nmedia.model.MediaModel
+import ru.netology.nmedia.util.AndroidUtils.defaultDispatcher
 import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.listToString
 import javax.inject.Inject
@@ -111,7 +112,12 @@ class PostRepositoryImpl @Inject constructor(
         }
             .flowOn(Dispatchers.Default)
 
-    override suspend fun getPostById(id: Long): Post = postDao.getPostById(id).toDto()
+    override suspend fun getPostById(id: Long): Flow<Post?> =
+        postDao.getPostById(id)
+            .map {
+                it?.toDto()
+            }
+            .flowOn(defaultDispatcher)
 
     override suspend fun getAll() {
         // Асинхронно вызываем сетевой запрос с помощью функции getAll()

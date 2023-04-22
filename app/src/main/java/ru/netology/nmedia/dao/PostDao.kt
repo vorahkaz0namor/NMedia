@@ -5,7 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
-import ru.netology.nmedia.dto.Post
+import kotlinx.coroutines.flow.Flow
 import ru.netology.nmedia.entity.DraftCopyEntity
 import ru.netology.nmedia.entity.PostEntity
 import java.util.*
@@ -20,7 +20,7 @@ interface PostDao {
     fun getAllRead(lastId: Long, firstId: Long): PagingSource<Int, PostEntity>
 
     @Query("SELECT * FROM PostEntity WHERE id = :id")
-    suspend fun getPostById(id: Long): PostEntity
+    fun getPostById(id: Long): Flow<PostEntity?>
 
     @Query("SELECT * FROM PostEntity ORDER BY idFromServer DESC")
     suspend fun getAll(): List<PostEntity>

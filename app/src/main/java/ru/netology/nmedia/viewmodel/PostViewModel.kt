@@ -18,6 +18,7 @@ import ru.netology.nmedia.model.MediaModel
 import ru.netology.nmedia.model.UiAction
 import ru.netology.nmedia.model.UiState
 import ru.netology.nmedia.repository.*
+import ru.netology.nmedia.util.AndroidUtils.defaultDispatcher
 import ru.netology.nmedia.util.CompanionNotMedia.customLog
 import ru.netology.nmedia.util.CompanionNotMedia.exceptionCheck
 import ru.netology.nmedia.util.SingleLiveEvent
@@ -36,25 +37,21 @@ private val empty = Post(
 class PostViewModel @Inject constructor(
     private val postRepository: PostRepository,
 ) : ViewModel() {
-    private val defaultDispatcher = Dispatchers.Default
     private var _dataFlow: Flow<PagingData<FeedItem>>? = null
+    private val cachedPagingDataFromRepo: Flow<PagingData<FeedItem>>
     val dataFlow: Flow<PagingData<FeedItem>>
         get() = cachedPagingDataFromRepo
-    private val cachedPagingDataFromRepo: Flow<PagingData<FeedItem>>
+    private var _singlePost: Flow<Post?> = flowOf(null)
+    val singlePost: Flow<Post?>
+        get() = _singlePost
     val totalState: StateFlow<UiState>
     val stateChanger: (UiAction) -> Unit
-    // Try to get newer posts, but this way don't work,
-    // even don't compile
-//    val newerCount: Flow<Int> =
-//        data.switchMap { posts ->
+//    val newerCount: LiveData<Int> =
+//        data.switchMap {
 //            postRepository.getNewerCount(
-//                posts.map {
-//                    it.idFromServer
-//                }.filter {
-//                    maxOf(it)
-//                } ?: 0L
-//            )
-//    }
+//                it.posts.maxOfOrNull { it.idFromServer } ?: 0L
+//            ).asLiveData()
+//        }
     private val _dataState = MutableLiveData(FeedModelState())
     val dataState: LiveData<FeedModelState>
         get() = _dataState
@@ -119,7 +116,7 @@ class PostViewModel @Inject constructor(
         cachedPagingDataFromRepo = postRepository.data // Flow<PagingData<FeedItem>>
             .mapLatest {
                 val maxId = postRepository.getLatestId()
-                Log.d("WRITE STATE.ID", "$maxId")
+//                Log.d("WRITE STATE.ID", "$maxId")
                 stateChanger(UiAction.Get(id = maxId))
                 it
             }
@@ -134,7 +131,7 @@ class PostViewModel @Inject constructor(
                     id = get.id,
                     lastIdScrolled = scroll.currentId
                 )
-                Log.d("UPDATE TOTALSTATE", "$uiState")
+//                Log.d("UPDATE TOTALSTATE", "$uiState")
                 uiState
             }
             .stateIn(
@@ -207,14 +204,19 @@ class PostViewModel @Inject constructor(
         }
     }
 
-    fun getPostById(id: Long): Post? {
-        var result: Post? = null
+    fun getPostById(id: Long) {
         viewModelScope.launch {
-            _dataState.value = _dataState.value?.loading()
-            result = postRepository.getPostById(id)
-            _dataState.value = _dataState.value?.showing()
+            try {
+                _dataState.value = _dataState.value?.loading()
+                _singlePost = postRepository.getPostById(id)
+                    .mapLatest { it }
+                    .flowOn(defaultDispatcher)
+                _dataState.value = _dataState.value?.showing()
+            } catch (e: Exception) {
+                _dataState.value = _dataState.value?.error()
+                _postEvent.value = exceptionCheck(e)
+            }
         }
-        return result
     }
 
     fun showUnreadPosts() {

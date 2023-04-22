@@ -7,7 +7,6 @@ import android.view.View
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
@@ -31,6 +30,7 @@ import ru.netology.nmedia.databinding.FragmentFeedBinding
 import ru.netology.nmedia.model.RemotePresentationState.*
 import ru.netology.nmedia.model.UiAction
 import ru.netology.nmedia.model.asRemotePresentationState
+import ru.netology.nmedia.util.AndroidUtils.viewScope
 import ru.netology.nmedia.util.CompanionNotMedia.allStatesToString
 import ru.netology.nmedia.util.CompanionNotMedia.overview
 import ru.netology.nmedia.viewmodel.AuthViewModel
@@ -44,8 +44,6 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
     private lateinit var loadStateFooter: PostLoadingStateAdapter
     private lateinit var navController: NavController
     private var snackbar: Snackbar? = null
-    private val Fragment.viewScope
-        get() = viewLifecycleOwner.lifecycleScope
 
     override fun onDestroyView() {
         super.onDestroyView()
@@ -130,11 +128,11 @@ class FeedFragment : Fragment(R.layout.fragment_feed) {
                     // Скролл к верхнему элементу списка, если произошел не пустой
                     // refresh
                     shouldScrollToTop.collectLatest {
-                        Log.d("SHOULD SCROLL TO TOP?", "$it")
+//                        Log.d("SHOULD SCROLL TO TOP?", "$it")
                         if (it) {
                             binding.recyclerView.posts.smoothScrollToPosition(0)
                             val currentId = totalState.value.id
-                            Log.d("WRITE STATE.SCROLL", "$currentId")
+//                            Log.d("WRITE STATE.SCROLL", "$currentId")
                             stateChanger(UiAction.Scroll(currentId = currentId))
                         }
                     }

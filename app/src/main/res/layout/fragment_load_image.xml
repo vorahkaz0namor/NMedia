@@ -6,16 +6,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".activity.LoadImageFragment">
 
-    <ImageView
-        android:id="@+id/image"
-        android:layout_width="@dimen/sample_image_size"
-        android:layout_height="@dimen/sample_image_size"
-        app:layout_constraintTop_toBottomOf="@id/loadButton"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="@string/sample_image" />
-
     <com.google.android.material.button.MaterialButton
         android:id="@+id/loadButton"
         android:layout_width="wrap_content"
@@ -25,5 +15,32 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="@dimen/sample_image_size"
+        android:layout_height="@dimen/sample_image_size"
+        app:layout_constraintTop_toBottomOf="@id/loadButton"
+        app:layout_constraintBottom_toTopOf="@id/radialFiller"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/sample_image" />
+
+    <ru.netology.nmedia.ui.StatsView
+        android:id="@+id/radialFiller"
+        android:layout_width="@dimen/sample_image_size"
+        android:layout_height="@dimen/sample_image_size"
+        app:textSize="@dimen/static_text"
+        app:lineWidth="@dimen/auth_indent"
+        app:firstColor="@color/first_color_stats_view"
+        app:secondColor="@color/second_color_stats_view"
+        app:thirdColor="@color/third_color_stats_view"
+        app:fourthColor="@color/fourth_color_stats_view"
+        app:textColor="?attr/colorControlNormal"
+        app:layout_constraintTop_toBottomOf="@id/image"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

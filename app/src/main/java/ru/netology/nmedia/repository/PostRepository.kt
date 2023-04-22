@@ -11,7 +11,7 @@ interface PostRepository {
     fun getLatestId(): Long
     fun getNewerCount(latestId: Long): Flow<Int>
     suspend fun getLatest(count: Int)
-    suspend fun getPostById(id: Long): Post
+    suspend fun getPostById(id: Long): Flow<Post?>
     suspend fun getAll()
     suspend fun showUnreadPosts()
     suspend fun saveWithAttachment(post: Post, media: MediaModel)
